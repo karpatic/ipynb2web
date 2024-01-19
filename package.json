@@ -1,0 +1,76 @@
+{
+  "name": "ipynb2web",
+  "description": "Prepare and convert Jupyter Notebooks into HTML templating content.",
+  "keywords": [
+    "jupyter",
+    "notebook",
+    "html",
+    "template",
+    "templating",
+    "ipynb",
+    "convert",
+    "prepare"
+  ],
+  "tags": [
+    "jupyter",
+    "notebook",
+    "html",
+    "template",
+    "templating",
+    "ipynb",
+    "convert",
+    "prepare"
+  ],
+  "author": "Charles Karpati",
+  "license": "MIT",
+  "type": "module",
+  "version": "1.0.23",
+  "main": "dist/ipynb2web.cjs",
+  "browser": "dist/ipynb2web.browser.umd.js",
+  "module": "dist/ipynb2web.node.umd.js",
+  "exports": {
+    ".": {
+      "import": {
+        "default": "./dist/ipynb2web.node.umd.js"
+      },
+      "require": {
+        "default": "./dist/ipynb2web.cjs"
+      }
+    },
+    "./cli": "./bin/ipynb2web.cli.cjs"
+  },
+  "bin": {
+    "ipynb2web-cli": "./bin/ipynb2web.cli.mjs"
+  },
+  "scripts": {
+    "build": "npm unlink ipynb2web; cls; rm dist/*; rm bin/*; webpack --config webpack.config.cjs ; npm link --loglevel verbose; ",
+    "buildesm": "node esbuild.js",
+    "testcli": "node ./bin/ipynb2web.cli.cjs audio",
+    "testnodecommon": "node ./test/test_node_common.cjs",
+    "testnodemodule": "node ./test/test_node_module.mjs",
+    "testbrowsermodule": "node ./test/test_browser_module.js",
+    "testbrowser": "node ./test/test_browser.js",
+    "testnode": "npm run testcli ; npm run testnodecommon ; npm run testnodemodule",
+    "generatedocs": "jsdoc -c jsdoc.conf.json",
+    "publish": "npm version patch; npm publish"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.23.7",
+    "@babel/preset-env": "^7.23.8",
+    "babel-loader": "^9.1.3",
+    "esbuild": "0.19.11",
+    "http-server": "^14.1.1",
+    "jsdoc": "^4.0.2",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^4.10.0",
+    "webpack-node-externals": "^3.0.0"
+  },
+  "dependencies": {
+    "fs": "^0.0.1-security",
+    "marked": "^11.1.1",
+    "path": "^0.12.7"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
