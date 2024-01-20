@@ -1,8 +1,15 @@
-/** 
- *  @fileOverview Uses OpenAI API to prepare text content convert text to speech.
- *
- *  @author       Charles Karpati
+/**
+ * @fileOverview Provides functionalities for generating audio content from text and JSON data using OpenAI's APIs. 
+ * 
+ * This module contains functions for creating speech from text input, saving audio files, extracting text from JSON for speech synthesis, and converting JSON data to audio files in a specified directory. It leverages OpenAI's text-to-speech and GPT-4 models to process and convert textual content into spoken audio, supporting various customization options like voice model and speech speed. 
+ * 
+ * Functions exposed from [cli](module-cli.html) and [node](module-node.html).
+ * @module create_audio
+ * @exports {Object} - Exports functions like createSpeech, saveSpeech, getTextFromJson, and speechFromDir for audio processing and generation.
+ * @author Charles Karpati
  */
+
+
 
 import fs from "fs";
 import path from 'path';

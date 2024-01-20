@@ -27,18 +27,20 @@
     <section>
         <article>
             <pre class="prettyprint source linenums"><code>/** 
- *  @fileOverview Uses OpenAI API to prepare text content convert text to speech.
+ *  @fileOverview Houses the core [nb2json](module-convert.html#.nb2json) function and accompanying utils. 
+ * Functions exposed from [browser](module-browser.html) and [node](module-node.html).
  * 
  *  Where processing happens
- *  -1 - calling nb2json - yaml filename returned gets formatted
- *  0 - nb2json - meta.filename is fixed up right before returning too
- *  0 - nb2json - meta.prettify inserts script
- *  0 - nb2json - replaceEmojies
- *  0 - nb2json - convertNotes
- *  1 - get_metadata - yaml is parsed, title, summary, keyValues set
+ * - -1 - Calling nb2json - yaml filename returned gets formatted
+ * - 0 - nb2json - meta.filename is fixed up right before returning too
+ * - 0 - nb2json - meta.prettify inserts script
+ * - 0 - nb2json - replaceEmojies
+ * - 0 - nb2json - convertNotes
+ * - 1 - get_metadata - yaml is parsed, title, summary, keyValues set
  * 
- *  @author       Charles Karpati
- * 
+ *  @module convert
+ *  @exports {Object} - An object containing utility functions.
+ *  @author Charles Karpati
  */
 
 
@@ -62,8 +64,9 @@ let pyCode = [];
  * @param {string} ipynbPath - The path to the Jupyter Notebook file.
  * @param {boolean} [verbose=false] - If set to true, enables verbose logging for detailed information.
  * @returns {Object} An object with metadata and processed content of the notebook.
+ * @memberof module:convert
  */
-export async function nb2json(ipynbPath, verbose = false) {
+async function nb2json(ipynbPath, verbose = false) {
   pyCode = []
   prettify = false;
   let url = ipynbPath;
@@ -99,13 +102,22 @@ export async function nb2json(ipynbPath, verbose = false) {
 /**
  * Extracts metadata from the first cell of a Jupyter Notebook, interpreting it as YAML.
  * Get markdown and check EACH LINE for yaml. Special characters must have a space after them.
- * ("# Title", "> summary", "- key1: value1")")
- * returns: { title: "Title", summary: "summary", key1: "value1" }
+ * 
+ * The Lines: 
+ * ```
+ * # Title
+ * > summary
+ * - key1: value1"
+ * ```
+ * Will return: 
+ * ```
+ * { title: "Title", summary: "summary", key1: "value1" }
+ * ```
  *
  * @param {Object[]} data - An array of cells from a Jupyter Notebook.
  * @returns {Object} An object containing extracted metadata like title, summary, and key-values.
  */
-export function get_metadata(data) {
+function get_metadata(data) {
   const returnThis = {};
   for (const line of data.source) {
     if (line.startsWith("#")) {
@@ -132,7 +144,7 @@ export function get_metadata(data) {
  * @param {boolean} [verbose=false] - If set to true, enables verbose logging for detailed information.
  * @returns {string[]} An array of strings representing the processed content of each cell.
  */
-export function convertNb(cells, meta, verbose = false) {
+function convertNb(cells, meta, verbose = false) {
   verbose &amp;&amp; console.log('- convertNb Running');
   return cells.map((c) => cleanCell(c, meta));
 }
@@ -199,7 +211,8 @@ function processMarkdown(x) {
 
 /**
  * Processes a code cell from a Jupyter Notebook, applying various transformations based on flags and output type.
- * Calls getFlags, processSource, processOutput
+ * 
+ * Calls [getFlags](module-convert.html#.getFlags), [processSource](module-convert.html#.processSource), [processOutput](module-convert.html#.processOutput)
  *
  * @param {Object} cell - A code cell from a Jupyter Notebook.
  * @param {Object} meta - Metadata associated with the notebook.
@@ -237,6 +250,7 @@ function processCode(cell, meta, verbose = false) {
  * Detects special flags in the source code of a notebook cell.
  * Detect and stripout and handle flags.
  *
+ * @memberof module:convert
  * @param {string} source - The source code of a notebook cell.
  * @returns {string[]} An array of detected flags in the cell's source code.
  */
@@ -262,6 +276,7 @@ function getFlags(source) {
  * Processes the source of a code cell, applying transformations based on flags and metadata.
  * Strip Flags from text, make details, hide all. Append to pyCode
  *
+ * @memberof module:convert
  * @param {string} source - The source code of a notebook cell.
  * @param {string[]} flags - An array of flags affecting the processing.
  * @param {Object} meta - Metadata associated with the notebook.
@@ -292,6 +307,8 @@ function processSource(source, flags, meta, verbose = false) {
  * Processes the output of a code cell, applying transformations based on flags and output type.
  * Strip Flags from output, make details, hide all.
  *
+ * @function processOutput
+ * @memberof module:convert
  * @param {Object} source - The output of a code cell.
  * @param {string[]} flags - An array of flags affecting the processing.
  * @param {boolean} [verbose=false] - If set to true, enables verbose logging for detailed information.
@@ -344,7 +361,9 @@ function processOutput(source, flags, verbose = false) {
   return source;
   //output_type == 'stream' ==> text
   //output_type == 'display_data' ==> data{'application/javascript' or 'text/html' or 'execute_result'}
-}</code></pre>
+}
+
+export { nb2json, get_metadata, convertNb } </code></pre>
         </article>
     </section>
 
@@ -354,13 +373,13 @@ function processOutput(source, flags, verbose = false) {
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><ul><li><a href="global.html#cleanCell">cleanCell</a></li><li><a href="global.html#cli">cli</a></li><li><a href="global.html#cli_nbs2html">cli_nbs2html</a></li><li><a href="global.html#convertNb">convertNb</a></li><li><a href="global.html#convertNotes">convertNotes</a></li><li><a href="global.html#createAudio">createAudio</a></li><li><a href="global.html#createSitemap">createSitemap</a></li><li><a href="global.html#createSpeech">createSpeech</a></li><li><a href="global.html#generate_sectionmap">generate_sectionmap</a></li><li><a href="global.html#getFlags">getFlags</a></li><li><a href="global.html#getTextFromJson">getTextFromJson</a></li><li><a href="global.html#get_metadata">get_metadata</a></li><li><a href="global.html#ipynb_publish">ipynb_publish</a></li><li><a href="global.html#makeDetails">makeDetails</a></li><li><a href="global.html#nb2json">nb2json</a></li><li><a href="global.html#processCode">processCode</a></li><li><a href="global.html#processDirectory">processDirectory</a></li><li><a href="global.html#processMarkdown">processMarkdown</a></li><li><a href="global.html#processOutput">processOutput</a></li><li><a href="global.html#processSource">processSource</a></li><li><a href="global.html#replaceAndLog">replaceAndLog</a></li><li><a href="global.html#replaceEmojis">replaceEmojis</a></li><li><a href="global.html#saveSpeech">saveSpeech</a></li><li><a href="global.html#speechFromDir">speechFromDir</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-browser.html">browser</a></li><li><a href="module-cli.html">cli</a></li><li><a href="module-convert.html">convert</a></li><li><a href="module-convert_util.html">convert_util</a></li><li><a href="module-create_audio.html">create_audio</a></li><li><a href="module-node.html">node</a></li><li><a href="module-prerender.html">prerender</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Fri Jan 19 2024 04:11:29 GMT-0500 (Eastern Standard Time)
+    Documentation by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Sat Jan 20 2024 17:22:11 GMT-0500 (Eastern Standard Time)
 </footer>
 
 <script> prettyPrint(); </script>

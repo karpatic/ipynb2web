@@ -27,14 +27,16 @@
     <section>
         <article>
             <pre class="prettyprint source linenums"><code>/** 
- *  @fileOverview Utility functions used by nb2json.
- *
- *  @author       Charles Karpati
+ *  @fileOverview Utility functions used by the [convert](module-convert.html).
+ *  @module convert_util
+ *  @exports {Object} - An object containing utility functions.
+ *  @author Charles Karpati
  */
 
 
+
 /**
- * Creates an HTML details element with the given content. Called by processOutput and processSource.
+ * Creates an HTML details element with the given content. Called by [processOutput](module-convert.html#.processOutput) and [processSource](module-convert.html#.processSource).
  * 
  * @param {string} content - The HTML content to be placed inside the details tag.
  * @param {boolean} open - Determines if the details should be open by default.
@@ -100,7 +102,7 @@ function replaceAndLog(text, input, output) {
   });
 };
 
-export { makeDetails, replaceEmojis, convertNotes, replaceAndLog } // ES6 exports</code></pre>
+export { makeDetails, replaceEmojis, convertNotes, replaceAndLog } </code></pre>
         </article>
     </section>
 
@@ -110,13 +112,13 @@ export { makeDetails, replaceEmojis, convertNotes, replaceAndLog } // ES6 export
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><ul><li><a href="global.html#cleanCell">cleanCell</a></li><li><a href="global.html#cli">cli</a></li><li><a href="global.html#cli_nbs2html">cli_nbs2html</a></li><li><a href="global.html#convertNb">convertNb</a></li><li><a href="global.html#convertNotes">convertNotes</a></li><li><a href="global.html#createAudio">createAudio</a></li><li><a href="global.html#createSitemap">createSitemap</a></li><li><a href="global.html#createSpeech">createSpeech</a></li><li><a href="global.html#generate_sectionmap">generate_sectionmap</a></li><li><a href="global.html#getFlags">getFlags</a></li><li><a href="global.html#getTextFromJson">getTextFromJson</a></li><li><a href="global.html#get_metadata">get_metadata</a></li><li><a href="global.html#ipynb_publish">ipynb_publish</a></li><li><a href="global.html#makeDetails">makeDetails</a></li><li><a href="global.html#nb2json">nb2json</a></li><li><a href="global.html#processCode">processCode</a></li><li><a href="global.html#processDirectory">processDirectory</a></li><li><a href="global.html#processMarkdown">processMarkdown</a></li><li><a href="global.html#processOutput">processOutput</a></li><li><a href="global.html#processSource">processSource</a></li><li><a href="global.html#replaceAndLog">replaceAndLog</a></li><li><a href="global.html#replaceEmojis">replaceEmojis</a></li><li><a href="global.html#saveSpeech">saveSpeech</a></li><li><a href="global.html#speechFromDir">speechFromDir</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-browser.html">browser</a></li><li><a href="module-cli.html">cli</a></li><li><a href="module-convert.html">convert</a></li><li><a href="module-convert_util.html">convert_util</a></li><li><a href="module-create_audio.html">create_audio</a></li><li><a href="module-node.html">node</a></li><li><a href="module-prerender.html">prerender</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Fri Jan 19 2024 04:11:29 GMT-0500 (Eastern Standard Time)
+    Documentation by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Sat Jan 20 2024 17:22:11 GMT-0500 (Eastern Standard Time)
 </footer>
 
 <script> prettyPrint(); </script>

@@ -20,7 +20,7 @@ app.get('/', (req, res) => {
         <head> 
             <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
             <script>console.log(window.marked)</script> 
-            <script src="/ipynb2web.browser-umd.js"></script>
+            <script src="/ipynb2web.browser.umd.js"></script>
         </head>
         <body> 
             <script> 
@@ -29,7 +29,7 @@ app.get('/', (req, res) => {
                 // Either: 
                 // ipynb2web.nb2json(url) 
                 // or 
-                Convert.nb2json(url)
+                ipynb2web.nb2json(url)
                     .then(result => { 
                         console.log(result);
                     })

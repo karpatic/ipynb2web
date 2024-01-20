@@ -4,7 +4,7 @@ const nodeExternals = require('webpack-node-externals');
 
 
 //
-// Idealy: Build using ESM for ease and package UMD for compatibility. Need two, one for node and one for browser. 
+// Idealy: Build using ESM for ease and package UMD for compatibility. Depending on the project, you made need two: One for node and one for browser. 
 //
 /*
 | Module Type                         | File Extension     | Export                  | Import/Require    | Supported Environments       | Compatible with                            |
@@ -15,6 +15,12 @@ const nodeExternals = require('webpack-node-externals');
 | Asynchronous Module Definition (AMD)| .js                | define                  | require           | Browser                      | AMD, UMD                                   |
 | Traditional Browser Scripts         | .js                | N/A                     | N/A               | Browser                      | AMD, UMD, ESM (all indirectly)             |
 */
+
+//
+// The Node ESM build script is located in ./esbuild.js but its not really needed.
+// Since ESM dependencies use CJS modules underneath the esm build for node frequently breaks.
+// Better to just use the original ESM files in ./src directly for that reason. Not even the UMD version works escape this issue.
+//
 
 const commonConfig = {
     optimization: {
@@ -58,7 +64,7 @@ const nodeCommonConfig = {
     externals: [nodeExternals()]
 };
 
-// cj.min - Not Needed
+// cjs.min - Not Needed
 const nodeCommonConfigMinified = {
     ...nodeCommonConfig,
     output: {
@@ -71,7 +77,7 @@ const nodeCommonConfigMinified = {
     },
 };
 
-// cli esm
+// cli cjs
 const cliConfig = {
     ...commonConfig,
     mode: 'production',
@@ -104,12 +110,7 @@ const cliConfigMinified = {
     },
 };
 
-//
-// The Node ESM build script is located in ./esbuild.js.
-// Since ESM dependencies use CJS modules underneath the esm build for node frequently breaks.
-// Better to just use the UMD version or the original ESM files in ./src directly.
-//
-
+/*
 // node umd
 const nodeUmdConfig = {
     ...commonConfig,
@@ -124,19 +125,7 @@ const nodeUmdConfig = {
     },
     externals: [nodeExternals()]
 };
-
-// min.node umd
-const nodeUmdConfigMinified = {
-    ...nodeUmdConfig,
-    output: {
-        ...nodeUmdConfig.output,
-        filename: 'ipynb2web.[name].umd.min.js',
-    },
-    optimization: {
-        ...commonConfig.optimization,
-        minimize: true
-    },
-};
+*/
 
 // browser umd
 const browserConfig = {
@@ -198,7 +187,7 @@ const browserESMConfigMinified = {
 module.exports = [
     nodeCommonConfig, nodeCommonConfigMinified,
     cliConfig, cliConfigMinified,
-    nodeUmdConfig, nodeUmdConfigMinified,
+    // nodeUmdConfig, nodeUmdConfigMinified,
     browserConfig, browserConfigMinified,
     browserESMConfig, browserESMConfigMinified
 ];

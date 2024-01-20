@@ -1,8 +1,10 @@
 // test.js
-// import { Prerender } from './../dist/ipynb2web.main.mjs';
-import ipynb2web from './../dist/ipynb2web.main.mjs';
+// import { ipynb2web } from './../src/node.js';
+// or
+import ipynb2web from './../src/node.js';
 
-console.log({ ipynb2web });
+
+console.log(ipynb2web);
 // import { Convert } from './../src/main.js';
 const directory = '';
 const SAVETO = './src/client/posts/';

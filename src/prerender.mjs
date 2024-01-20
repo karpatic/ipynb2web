@@ -1,8 +1,14 @@
-/** 
- *  @fileOverview Server side functions for ipynb2web like createSitemap, createAudio
- *
- *  @author       Charles Karpati
+/**
+ * @fileOverview Provides functionalities for processing Jupyter Notebook files (.ipynb) 
+ * 
+ * The module serves as the core of the ipynb2web conversion pipeline, handling various stages of content transformation and site structure generation. This includes converting notebooks to HTML, creating audio files from specified content, generating sitemaps for web navigation, and publishing processed files. 
+ * 
+ * Functions exposed from [node](module-node.html) and [cli](module-cli.html) into different web formats and managing related assets. 
+ * @module prerender
+ * @exports {Object} - Exports functions like createAudio, createSitemap, and cli_nbs2html for processing Jupyter Notebooks and related assets.
+ * @author Charles Karpati
  */
+
 
 import fs from 'fs';
 import path from 'path';
@@ -12,6 +18,7 @@ import httpServer from "http-server";
  * Checks YAML for `audio` tag and creates the file
  *
  * @async
+ * @memberof module:prerender
  * @param {string} [from='./src/client/posts/'] - The source directory containing content to be converted to audio.
  * @param {string} [to='./src/client/audio/'] - The target directory where audio files will be saved.
  */
@@ -22,9 +29,10 @@ async function createAudio(from = './src/client/posts/', to = './src/client/audi
 }
 
 /**
- * Appends each ipynb to sitemap.txt by calling processDirectory().
+ * Appends each ipynb to sitemap.txt by calling [processDirectory](module-prerender.html#.processDirectory).
  *
  * @async
+ * @memberof module:prerender
  * @param {string} [SAVETO='./src/client/posts/'] - The directory to search for JSON map files.
  * @param {string} [sitemapFile='./sitemap.txt'] - The file path where the sitemap will be saved.
  * @param {boolean} [verbose=false] - If set to true, enables verbose logging for detailed information.
@@ -45,9 +53,10 @@ async function createSitemap(SAVETO = './src/client/posts/', sitemapFile = './si
 }
 
 /**
- * Recursively searches for _map.json files [created from cli_nbs2html()->generate_sectionmap() ] and appends the mappings to sitemap.txt.
+ * Recursively searches for _map.json files created from [[cli_nbs2html](module-prerender.html#.cli_nbs2html)->[generate_sectionmap](module-prerender.html#.generate_sectionmap) and appends the mappings to sitemap.txt.
  *
  * @async
+ * @memberof module:prerender
  * @param {Array<string>} pages - An array to accumulate page URLs for the sitemap.
  * @param {string} directory - The directory to process.
  * @param {string} [subdir=''] - A subdirectory path to append to each URL in the sitemap.
@@ -81,9 +90,10 @@ async function processDirectory(pages, directory, subdir = '', verbose = false) 
 }
 
 /**
- * Calls generate_sectionmap() for each file in directory.
+ * Calls [generate_sectionmap](module-prerender.html#.generate_sectionmap) for each file in directory.
  *
  * @async
+ * @memberof module:prerender
  * @param {string} [FROM='./src/ipynb/'] - The directory containing .ipynb files to process.
  * @param {string} directory - A subdirectory to process within the FROM path.
  * @param {string} [SAVETO='./src/client/posts/'] - The directory where the processed files will be saved.
@@ -107,12 +117,13 @@ async function cli_nbs2html(FROM = './src/ipynb/', directory, SAVETO = './src/cl
 }
 
 /**
- * Calls ipynb_publish on all files in the directory. 
+ * Calls [ipynb_publish](module-prerender.html#.ipynb_publish) on all files in the directory. 
  * - Also creates section_map.json which is later used in createSitemap()
  * - It excludes specified metadata fields from section_map.json
  * - Skips _filename.ipynb files entirely and won't add meta.hide yaml's to the section_map.json
  *
  * @async
+ * @memberof module:prerender
  * @param {Array<string>} pages - An array of page names to process.
  * @param {string} FROM - The base directory containing .ipynb files.
  * @param {string} directory - A subdirectory to process.
@@ -201,6 +212,7 @@ async function generate_sectionmap(pages, FROM, directory, SAVETO, verbose = fal
  * Optionally, extracts and saves Python code from the notebook.
  *
  * @async
+ * @memberof module:prerender
  * @param {string} fullFilePath - The full path to the Jupyter Notebook file, including the filename and extension.
  * @param {string} saveDir - The directory where the processed file and any extracted Python code will be saved.
  * @param {string} [type='json'] - The format for the output file ('json' is the default format).
@@ -243,4 +255,4 @@ async function ipynb_publish(
   return final;
 }
 
-export { createAudio, createSitemap, cli_nbs2html } // ES6 exports
+export { createAudio, createSitemap, cli_nbs2html }

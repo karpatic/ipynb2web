@@ -21,8 +21,7 @@ app.get('/', (req, res) => {
             
             // Module import method 1
             <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script> 
-            <script type="module" src="/ipynb2web.browser.mjs"></script> 
-            <!-- --> 
+            <script type="module" src="/ipynb2web.browser.mjs"></script>  
         </head>
         <body>  
             

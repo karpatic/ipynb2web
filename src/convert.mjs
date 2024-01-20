@@ -1,16 +1,18 @@
 /** 
- *  @fileOverview Uses OpenAI API to prepare text content convert text to speech.
+ *  @fileOverview Houses the core [nb2json](module-convert.html#.nb2json) function and accompanying utils. 
+ * Functions exposed from [browser](module-browser.html) and [node](module-node.html).
  * 
  *  Where processing happens
- *  -1 - calling nb2json - yaml filename returned gets formatted
- *  0 - nb2json - meta.filename is fixed up right before returning too
- *  0 - nb2json - meta.prettify inserts script
- *  0 - nb2json - replaceEmojies
- *  0 - nb2json - convertNotes
- *  1 - get_metadata - yaml is parsed, title, summary, keyValues set
+ * - -1 - Calling nb2json - yaml filename returned gets formatted
+ * - 0 - nb2json - meta.filename is fixed up right before returning too
+ * - 0 - nb2json - meta.prettify inserts script
+ * - 0 - nb2json - replaceEmojies
+ * - 0 - nb2json - convertNotes
+ * - 1 - get_metadata - yaml is parsed, title, summary, keyValues set
  * 
- *  @author       Charles Karpati
- * 
+ *  @module convert
+ *  @exports {Object} - An object containing utility functions.
+ *  @author Charles Karpati
  */
 
 
@@ -34,8 +36,9 @@ let pyCode = [];
  * @param {string} ipynbPath - The path to the Jupyter Notebook file.
  * @param {boolean} [verbose=false] - If set to true, enables verbose logging for detailed information.
  * @returns {Object} An object with metadata and processed content of the notebook.
+ * @memberof module:convert
  */
-export async function nb2json(ipynbPath, verbose = false) {
+async function nb2json(ipynbPath, verbose = false) {
   pyCode = []
   prettify = false;
   let url = ipynbPath;
@@ -71,13 +74,22 @@ export async function nb2json(ipynbPath, verbose = false) {
 /**
  * Extracts metadata from the first cell of a Jupyter Notebook, interpreting it as YAML.
  * Get markdown and check EACH LINE for yaml. Special characters must have a space after them.
- * ("# Title", "> summary", "- key1: value1")")
- * returns: { title: "Title", summary: "summary", key1: "value1" }
+ * 
+ * The Lines: 
+ * ```
+ * # Title
+ * > summary
+ * - key1: value1"
+ * ```
+ * Will return: 
+ * ```
+ * { title: "Title", summary: "summary", key1: "value1" }
+ * ```
  *
  * @param {Object[]} data - An array of cells from a Jupyter Notebook.
  * @returns {Object} An object containing extracted metadata like title, summary, and key-values.
  */
-export function get_metadata(data) {
+function get_metadata(data) {
   const returnThis = {};
   for (const line of data.source) {
     if (line.startsWith("#")) {
@@ -104,7 +116,7 @@ export function get_metadata(data) {
  * @param {boolean} [verbose=false] - If set to true, enables verbose logging for detailed information.
  * @returns {string[]} An array of strings representing the processed content of each cell.
  */
-export function convertNb(cells, meta, verbose = false) {
+function convertNb(cells, meta, verbose = false) {
   verbose && console.log('- convertNb Running');
   return cells.map((c) => cleanCell(c, meta));
 }
@@ -171,7 +183,8 @@ function processMarkdown(x) {
 
 /**
  * Processes a code cell from a Jupyter Notebook, applying various transformations based on flags and output type.
- * Calls getFlags, processSource, processOutput
+ * 
+ * Calls [getFlags](module-convert.html#.getFlags), [processSource](module-convert.html#.processSource), [processOutput](module-convert.html#.processOutput)
  *
  * @param {Object} cell - A code cell from a Jupyter Notebook.
  * @param {Object} meta - Metadata associated with the notebook.
@@ -209,6 +222,7 @@ function processCode(cell, meta, verbose = false) {
  * Detects special flags in the source code of a notebook cell.
  * Detect and stripout and handle flags.
  *
+ * @memberof module:convert
  * @param {string} source - The source code of a notebook cell.
  * @returns {string[]} An array of detected flags in the cell's source code.
  */
@@ -234,6 +248,7 @@ function getFlags(source) {
  * Processes the source of a code cell, applying transformations based on flags and metadata.
  * Strip Flags from text, make details, hide all. Append to pyCode
  *
+ * @memberof module:convert
  * @param {string} source - The source code of a notebook cell.
  * @param {string[]} flags - An array of flags affecting the processing.
  * @param {Object} meta - Metadata associated with the notebook.
@@ -264,6 +279,8 @@ function processSource(source, flags, meta, verbose = false) {
  * Processes the output of a code cell, applying transformations based on flags and output type.
  * Strip Flags from output, make details, hide all.
  *
+ * @function processOutput
+ * @memberof module:convert
  * @param {Object} source - The output of a code cell.
  * @param {string[]} flags - An array of flags affecting the processing.
  * @param {boolean} [verbose=false] - If set to true, enables verbose logging for detailed information.
@@ -317,3 +334,5 @@ function processOutput(source, flags, verbose = false) {
   //output_type == 'stream' ==> text
   //output_type == 'display_data' ==> data{'application/javascript' or 'text/html' or 'execute_result'}
 }
+
+export { nb2json, get_metadata, convertNb } 

@@ -1,12 +1,14 @@
 /** 
- *  @fileOverview Utility functions used by nb2json.
- *
- *  @author       Charles Karpati
+ *  @fileOverview Utility functions used by the [convert](module-convert.html).
+ *  @module convert_util
+ *  @exports {Object} - An object containing utility functions.
+ *  @author Charles Karpati
  */
 
 
+
 /**
- * Creates an HTML details element with the given content. Called by processOutput and processSource.
+ * Creates an HTML details element with the given content. Called by [processOutput](module-convert.html#.processOutput) and [processSource](module-convert.html#.processSource).
  * 
  * @param {string} content - The HTML content to be placed inside the details tag.
  * @param {boolean} open - Determines if the details should be open by default.
@@ -72,4 +74,4 @@ function replaceAndLog(text, input, output) {
   });
 };
 
-export { makeDetails, replaceEmojis, convertNotes, replaceAndLog } // ES6 exports
+export { makeDetails, replaceEmojis, convertNotes, replaceAndLog } 

@@ -377,8 +377,14 @@ function buildNav(members) {
             }
             seen[longname] = true;
         });
-        nav += `<ul>${globalNav}</ul>`;
 
+        if (!globalNav) {
+            // turn the heading into a link so you can actually get to the global page
+            nav += `<h3>${linkto('global', 'Global')}</h3>`;
+        }
+        else {
+            nav += `<ul>${globalNav}</ul>`;
+        }
     }
 
     return nav;

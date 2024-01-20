@@ -29,19 +29,23 @@
   "browser": "dist/ipynb2web.browser.umd.js",
   "module": "dist/ipynb2web.node.umd.js",
   "exports": {
-    ".": {
-      "import": {
-        "default": "./dist/ipynb2web.node.umd.js"
-      },
-      "require": {
-        "default": "./dist/ipynb2web.cjs"
-      }
+    "import": {
+      "default": "./dist/ipynb2web.node.umd.js"
     },
-    "./cli": "./bin/ipynb2web.cli.cjs"
+    "require": {
+      "default": "./dist/ipynb2web.cjs"
+    }
   },
+  "repository": "git://github.com/karpatic/ipynb2web.git",
+  "homepage": "https://karpatic.github.io/ipynb2web/",
   "bin": {
     "ipynb2web-cli": "./bin/ipynb2web.cli.mjs"
   },
+  "files": [
+    "bin/",
+    "dist/",
+    "src/"
+  ],
   "scripts": {
     "build": "npm unlink ipynb2web; cls; rm dist/*; rm bin/*; webpack --config webpack.config.cjs ; npm link --loglevel verbose; ",
     "buildesm": "node esbuild.js",
@@ -51,7 +55,10 @@
     "testbrowsermodule": "node ./test/test_browser_module.js",
     "testbrowser": "node ./test/test_browser.js",
     "testnode": "npm run testcli ; npm run testnodecommon ; npm run testnodemodule",
-    "generatedocs": "jsdoc -c jsdoc.conf.json",
+    "builddocs": "jsdoc -c jsdoc.conf.json",
+    "watchdocs": "nodemon --watch src --ext js,mjs,cjs --exec 'npm run builddocs'",
+    "watchdocu": "cd docusaurus; npm run start",
+    "builddocu": "rm ./docs/* -r; cd docusaurus; npm run build; cp build/* ../docs/; rm build -r;",
     "publish": "npm version patch; npm publish"
   },
   "devDependencies": {
@@ -66,6 +73,7 @@
     "webpack-node-externals": "^3.0.0"
   },
   "dependencies": {
+    "docusaurus": "^1.14.7",
     "fs": "^0.0.1-security",
     "marked": "^11.1.1",
     "path": "^0.12.7"

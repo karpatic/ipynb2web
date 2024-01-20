@@ -7,7 +7,11 @@
     "includePattern": ".+\\.(js|mjs|cjs)$",
     "excludePattern": "(^|\\/|\\\\)_"
   },
-  "plugins": [],
+  "plugins": ["plugins/markdown"],
+  "markdown": {
+    "tags": ["author", "param", "returns", "throws", "see", "module", "fileOverview", "description", "returns"],
+    "hardwrap": true
+  },
   "templates": {
     "cleverLinks": false,
     "monospaceLinks": false,
@@ -17,7 +21,7 @@
   },
   "opts": {
     "encoding": "utf8",
-    "destination": "./docs/",
+    "destination": "./docusaurus/static/jsdocs/",
     "recurse": true,
     "verbose": true,
     "readme": "./README.md",
