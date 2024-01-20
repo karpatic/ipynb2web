@@ -1,3 +1,3 @@
 # FAQ
 
-questions here
+Questions here

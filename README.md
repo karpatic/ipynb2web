@@ -7,7 +7,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![NPM](https://nodei.co/npm/ipynb.png)](https://nodei.co/npm/ipynb/)
 
-This project is complete with dedicated API and also usage documentation. Read below to get started.
+This project is complete with dedicated [API](https://karpatic.github.io/ipynb2web/jsdocs/) and also [usage](https://karpatic.github.io/ipynb2web) documentation. Read below to get started.
 
 1. Process Ipynb's into JSON assets ready for website templating.
 2. Light weight with minimal dependencies
