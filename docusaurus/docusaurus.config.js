@@ -72,7 +72,7 @@ const config = {
             position: 'left'
           },
           {
-            to: '/jsdocs/index.html',
+            to: 'https://karpatic.github.io/ipynb2web/jsdocs/',
             label: 'API',
             position: 'left'
           },
