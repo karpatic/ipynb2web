@@ -14,9 +14,11 @@
 /** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
 const sidebars = {
   docsSidebar: [
-    'overview/README',
     'overview/getting-started',
     'overview/ipynb',
+    'overview/cli',
+    'overview/browser',
+    'overview/server',
     'overview/faq'
   ],
 };

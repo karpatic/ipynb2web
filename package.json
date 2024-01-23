@@ -58,7 +58,7 @@
     "builddocs": "jsdoc -c jsdoc.conf.json",
     "watchdocs": "nodemon --watch src --ext js,mjs,cjs --exec 'npm run builddocs'",
     "watchdocu": "cd docusaurus; npm run start",
-    "builddocu": "rm ./docs/* -r; rm docusaurus/docs/overview/README.md; cp README.md docusaurus/docs/overview/README.md; cd docusaurus; npm run build; cp -r build/* ../docs/; rm -r build/*",
+    "builddocu": "rm ./docs/* -r; rm docusaurus/docs/overview/getting-started.md; cp README.md docusaurus/docs/overview/getting-started.md; cd docusaurus; npm run build; cp -r build/* ../docs/; rm -r build/*;  cp CNAME ../docs/",
     "publish": "npm version patch; npm publish"
   },
   "devDependencies": {
