@@ -36,7 +36,7 @@ This method is for simple scripts and does not require ES module support.
     <script>
       console.log(window.marked);
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/ipynb2web@1.0.23/dist/ipynb2web.browser.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ipynb2web@latest/dist/ipynb2web.browser.umd.js"></script>
   </head>
   <body>
     <script>
@@ -64,7 +64,7 @@ This approach uses module script tags.
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script
       type="module"
-      src="https://cdn.jsdelivr.net/npm/ipynb2web@1.0.23/dist/ipynb2web.browser.mjs"
+      src="https://cdn.jsdelivr.net/npm/ipynb2web@latest/dist/ipynb2web.browser.mjs"
     ></script>
   </head>
   <body>
@@ -87,8 +87,8 @@ This approach uses ES module imports.
   <body>
     <script type="module">
       import { marked } from "https://cdn.jsdelivr.net/npm/marked/lib/marked.esm.js";
-      import { ipynb2web } from "https://cdn.jsdelivr.net/npm/ipynb2web@1.0.23/dist/ipynb2web.browser.mjs";
-      // import ipynb2web from 'https://cdn.jsdelivr.net/npm/ipynb2web@1.0.23/dist/ipynb2web.browser.mjs'; // Either works
+      import { ipynb2web } from "https://cdn.jsdelivr.net/npm/ipynb2web@latest/dist/ipynb2web.browser.mjs";
+      // import ipynb2web from 'https://cdn.jsdelivr.net/npm/ipynb2web@latest/dist/ipynb2web.browser.mjs'; // Either works
       ipynb2web.nb2json(url);
       // returns: { meta: { ... }, content: { ... } }
     </script>

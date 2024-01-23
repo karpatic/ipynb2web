@@ -140,8 +140,7 @@ var prettify = false;
 var pyCode = [];
 
 /**
- * Converts a Jupyter Notebook (.ipynb) file to a JSON object containing metadata and content.
- * Must be in directory of ipynb you want to convert to html.
+ * Converts a Jupyter Notebook (.ipynb) file to a JSON object containing metadata and content as two distinct entries.
  * 
  * @async
  * @param {string} ipynbPath - The path to the Jupyter Notebook file.
@@ -386,8 +385,7 @@ function processCode(cell, meta) {
 }
 
 /**
- * Detects special flags in the source code of a notebook cell.
- * Detect and stripout and handle flags.
+ * Detects special flags in the source code of a notebook cell and handles them accordingly.
  *
  * @memberof module:convert
  * @param {string} source - The source code of a notebook cell.
@@ -1132,7 +1130,7 @@ function _processDirectory() {
                     jsonData = _context3.t0.parse.call(_context3.t0, _context3.t1);
                     jsonData.forEach(function (obj) {
                       if (obj.filename) {
-                        pages.push("http://www.charleskarpati.com/".concat(file.split('_')[0].split('.')[0], "/").concat(subdir ? subdir + '/' : '').concat(obj.filename));
+                        pages.push("/".concat(file.split('_')[0].split('.')[0], "/").concat(subdir ? subdir + '/' : '').concat(obj.filename));
                       }
                     });
                   case 7:

@@ -57,6 +57,11 @@ const config = {
             position: 'left'
           },
           {
+            href: 'https://ipynb2web.com/test/index.html',
+            label: 'Try it out',
+            position: 'right',
+          },
+          {
             href: 'https://github.com/karpatic/ipynb2web',
             label: 'GitHub',
             position: 'right',
