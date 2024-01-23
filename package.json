@@ -37,7 +37,7 @@
     }
   },
   "repository": "git://github.com/karpatic/ipynb2web.git",
-  "homepage": "https://karpatic.github.io/ipynb2web/",
+  "homepage": "https://ipynb2web.com/",
   "bin": {
     "ipynb2web-cli": "./bin/ipynb2web.cli.mjs"
   },

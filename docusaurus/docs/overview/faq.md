@@ -8,28 +8,9 @@ Ipynb2web is a tool designed to convert Interactive Python Notebooks (.ipynb) in
 
 Unlike other tools like Pandoc or Sphinx, ipynb2web allows for the inclusion of `yaml` metadata, special `#flags` for output formatting, and the addition of minimally opinionated content through specific `markup`.
 
-## Usage
-
-### How do I install ipynb2web?
-
-For Node.js environments:
-
-```bash
-npm install ipynb2web
-```
-
-### How do I convert a Jupyter notebook to JSON using ipynb2web?
-
-```javascript
-const preparedJsonAsset = ipynb2web.nb2json(url);
-// Returns: { meta: { ... }, content: { ... } }
-```
-
 ### Can I use ipynb2web in the browser?
 
 Yes, ipynb2web can be included via CDN and used to convert notebooks to JSON in the browser.
-
-## Features and Functionality
 
 ### What core features does ipynb2web offer?
 
@@ -40,15 +21,7 @@ Yes, ipynb2web can be included via CDN and used to convert notebooks to JSON in 
 
 ### How does ipynb2web handle Markdown and code cells?
 
-Markdown cells support footnotes, breakouts, and HTML embedding. Code cells can be processed with flags for specific behaviors like collapsing, hiding, or executing JavaScript/HTML.
-
-### What are some key commands in the ipynb2web CLI?
-
-- Convert notebooks to JSON: `ipynb2web DirectoryName "custom/SAVETO/path/" "custom/FROM/path/"`
-- Generate a sitemap: `ipynb2web sitemap "custom/sitemap/path.txt"`
-- Create audio assets: `ipynb2web audio "custom/SAVETO/path/" "custom/FROM/path/"`
-
-## Troubleshooting
+Add YAML to the top of your docs to pass it on as metadata. Markdown cells support footnotes, breakouts, and HTML embedding. Code cells can be processed with flags for specific behaviors like collapsing, hiding, or executing JavaScript/HTML.
 
 ### What if my notebook isn't converting properly?
 
@@ -56,7 +29,7 @@ Ensure that the YAML metadata is correctly formatted and that the notebook follo
 
 ### How can I get detailed API documentation?
 
-Visit the official documentation: [ipynb2web API Documentation](https://karpatic.github.io/ipynb2web/jsdocs)
+Visit the official documentation: [ipynb2web API Documentation](https://ipynb2web.com/jsdocs)
 
 ## Contact and Support
 
@@ -66,4 +39,4 @@ Issues and feature requests can be submitted through the project's GitHub reposi
 
 ### Where can I find more examples and usage instructions?
 
-For comprehensive guides and examples, visit the official website: [ipynb2web Documentation](https://karpatic.github.io/ipynb2web/docs/overview)
+For comprehensive guides and examples, visit the official website: [ipynb2web Documentation](https://ipynb2web.com/docs/overview/getting-started)

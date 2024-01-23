@@ -35,7 +35,7 @@ const FeatureList = [
     img: './img/ipynb2web.png',
     description: (
       <>
-        Convert your .ipynb docs into web-templatable json assets with the use of a single <a href='https://karpatic.github.io/ipynb2web/jsdocs/module-convert.html#.nb2json'>command</a>.
+        Convert your .ipynb docs into web-templatable json assets with the use of a single <a href='https://ipynb2web.com/jsdocs/module-convert.html#.nb2json'>command</a>.
       </>
     ),
   },
@@ -62,7 +62,7 @@ const FeatureList = [
     img: './img/ipynb2web.png',
     description: (
       <>
-        Render assets on the <a href="https://karpatic.github.io/ipynb2web/jsdocs/module-node.html">server</a> or in the <a href="https://karpatic.github.io/ipynb2web/jsdocs/module-browser.html">browser</a>; Using Modules, Vanilla JS, and even your <a href="https://karpatic.github.io/ipynb2web/jsdocs/module-cli.html">terminal</a>.
+        Render assets on the <a href="https://ipynb2web.com/jsdocs/module-node.html">server</a> or in the <a href="https://ipynb2web.com/jsdocs/module-browser.html">browser</a>; Using Modules, Vanilla JS, and even your <a href="https://ipynb2web.com/jsdocs/module-cli.html">terminal</a>.
       </>
     ),
   },

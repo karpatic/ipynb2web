@@ -78,7 +78,7 @@ async function processDirectory(pages, directory, subdir = '', verbose = false) 
 
     jsonData.forEach(obj => {
       if (obj.filename) {
-        pages.push(`http://www.charleskarpati.com/${file.split('_')[0].split('.')[0]}/${subdir ? subdir + '/' : ''}${obj.filename}`);
+        pages.push(`/${file.split('_')[0].split('.')[0]}/${subdir ? subdir + '/' : ''}${obj.filename}`);
       }
     });
   }));
