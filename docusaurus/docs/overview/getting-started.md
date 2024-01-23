@@ -1,7 +1,3 @@
----
-sidebar_position: 1
----
-
 # Getting Started
 
 [![npm version](https://badge.fury.io/js/ipynb2web.svg)](https://badge.fury.io/js/ipynb2web)
@@ -15,7 +11,7 @@ sidebar_position: 1
 
 Ipynb2web is designed to convert Interactive Python Notebooks (.ipynb) into web-ready, static assets that are template-compatible. This standalone tool uses `marked` as it's only dependency and offers unique functionalities not found in other tools like Pandoc, Sphinx, Nbdev, Quarto, etc.
 
-Complete with [API documentation](https://karpatic.github.io/ipynb2web/jsdocs) and [usage instructions](https://karpatic.github.io/ipynb2web/docs/overview), this project facilitates seamless integration of .ipynb documents into web formats.
+Complete with [API documentation](https://karpatic.github.io/ipynb2web/jsdocs) and [usage instructions](http://ipynb2web.com/docs/overview/getting-started), this project facilitates seamless integration of .ipynb documents into web formats.
 
 ## Core Features
 
