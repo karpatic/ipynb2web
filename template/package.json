@@ -1,0 +1,5 @@
+{
+    "scripts":{
+        "start": "while inotifywait -e modify *_test.*; do     pandoc template_test.md -o resumecharleskarpati.pdf --template=template_test.tex; done"
+    }
+}

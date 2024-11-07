@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: convert_util.mjs</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-custom.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: convert_util.mjs</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/** 
+ *  @fileOverview Utility functions used by the [convert](module-convert.html).
+ *  @module convert_util
+ *  @exports {Object} - An object containing utility functions.
+ *  @author Charles Karpati
+ */
+
+
+
+/**
+ * Creates an HTML details element with the given content. Called by [processOutput](module-convert.html#.processOutput) and [processSource](module-convert.html#.processSource).
+ * 
+ * @param {string} content - The HTML content to be placed inside the details tag.
+ * @param {boolean} open - Determines if the details should be open by default.
+ * @returns {string} An HTML string representing a details element.
+ * @memberof module:convert_util
+ */
+function makeDetails(content, open) {
+  return "&lt;details " + (open ? "open" : "") + "> &lt;summary>Click to toggle&lt;/summary> " + content + "&lt;/details>";
+}
+
+/**
+ * Replaces specified emoji characters in the text with their corresponding HTML entities. Convert emojis to html entities
+ *
+ * @param {string} text - The text containing emojis to be replaced.
+ * @returns {string} The text with emojis replaced by HTML entities.
+ * @memberof module:convert_util
+ */
+function replaceEmojis(text) {
+  // Dec => Code => https://apps.timwhitlock.info/unicode/inspect/hex/1F633 
+  text = text.replaceAll("🙂", "&amp;#1F642");
+  text = text.replaceAll("😳", "&amp;#128563");
+  text = text.replaceAll("\u2003", "&amp;#8195");
+  text = text.replaceAll("👷", "&amp;#128119");
+  text = text.replaceAll("🧡", "&amp;#129505");
+  text = text.replaceAll("💖", "&amp;#128150");
+  return text;
+}
+
+/**
+ * Converts special note syntax in a string to HTML elements for displaying notes.
+ *
+ * @param {string} str - The string containing note syntax to be converted.
+ * @returns {string} The string with note syntax converted to HTML elements.
+ * @memberof module:convert_util
+ */
+function convertNotes(str) {
+  let matchCount = 0;
+  const regex = /(&lt;p)(.*?)\(\(\((.*?)::(.*?)\)\)\)(.*?)(&lt;\/p>)/g;
+
+  const replacement = (_, p1, p2, key, value, p4, p5) => {
+    matchCount++;
+    let pStart = ""; // style='display:inline' ";
+    let lbl = `&lt;label ${pStart} tabindex="0" for='note${matchCount}' class='notelbl'>[${matchCount}]&lt;/label>`;
+    let fin = `&lt;div>
+      &lt;input type='checkbox' id='note${matchCount}' class='notebox'>
+      ${p1}${pStart}${p2}${lbl}${p4}${p5}
+      &lt;aside>${lbl} ${value} &lt;/aside> 
+    &lt;/div>`;
+    return fin;
+  };
+
+  return str.replace(regex, replacement);
+}
+
+/**
+ * Replaces occurrences of a pattern in a string and optionally logs the replacement.
+ *
+ * @param {string} text - The text in which replacements are to be made.
+ * @param {RegExp|string} input - The pattern to search for in the text.
+ * @param {Function|string} output - The replacement text or a function that returns the replacement text.
+ * @returns {string} The text after performing the replacements.
+ * @memberof module:convert_util
+ */
+function replaceAndLog(text, input, output) {
+  return text.replace(input, function (match, capture) {
+    return output.replace?.('$1', capture) || output(match, capture);
+  });
+};
+
+export { makeDetails, replaceEmojis, convertNotes, replaceAndLog } </code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Ipynb2web_browser.html">Ipynb2web:browser</a></li><li><a href="module-Ipynb2web_cli.html">Ipynb2web:cli</a></li><li><a href="module-Ipynb2web_node.html">Ipynb2web:node</a></li><li><a href="module-convert.html">convert</a></li><li><a href="module-convert_util.html">convert_util</a></li><li><a href="module-create_audio.html">create_audio</a></li><li><a href="module-prerender.html">prerender</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.3</a> on Thu Nov 07 2024 15:52:13 GMT-0500 (Eastern Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+{
+    "tags": {
+      "allowUnknownTags": true
+    },
+    "source": {
+      "include": ["./src"],
+      "includePattern": ".+\\.(js|mjs|cjs)$",
+      "excludePattern": "(^|\\/|\\\\)_"
+    },
+    "plugins": ["plugins/markdown"],
+    "markdown": {
+      "tags": ["author", "param", "returns", "throws", "see", "module", "fileOverview", "description", "returns"],
+      "hardwrap": true
+    },
+    "templates": {
+      "cleverLinks": false,
+      "monospaceLinks": false,
+      "default": {
+        "outputSourceFiles": true
+      }
+    },
+    "opts": {
+      "encoding": "utf8",
+      "destination": "./docusaurus/static/jsdocs/",
+      "recurse": true,
+      "verbose": true,
+      "readme": "./README.md",
+      "template": "./template"
+    }
+  }

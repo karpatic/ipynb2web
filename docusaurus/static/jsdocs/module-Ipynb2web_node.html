@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Module: Ipynb2web:node</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-custom.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Module: Ipynb2web:node</h1>
+
+    
+
+
+
+
+<section>
+
+<header>
+    
+        
+            
+        
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+        
+            <div class="description"><p>The entry point for the <strong>Node</strong> version of ipynb2web when installed via NPM.</p>
+<p>Install:</p>
+<pre class="prettyprint source"><code>npm install ipynb2web
+</code></pre>
+<p>Import using ESM:</p>
+<pre class="prettyprint source"><code>// import { ipynb2web } from './../src/node.js';
+// or
+import ipynb2web from './../src/node.js';
+</code></pre>
+<p>Import using CJS:</p>
+<pre class="prettyprint source"><code>// const ipynb2web = require('../dist/ipynb2web.cjs').default;
+// or
+const { ipynb2web } = require('../dist/ipynb2web.cjs');
+</code></pre>
+<p>Usage:</p>
+<pre class="prettyprint source"><code>const prepairedJsonAsset = ipynb2web.nb2json(url)
+</code></pre>
+<p>Returns:</p>
+<pre class="prettyprint source"><code>{ meta: { ... }, content: { ... } }
+</code></pre>
+<p>It Calls core functionalities from the <a href="module-convert.html">convert</a>, <a href="module-prerender.html">prerender</a>, <a href="module-convert_util.html">convert_util</a> modules.</p></div>
+        
+
+        
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-author">Author:</dt>
+    <dd class="tag-author">
+        <ul>
+            <li>Charles Karpati</li>
+        </ul>
+    </dd>
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="node.js.html">node.js</a>, <a href="node.js.html#line3">line 3</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Members</h3>
+
+        
+            
+<h4 class="name" id=".ipynb2web"><span class="type-signature">(static, constant) </span>ipynb2web<span class="type-signature"> :Object</span></h4>
+
+
+
+
+<div class="description">
+    <p>ipynb2web's Node implementation. This is not the same as the browser or the CLI implementation.</p>
+</div>
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type">Object</span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+    <h5 class="subsection-title">Properties:</h5>
+
+    
+
+<table class="props">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>createSitemap</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Calls <a href="module-prerender.html#.createSitemap">prerender.createSitemap</a> to create a sitemap.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>createAudio</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Calls <a href="module-prerender.html#.createAudio">prerender.createAudio</a> to create audio.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>cli_nbs2html</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Calls <a href="module-prerender.html#.cli_nbs2html">prerender.cli_nbs2html</a> to convert notebooks to HTML from command line.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>createSpeech</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Calls <a href="module-create_audio.html#.createSpeech">create_audio.createSpeech</a> to create speech.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>saveSpeech</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Calls <a href="module-create_audio.html#.saveSpeech">create_audio.saveSpeech</a> to save speech.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>getTextFromJson</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Calls <a href="module-create_audio.html#.getTextFromJson">create_audio.getTextFromJson</a> to get text from JSON.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>speechFromDir</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Calls <a href="module-create_audio.html#.speechFromDir">create_audio.speechFromDir</a> to create speech from a directory.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>makeDetails</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Calls <a href="module-convert_util.html#.makeDetails">convert_util.makeDetails</a> to make details.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>replaceEmojis</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Calls <a href="module-convert_util.html#.replaceEmojis">convert_util.replaceEmojis</a> to replace emojis.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>convertNotes</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Calls <a href="module-convert_util.html#.convertNotes">convert_util.convertNotes</a> to convert notes.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>replaceAndLog</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Calls <a href="module-convert_util.html#.replaceAndLog">convert_util.replaceAndLog</a> to replace and log.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>nb2json</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Calls <a href="module-convert.html#.nb2json">convert.nb2json</a> to convert Jupyter Notebook to JSON.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="node.js.html">node.js</a>, <a href="node.js.html#line59">line 59</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+    
+
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Ipynb2web_browser.html">Ipynb2web:browser</a></li><li><a href="module-Ipynb2web_cli.html">Ipynb2web:cli</a></li><li><a href="module-Ipynb2web_node.html">Ipynb2web:node</a></li><li><a href="module-convert.html">convert</a></li><li><a href="module-convert_util.html">convert_util</a></li><li><a href="module-create_audio.html">create_audio</a></li><li><a href="module-prerender.html">prerender</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.3</a> on Thu Nov 07 2024 15:52:13 GMT-0500 (Eastern Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

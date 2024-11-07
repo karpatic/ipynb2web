@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: browser.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: browser.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @fileOverview Entry point for Browser version of ipynb2web.
+ * @module browser
+ * @description The entry point for the __Browser__ version of ipynb2web.
+ * 
+ * Import: Script Tag
+ * ```
+ * &lt;script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js">&lt;/script>
+ * &lt;script src="https://cdn.jsdelivr.net/npm/ipynb2web@1.0.23/dist/ipynb2web.browser-umd.js">&lt;/script>
+ * ```
+ *  Import: As Module
+ * ```
+ * import { marked } from "https://cdn.jsdelivr.net/npm/marked/lib/marked.esm.js"; 
+ * import ipynb2web from 'https://cdn.jsdelivr.net/npm/ipynb2web@1.0.23/dist/ipynb2web.browser.mjs';
+ * ``` 
+ * Usage:
+ * ``` 
+ * const prepairedJsonAsset = ipynb2web.nb2json(url)
+ * ```
+ * Returns:
+ * ```
+ * { meta: { ... }, content: { ... } }
+ * ```
+ * When ipynb2web is used in the browser environment, it assigns the 'ipynb2web' object to the global 'window' object.
+ * 
+ * It exposes the [nb2json](module-convert.html#.nb2json) function and nothing more.
+ * @exports {Object} ipynb2web - An object containing the 'nb2json' function.
+ * @exports {Function} nb2json - A function to convert Jupyter Notebook to JSON.
+ * @author Charles Karpati
+ */
+
+import * as Convert from './convert.mjs';
+
+/**
+ * @type {Object} ipynb2web
+ * @property {Function} nb2json - A function to convert Jupyter Notebook to JSON.
+ */
+const ipynb2web = {
+  nb2json: Convert.nb2json
+};
+
+/**
+ * If the script is running in a browser environment, assign the 'ipynb2web' object to the global 'window' object.
+ */
+if (typeof window !== 'undefined') {
+  window.ipynb2web = ipynb2web;
+}
+
+export default ipynb2web;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-browser.html">browser</a></li><li><a href="module-cli.html">cli</a></li><li><a href="module-convert.html">convert</a></li><li><a href="module-convert_util.html">convert_util</a></li><li><a href="module-create_audio.html">create_audio</a></li><li><a href="module-node.html">node</a></li><li><a href="module-prerender.html">prerender</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Mon Jan 22 2024 20:22:04 GMT-0500 (Eastern Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

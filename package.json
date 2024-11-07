@@ -1,0 +1,85 @@
+{
+  "name": "ipynb2web",
+  "description": "Prepare and convert Jupyter Notebooks into HTML templating content.",
+  "keywords": [
+    "jupyter",
+    "notebook",
+    "html",
+    "template",
+    "templating",
+    "ipynb",
+    "convert",
+    "prepare"
+  ],
+  "tags": [
+    "jupyter",
+    "notebook",
+    "html",
+    "template",
+    "templating",
+    "ipynb",
+    "convert",
+    "prepare"
+  ],
+  "author": "Charles Karpati",
+  "license": "MIT",
+  "type": "module",
+  "version": "1.0.24",
+  "main": "dist/ipynb2web.cjs",
+  "browser": "dist/ipynb2web.browser.umd.js",
+  "module": "./src/node.js",
+  "exports": {
+    "import": {
+      "default": "./src/node.js"
+    },
+    "require": {
+      "default": "./dist/ipynb2web.cjs"
+    }
+  },
+  "repository": "git://github.com/karpatic/ipynb2web.git",
+  "homepage": "https://ipynb2web.com/",
+  "bin": {
+    "ipynb2web-cli": "./bin/ipynb2web.cli.mjs"
+  },
+  "files": [
+    "bin/",
+    "dist/",
+    "src/"
+  ],
+  "scripts": {
+    "build": "npm unlink ipynb2web; clear; webpack --config webpack.config.cjs ; npm link --loglevel verbose; ",
+    "docs": "npm run builddocs; npm run builddocu",
+    "publish": "npm version patch; npm publish",
+    "buildesm": "node esbuild.js",
+    "testcli": "node ./bin/ipynb2web.cli.cjs audio",
+    "testnodecommon": "node ./test/test_node_common.cjs",
+    "testnodemodule": "node ./test/test_node_module.mjs",
+    "testbrowsermodule": "node ./test/test_browser_module.js",
+    "testbrowser": "node ./test/test_browser.js",
+    "testnode": "npm run testcli ; npm run testnodecommon ; npm run testnodemodule",
+    "builddocs": "jsdoc -c jsdoc.conf.json",
+    "watchdocs": "nodemon --watch src --watch template --ext js,mjs,cjs,tmpl,css --exec \"npm run builddocs\"",
+    "watchdocu": "cd docusaurus; npm run start",
+    "builddocu": "rm ./docs/* -r; rm docusaurus/docs/overview/getting-started.md; cp README.md docusaurus/docs/overview/getting-started.md; cd docusaurus; npm run build; cp -r build/* ../docs/; rm -r build/*;  cp CNAME ../docs/"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.23.7",
+    "@babel/preset-env": "^7.23.8",
+    "babel-loader": "^9.1.3",
+    "esbuild": "0.19.11",
+    "http-server": "^14.1.1",
+    "jsdoc": "^4.0.2",
+    "webpack-cli": "^4.10.0",
+    "webpack-node-externals": "^3.0.0"
+  },
+  "dependencies": {
+    "docusaurus": "^1.14.7",
+    "fs": "^0.0.1-security",
+    "marked": "^11.1.1",
+    "nodemon": "^3.1.7",
+    "path": "^0.12.7"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

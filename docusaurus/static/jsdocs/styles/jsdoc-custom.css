@@ -1,0 +1,20 @@
+h4 {
+    color: blue;
+    font-weight: 900;
+    font-size: 2rem;
+}
+
+/* Reset styles for specific elements within the h4 */
+h4 .type-signature,
+h4 .signature,
+h4 .signature-attributes {
+    color: initial;
+    font-weight: initial;
+    font-size: initial;
+}
+
+  
+
+.type-signature{
+    font-size:.75rem;
+}
