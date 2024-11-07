@@ -26,3 +26,9 @@ Complete with [API documentation](https://ipynb2web.com/jsdocs) and [usage instr
 3. Supports custom template creation and integration with existing tools.
 4. Automates handling of intricate details overlooked by other notebook conversion tools, such as removing system logs, warnings, and error messages.
 5. On the server side, it can traverse directories to create python modules, tables of contents, sitemaps, cover photos, and audio transcriptions.
+
+## Development Notes
+
+1. Running `Build` will link/relink the repo to your global npm registry
+2. Rendered JSDocs are inserted as static asseets into Docsaurus.
+3. The node module does not get minified but served directly from source. BuildESM is not used.

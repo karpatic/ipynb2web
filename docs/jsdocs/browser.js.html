@@ -11,6 +11,7 @@
     <![endif]-->
     <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
     <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-custom.css">
 </head>
 
 <body>
@@ -28,7 +29,7 @@
         <article>
             <pre class="prettyprint source linenums"><code>/**
  * @fileOverview Entry point for Browser version of ipynb2web.
- * @module browser
+ * @module Ipynb2web:browser
  * @description The entry point for the __Browser__ version of ipynb2web.
  * 
  * Import: Script Tag
@@ -60,8 +61,9 @@
 import * as Convert from './convert.mjs';
 
 /**
- * @type {Object} ipynb2web
- * @property {Function} nb2json - A function to convert Jupyter Notebook to JSON.
+ * @type {Object} ipynb2web's Node implementation. This is not the same as the browser or the CLI implementation.
+ * @property {Function} nb2json - Calls [convert.nb2json](module-convert.html#.nb2json) to convert Jupyter Notebook to JSON.
+ * @memberof module:Ipynb2web:browser
  */
 const ipynb2web = {
   nb2json: Convert.nb2json
@@ -71,11 +73,11 @@ const ipynb2web = {
  * If the script is running in a browser environment, assign the 'ipynb2web' object to the global 'window' object.
  */
 if (typeof window !== 'undefined') {
-  window.ipynb2web = ipynb2web;
+  window.ipynb2web = ipynb2web; 
 }
 
 export default ipynb2web;
-</code></pre>
+  </code></pre>
         </article>
     </section>
 
@@ -85,13 +87,13 @@ export default ipynb2web;
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-browser.html">browser</a></li><li><a href="module-cli.html">cli</a></li><li><a href="module-convert.html">convert</a></li><li><a href="module-convert_util.html">convert_util</a></li><li><a href="module-create_audio.html">create_audio</a></li><li><a href="module-node.html">node</a></li><li><a href="module-prerender.html">prerender</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Ipynb2web_browser.html">Ipynb2web:browser</a></li><li><a href="module-Ipynb2web_cli.html">Ipynb2web:cli</a></li><li><a href="module-Ipynb2web_node.html">Ipynb2web:node</a></li><li><a href="module-convert.html">convert</a></li><li><a href="module-convert_util.html">convert_util</a></li><li><a href="module-create_audio.html">create_audio</a></li><li><a href="module-prerender.html">prerender</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Mon Jan 22 2024 20:22:04 GMT-0500 (Eastern Standard Time)
+    Documentation by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.3</a> on Thu Nov 07 2024 16:02:22 GMT-0500 (Eastern Standard Time)
 </footer>
 
 <script> prettyPrint(); </script>
