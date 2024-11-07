@@ -19,7 +19,7 @@
  * ```
  * Returns:
  * ```
- * { meta: { ... }, content: { ... } }
+ * { meta: { ... }, content: { ... } } 
  * ```
  * When ipynb2web is used in the browser environment, it assigns the 'ipynb2web' object to the global 'window' object.
  * 
