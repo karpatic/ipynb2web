@@ -41,7 +41,7 @@ This method is for simple scripts and does not require ES module support.
   <body>
     <script>
       const url =
-        "https://api.charleskarpati.com/vanillapivottable/index.ipynb";
+        "https://carlos-a-diez.com/cms/test.ipynb";
       ipynb2web.nb2json(url);
       // returns: { meta: { ... }, content: { ... } }
     </script>
@@ -87,8 +87,7 @@ This approach uses ES module imports.
   <body>
     <script type="module">
       import { marked } from "https://cdn.jsdelivr.net/npm/marked/lib/marked.esm.js";
-      import { ipynb2web } from "https://cdn.jsdelivr.net/npm/ipynb2web@latest/dist/ipynb2web.browser.mjs";
-      // import ipynb2web from 'https://cdn.jsdelivr.net/npm/ipynb2web@latest/dist/ipynb2web.browser.mjs'; // Either works
+      import ipynb2web from 'https://cdn.jsdelivr.net/npm/ipynb2web@latest/dist/ipynb2web.browser.mjs'; // Either works
       ipynb2web.nb2json(url);
       // returns: { meta: { ... }, content: { ... } }
     </script>

@@ -8,16 +8,14 @@
  * npm install ipynb2web
  * ```
  * Import using ESM:
- * ```
- * // import { ipynb2web } from './../src/node.js';
- * // or
- * import ipynb2web from './../src/node.js';
+ * ``` 
+ * import ipynb2web from 'ipynb2web';
  * ```
  * Import using CJS:
  * ```
- * // const ipynb2web = require('../dist/ipynb2web.cjs').default;
+ * // const ipynb2web = require('ipynb2web').default;
  * // or
- * const { ipynb2web } = require('../dist/ipynb2web.cjs');
+ * const { ipynb2web } = require('ipynb2web');
  * ```
  * Usage:
  * ```

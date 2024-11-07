@@ -22,20 +22,17 @@ Convert Jupyter notebooks to JSON using the `nb2json(path)` function.
 
 #### Using ECMAScript Modules (ESM)
 
-```javascript
-// Option 1
-import { ipynb2web } from "./../src/node.js";
-// Option 2
-import ipynb2web from "./../src/node.js";
+```javascript 
+import ipynb2web from ipynb2web;
 ```
 
 #### Using CommonJS (CJS)
 
 ```javascript
 // Option 1
-const ipynb2web = require("../dist/ipynb2web.cjs").default;
+const ipynb2web = require("ipynb2web").default;
 // Option 2
-const { ipynb2web } = require("../dist/ipynb2web.cjs");
+const { ipynb2web } = require('ipynb2web');
 ```
 
 ### Using ipynb2web
