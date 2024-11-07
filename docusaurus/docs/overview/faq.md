@@ -29,7 +29,7 @@ Ensure that the YAML metadata is correctly formatted and that the notebook follo
 
 ### How can I get detailed API documentation?
 
-Visit the official documentation: [ipynb2web API Documentation](https://ipynb2web.com/jsdocs)
+Visit the official documentation: [ipynb2web API Documentation](https://ipynb2web.com/jsdocs/module-Ipynb2web_browser.html)
 
 ## Contact and Support
 

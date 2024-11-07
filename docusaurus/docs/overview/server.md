@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # Server Side
 
-This guide provides a user-oriented walkthrough of the CLI module of ipynb2web. For detailed API documentation, please refer to the [official documentation](https://karpatic.github.io/ipynb2web/jsdocs/module-node.html)
+This guide provides a user-oriented walkthrough of the CLI module of ipynb2web. For detailed API documentation, please refer to the [official documentation](https://ipynb2web.com/jsdocs/module-Ipynb2web_browser.html)
 
 ## Installation
 

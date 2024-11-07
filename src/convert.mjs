@@ -1,6 +1,6 @@
 /** 
  *  @fileOverview Houses the core [nb2json](module-convert.html#.nb2json) function and accompanying utils. 
- * Functions exposed from [browser](module-browser.html) and [node](module-node.html).
+ * Functions exposed from [browser](module-Ipynb2web_browser.html) and [node](module-Ipynb2web_node.html).
  * 
  *  Where processing happens
  * - -1 - Calling nb2json - yaml filename returned gets formatted

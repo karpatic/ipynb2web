@@ -26,7 +26,7 @@
  * { meta: { ... }, content: { ... } }
  * ```
  * 
- * It Calls core functionalities from the [convert](module-convert.html), [prerender](module-prerender.html), [convert_util](module-convert_util.html) modules. 
+ * Calls core functionalities from the [convert](module-convert.html), [prerender](module-prerender.html), [convert_util](module-convert_util.html) modules. 
  * @module Ipynb2web:node
  * @exports {Object} ipynb2web - An object containing the 'nb2json' function.
  * @exports {Function} nb2json - A function to convert Jupyter Notebook to JSON.
