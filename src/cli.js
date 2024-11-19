@@ -57,7 +57,7 @@ function cli(args) {
     const FROM = args[2] || false;
     const sitemapFile = args[2] || false;
 
-    // console.log('CLI RECEIVED args: ', args);
+    console.log('CLI RECEIVED args: ', args);
 
     /**
      * Based on the first argument, call the appropriate function.
@@ -65,9 +65,9 @@ function cli(args) {
      * If 'audio', call createAudio.
      * Otherwise, call cli_nbs2html.
      */ 
-    if (directory === 'sitemap') { createSitemap(SAVETO || './src/posts/', sitemapFile||'./sitemap.txt'); }
+    if (directory === 'sitemap') { createSitemap(SAVETO || './', sitemapFile||'./sitemap.txt'); }
     else if (directory === 'audio') { createAudio(FROM, SAVETO); }
-    else { cli_nbs2html(FROM, directory, SAVETO); }
+    else { cli_nbs2html(FROM, directory, SAVETO, true); }
 }
 
 /**

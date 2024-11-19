@@ -29,23 +29,23 @@ async function createAudio(from = './src/posts/', to = './src/client/audio/') {
 }
 
 /**
- * Appends each ipynb to sitemap.txt by calling [processDirectory](module-prerender.html#.processDirectory).
+ * Appends each ipynb to sitemap.txt by calling [process Directory](module-prerender.html#.processDirectory).
  *
  * @async
  * @memberof module:prerender
- * @param {string} [SAVETO='./src/posts/'] - The directory to search for JSON map files.
+ * @param {string} [search='./'] - The directory to search for JSON map files.
  * @param {string} [sitemapFile='./sitemap.txt'] - The file path where the sitemap will be saved.
  * @param {boolean} [verbose=false] - If set to true, enables verbose logging for detailed information.
  * @returns {void} Does not return a value; processes and writes to the sitemap file directly.
  * @throws {Error} Logs an error to the console if there is a failure in writing the sitemap file and verbose is true.
  */
 
-async function createSitemap(SAVETO = './src/posts/', sitemapFile = './sitemap.txt', verbose = false) {
-  let pages = [];
-  verbose && console.log(`\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ START createSitemap \n\n`)
-  await processDirectory(pages, SAVETO, '');
-  try {
-    await fs.writeFile(sitemapFile, pages.join('\n') + '\n');
+async function createSitemap(search='./', sitemapFile = './sitemap.txt', verbose = true) { 
+  verbose && console.log(`\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ START createSitemap \n\n`) 
+  const pages = await processDirectory(search, '', verbose);
+  console.log('pages', pages)
+  try {  
+    await fs.promises.writeFile(sitemapFile, pages.join('\n') + '\n');
     verbose && console.log('Sitemap file created successfully:', sitemapFile);
   } catch (err) {
     verbose && console.error(`Error creating or truncating sitemap file: ${sitemapFile}`, err);
@@ -56,23 +56,26 @@ async function createSitemap(SAVETO = './src/posts/', sitemapFile = './sitemap.t
  * Recursively searches for _map.json files created from [[cli_nbs2html](module-prerender.html#.cli_nbs2html)->[generate_sectionmap](module-prerender.html#.generate_sectionmap) and appends the mappings to sitemap.txt.
  *
  * @async
- * @memberof module:prerender
- * @param {Array<string>} pages - An array to accumulate page URLs for the sitemap.
+ * @memberof module:prerender 
  * @param {string} directory - The directory to process.
  * @param {string} [subdir=''] - A subdirectory path to append to each URL in the sitemap.
  * @param {boolean} [verbose=false] - If set to true, enables verbose logging for detailed information.
- * @returns {void} Does not return a value; modifies the 'pages' array by reference.
+ * @returns {Array<string>} - An array to accumulate page URLs for the sitemap.
  * @throws {Error} Logs an error to the console if unable to process a directory and verbose is true.
  */
-async function processDirectory(pages, directory, subdir = '', verbose = false) {
-  console.log('processDirectory', {directory, subdir})
+async function processDirectory(directory, subdir = '', verbose = false) {
+  let pages = [];
+  console.log('prossdir', { directory, subdir });
+  
   const stat = await fs.promises.stat(directory);
   if (!stat.isDirectory()) {
     verbose && console.log('\n\n UNABLE TO PROCESS DIRECTORY: ', directory, subdir);
-    return;
+    return pages;
   }
 
   const files = await fs.promises.readdir(directory);
+
+  // Process files that include '_map.json'
   await Promise.all(files.filter(file => file.includes('_map.json')).map(async file => {
     const filePath = path.join(directory, file);
     const jsonData = JSON.parse(await fs.promises.readFile(filePath, 'utf-8'));
@@ -84,11 +87,15 @@ async function processDirectory(pages, directory, subdir = '', verbose = false) 
     });
   }));
 
-  // recursively process subdirectories
-  await Promise.all(files.filter(file => !path.extname(file)).map(file => {
-    return processDirectory(pages, path.join(directory, file), path.join(subdir, file));
-  }));
+  // Recursively process directories
+  for (const file of files.filter(file => !path.extname(file))) {
+    const subPages = await processDirectory(path.join(directory, file), '', verbose);
+    pages = pages.concat(subPages);
+  }
+
+  return pages;
 }
+
 
 /**
  * Calls [generate_sectionmap](module-prerender.html#.generate_sectionmap) for each file in directory.
@@ -113,11 +120,11 @@ async function cli_nbs2html(FROM, directory, SAVETO, verbose = false) {
   if (!stat.isDirectory()) {
     verbose && console.log('\n\n UNABLE TO PROCESS DIRECTORY: ', directory, subdir);
     return;
-  }
+  } 
   let pages = (await fs.promises.readdir(`${FROM}${directory}/`))
     .filter((file) => path.extname(file) === ".ipynb")
-    .map((file) => path.parse(file).name); // filename without extension
-  generate_sectionmap(pages, FROM, directory, SAVETO);
+    .map((file) => path.parse(file).name ); // filename without extension 
+  generate_sectionmap(pages, FROM, directory, SAVETO, verbose);
 }
 
 /**
@@ -181,7 +188,9 @@ async function generate_sectionmap(pages, FROM, directory, SAVETO, verbose = fal
     links.push(rest);
   }
 
+  // Call ipynb_publish and save for each page
   for (const page of pages) {
+    // Skip files that start with an underscore
     const r = !page.startsWith("_") && await ipynb_publish(`${FROM}${directory}/${page}`, `${SAVETO}${directory}`);
     if (r && !!!r.meta.hide) {
       const {
@@ -233,6 +242,9 @@ async function ipynb_publish(
   if (type === "json") {
     const { nb2json } = await import(/* webpackChunkName: "convert" */ "./convert.mjs");
     final = await nb2json(fullFilePath);
+    if(final?.meta?.title == 'Meta Quest Notes')  {
+      console.log('final', final)
+    }
   }
 
   let pyCode = final.meta.pyCode;

@@ -43,10 +43,13 @@ async function nb2json(ipynbPath, verbose = false) {
   let url = ipynbPath;
   if (typeof process !== "undefined" && !ipynbPath.startsWith("http")) {
     url = `http://localhost:8085/${ipynbPath}.ipynb`;
-  }
+  } 
 
   let ipynb = await fetch(url, { headers: { "Content-Type": "application/json; charset=utf-8" } });
+  // console.log('url', url);
+  // console.log('ipynb', ipynb);
   const nb = await ipynb.json();
+  // console.log('nb', nb);
 
   const meta = get_metadata(nb.cells[0]);
   meta.filename = ipynbPath.split("/")[ipynbPath.split("/").length - 1].toLowerCase().replaceAll(" ", "_");
