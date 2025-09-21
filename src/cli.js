@@ -57,7 +57,7 @@ function cli(args) {
     const FROM = args[2] || false;
     const sitemapFile = args[2] || false;
 
-    console.log('CLI RECEIVED args: ', args);
+    console.log('CLI RECEIVED ARGS:'); //, { directory, SAVETO, FROM, sitemapFile });
 
     /**
      * Based on the first argument, call the appropriate function.
@@ -79,7 +79,7 @@ if (require.main === module) {  }
 
 if (import.meta.url.includes('ipynb2web')) {
     const args = process.argv.slice(2);
-    if (args[0] === 'help') {
+    if (args[0] === 'help' || args.length === 0) {
         help();
     } else {
         cli(args);

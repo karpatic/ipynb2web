@@ -32,7 +32,6 @@ async function testCreateSitemap() {
 
 async function testCliNbs2Html() {
     console.log('Testing cli_nbs2html...');
-
     await ipynb2web.cli_nbs2html(FROM, directory, SAVETO);
     console.log('cli_nbs2html test completed.\n');
 }

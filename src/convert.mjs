@@ -37,7 +37,7 @@ let pyCode = [];
  * @returns {Object} An object with metadata and processed content of the notebook.
  * @memberof module:convert
  */
-async function nb2json(ipynbPath, verbose = false) {
+async function nb2json(ipynbPath, verbose = false) { 
   pyCode = []
   prettify = false;
   let url = ipynbPath;
@@ -57,7 +57,7 @@ async function nb2json(ipynbPath, verbose = false) {
   verbose && console.log('- get_metadata', meta, '\n');
 
   // Convert file 
-  let content = convertNb(nb.cells.slice(1), meta).flat().join(" ");
+  let content = convertNb(nb.cells.slice(1), meta, verbose).flat().join(" ");
   verbose && pyCode.length && console.log({ pyCode });
 
   meta.pyCode = pyCode;
@@ -67,7 +67,7 @@ async function nb2json(ipynbPath, verbose = false) {
   <link rel="stylesheet" href="https://cdn.rawgit.com/google/code-prettify/master/styles/desert.css"/>
   `);
 
-  verbose && console.log('- - content Ran ~~~~~~~~~~~', content, '~~~~~~~~~~~\n');
+  // verbose && console.log('- - content Ran ~~~~~~~~~~~', content, '~~~~~~~~~~~\n');
   let resp = replaceEmojis(content);
   verbose && console.log('- - replaceEmojis Ran', '\n');
   return { meta, content: resp };
@@ -119,8 +119,10 @@ function get_metadata(data) {
  * @returns {string[]} An array of strings representing the processed content of each cell.
  */
 function convertNb(cells, meta, verbose = false) {
-  verbose && console.log('- convertNb Running');
-  return cells.map((c) => cleanCell(c, meta));
+  verbose && console.group('- convertNb Running');
+  let returnThis = cells.map((c) => cleanCell(c, meta, verbose));
+  verbose && console.groupEnd();
+  return returnThis;
 }
 
 /**
@@ -132,14 +134,14 @@ function convertNb(cells, meta, verbose = false) {
  * @param {boolean} [verbose=false] - If set to true, enables verbose logging for detailed information.
  * @returns {string} The processed content of the cell.
  */
-function cleanCell(cell, meta, verbose = false) {
-  verbose && console.log('- - cleanCell Running');//, cell ,'\n'); 
+function cleanCell(cell, meta, verbose = false) { 
   let x;
-  if (cell["cell_type"] == "markdown") {
-    verbose && console.log('- - - Parsing Markdown');
+  if (cell["cell_type"] == "markdown") { 
     x = processMarkdown(cell["source"].join(" "))
-  } else {
-    x = processCode(cell, meta);
+    // verbose && console.log('- - - Parsing Markdown', x);
+  } else {  
+    // verbose && console.log('- - Parsing Code');//, cell ,'\n'); 
+    x = processCode(cell, meta, verbose);
   }
   return x;
 }
@@ -150,34 +152,33 @@ function cleanCell(cell, meta, verbose = false) {
  * @param {string} x - The markdown content to be processed.
  * @returns {string} The processed HTML content.
  */
-function processMarkdown(x) {
-  // check if matches regex: (((key1::value1))) and replace with aside
-  x = x.replace(/\(\(\((.*?)::(.*?)\)\)\)/g, function (match, key, value) {
-    if (key == 'note') { return match }
-    return `<aside class="${key}">${value}</aside>`;
-  });
-  x = marked.parse(x)
+function processMarkdown(txt) {
 
-  // wrap li's in a div or p
-  x = x.replace(/<li>(.*?)<\/li>/g, (match, innerContent) => {
-    const containsBlockLevel = /<(p|div|blockquote|pre|hr|form)/.test(innerContent);
-    let returnThis = `<li>${containsBlockLevel ? `<div>${innerContent}</div>` : `<p>${innerContent}</p>`}</li>`
-    return returnThis;
-  });
+  // Does not process markdown wrapped in html
+  let x = marked(txt); 
+  
+  // Two spaces at lines end transform into line breaks 
+  x = x.replace(/\s{2,}<\/p>/g, "</p><br>");
+
+  // Remove newline chars even though they dont get rendered. 
+  // x = x.replace(/\n/g, '');
 
   // replace code blocks with pre.prettyprint
-  x = replaceAndLog(x, /<pre><code>([\s\S]*?)<\/code><\/pre>/g, () => { prettify = true; "<pre class='prettyprint'>$1</pre>" });
-  x = replaceAndLog(x, /<code>([\s\S]*?)<\/code>/g, () => { prettify = true; "<pre class='prettyprint'>$1</pre>" });
+  x = replaceAndLog(x, /<pre><code>([\s\S]*?)<\/code><\/pre>/g, (match, content) => { prettify = true; return `<pre class='prettyprint'>${content}</pre>`; });
+  
+  // Single line code blocks do NOT get prettified
+  // x = replaceAndLog(x, /<code>([\s\S]*?)<\/code>/g, (match, content) => { prettify = true; return `<pre class='prettyprint' style='display:inline'>${content}</pre>`; });
 
-  // local redirects pingServer
+  // Open links in new tab
   x = replaceAndLog(x, /<a\s+(?:[^>]*?\s+)?href="(.*?)"/g, (match, href) => {
-    // open links in new tab
     if (!href.startsWith("./")) {
-      match += ' onclick="window.pingServer(this)" target="_blank" rel="noopener noreferrer nofollow"';
+      match += ' target="_blank" rel="nosopener noreferrer nofollow"';
     }
-    return match;
+    return match; 
   });
 
+
+  // x = createSpans(createInlineFootnotes(createElement(str))
   x = convertNotes(x);
 
   return x
@@ -194,29 +195,28 @@ function processMarkdown(x) {
  * @returns {string[]} An array of strings representing the processed content of the code cell.
  */
 function processCode(cell, meta, verbose = false) {
-  verbose && console.log('- - - processCode Running');
+  // verbose && console.log('- - - processCode Running');
   let x = [];
   let flags = [];
   // source
-  if (cell["source"].length) {
-    verbose && console.log('- - - - Raw Input Source', cell['source'])
+  // verbose && console.group('ProcessCode');
+  if (cell["source"].length) { 
     let source = cell["source"];
     flags = getFlags(source[0]);
-    verbose && console.log('- - - - - Flags: ', flags);
+    // verbose && console.log('Input: ', {'Raw': cell['source'], 'Flags': flags } ) 
     if (flags.length > 0) { source = source.slice(1) }
     source = processSource(source.join(" "), flags, meta);
     x.push(source);
   }
   // output
-  if (cell["outputs"].length) {
-    verbose && console.log('- - - - Raw Process Outputs', cell['outputs'])
+  if (cell["outputs"].length) { 
+    // verbose && console.log(flags, cell['outputs']) 
     for (let o of cell["outputs"]) {
       x.push(processOutput(o, flags));
-    }
-    verbose && console.log('- - - - - processOutput: ', x);
+    } 
     // clear_output();
   }
-  verbose && console.log('- - - processCode Ran');
+  // verbose && console.groupEnd();
   return x;
 }
 
@@ -298,12 +298,12 @@ function processOutput(source, flags, verbose = false) {
     source["data"] = { "text/html": source["text"] };
   }
 
-  const keys = Object.keys(source["data"]);
+  const keys = Object.keys(source["data"]); 
   if (keys.includes("text/html")) {
     source = source["data"]["text/html"];
     source = source.join("");
   } else if (keys.includes("application/javascript")) {
-    source = "<script>" + source["data"]["application/javascript"] + "</script>";
+    source = "<script>" + source["data"]["application/javascript"] + "</script>"; 
   } else if (keys.includes("image/png")) {
     source = '<img src="data:image/png;base64,' + source["data"]["image/png"] + "\" alt='Image Alt Text'>";
   } else if (keys.includes("text/plain")) {
@@ -315,7 +315,7 @@ function processOutput(source, flags, verbose = false) {
       source = source.replaceAll(lbl + "\r\n", "");
       source = source.replaceAll(lbl + "\n", "");
     } catch {
-      verbose && console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!processOutput... ", typeof source, source);
+      verbose && console.log("ERROR: !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!processOutput... ", typeof source, source);
     }
     if (lbl == "#collapse_output_open") {
       source = makeDetails(source, true);

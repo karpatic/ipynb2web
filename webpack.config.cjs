@@ -93,6 +93,10 @@ const cliConfig = {
     plugins: [
         new webpack.optimize.LimitChunkCountPlugin({
             maxChunks: 1
+        }),
+        new webpack.BannerPlugin({
+            banner: '#!/usr/bin/env node',
+            raw: true
         })
     ]
 };
@@ -108,6 +112,15 @@ const cliConfigMinified = {
         ...commonConfig.optimization,
         minimize: true
     },
+    plugins: [
+        new webpack.optimize.LimitChunkCountPlugin({
+            maxChunks: 1
+        }),
+        new webpack.BannerPlugin({
+            banner: '#!/usr/bin/env node',
+            raw: true
+        })
+    ]
 };
 
 /*

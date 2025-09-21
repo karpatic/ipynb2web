@@ -64,14 +64,20 @@ async function createSitemap(search='./', sitemapFile = './sitemap.txt', verbose
  * @throws {Error} Logs an error to the console if unable to process a directory and verbose is true.
  */
 async function processDirectory(directory, subdir = '', verbose = false) {
-  let pages = [];
-  console.log('prossdir', { directory, subdir });
+  let pages = [];  
+  // check if node_modules, .git, etc. are in the path
+  const excludedDirs = ['node_modules', '.git', 'venv', 'env', '__pycache__', 'dist', 
+    'build', '.idea', '.vscode', '.DS_Store', '.pytest_cache', '.mypy_cache', 'venv3', 'venv2',
+    'docs'];
+  const isExcluded = excludedDirs.some(dir => directory.includes(dir));
+  if (isExcluded) { return pages; }
   
   const stat = await fs.promises.stat(directory);
   if (!stat.isDirectory()) {
-    verbose && console.log('\n\n UNABLE TO PROCESS DIRECTORY: ', directory, subdir);
+    // verbose && console.log('\n\n UNABLE TO PROCESS DIRECTORY: ', directory, subdir);
     return pages;
   }
+  console.log('prossdir', { directory });
 
   const files = await fs.promises.readdir(directory);
 
@@ -118,7 +124,7 @@ async function cli_nbs2html(FROM, directory, SAVETO, verbose = false) {
   // const stat = await fs.promises.stat(`${FROM}${directory}/`);
   const stat = await fs.promises.stat(`${FROM}${directory}/`);
   if (!stat.isDirectory()) {
-    verbose && console.log('\n\n UNABLE TO PROCESS DIRECTORY: ', directory, subdir);
+    verbose && console.log('\n\n UNABLE TO PROCESS DIRECTORY: ', directory);
     return;
   } 
   let pages = (await fs.promises.readdir(`${FROM}${directory}/`))
@@ -242,9 +248,9 @@ async function ipynb_publish(
   if (type === "json") {
     const { nb2json } = await import(/* webpackChunkName: "convert" */ "./convert.mjs");
     final = await nb2json(fullFilePath);
-    if(final?.meta?.title == 'Meta Quest Notes')  {
-      console.log('final', final)
-    }
+    // if(final?.meta?.title == 'Meta Quest Notes')  {
+    //   console.log('final', final)
+    // }
   }
 
   let pyCode = final.meta.pyCode;

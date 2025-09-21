@@ -45,23 +45,110 @@ function replaceEmojis(text) {
  * @memberof module:convert_util
  */
 function convertNotes(str) {
-  let matchCount = 0;
-  const regex = /(<p)(.*?)\(\(\((.*?)::(.*?)\)\)\)(.*?)(<\/p>)/g;
+  // console.log("Converting notes", str);
+  str = createElement(str); 
+  str = createInlineFootnotes(str);
+  str = createSpans(str)
+  return str
+}
 
-  const replacement = (_, p1, p2, key, value, p4, p5) => {
-    matchCount++;
-    let pStart = ""; // style='display:inline' ";
-    let lbl = `<label ${pStart} tabindex="0" for='note${matchCount}' class='notelbl'>[${matchCount}]</label>`;
-    let fin = `<div>
-      <input type='checkbox' id='note${matchCount}' class='notebox'>
-      ${p1}${pStart}${p2}${lbl}${p4}${p5}
-      <aside>${lbl} ${value} </aside> 
-    </div>`;
-    return fin;
+
+
+
+
+
+
+
+
+ 
+//  
+// Markdown content will be prefaced with :::{#id .class} 
+// Removes 'pre' and 'code' blocks while processing and then reinserts at end.
+// check six layers deep. do this by first by creating an array of substrings that are wrapped by an opening and closing 
+// ':::' * 6,  then within the resulting arrays, create sub arrays for ':::' * 5, and so on and so on, then handle each 
+// one at ':::' * 1 and merge all the results back to the final form.
+function createElement(str) {
+  // 1. Shield existing <pre>/<code> blocks
+  const codeBlocks = [];
+  str = str.replace(/<pre[\s\S]*?<\/pre>|<code[\s\S]*?<\/code>/g, m => `__CODE_${codeBlocks.push(m)-1}__`);
+
+  // helper to build the element
+  const buildElement = (attrs, content) => {
+    return `<div${buildAttrs(attrs)}>${content.trim()}</div>`
   };
 
-  return str.replace(regex, replacement);
+  // helper to build id/class string
+  const buildAttrs = attrs => {
+    const idMatch = attrs.match(/#([A-Za-z0-9_-]+)/);
+    const classMatches = [...attrs.matchAll(/\.([A-Za-z0-9_-]+)/g)].map(m => m[1]);
+    return `${idMatch ? ` id="${idMatch[1]}"` : ''}${classMatches.length ? ` class="${classMatches.join(' ')}"` : ''}`;
+  };
+
+  // 2. process :::...::: blocks from 6 colons down to 1
+  for (let level = 6; level > 0; level--) {
+    const colons = ':'.repeat(level);
+    const regex = new RegExp(
+      `${colons}\\s*{\\s*([^}]*)}\\s*([\\s\\S]*?)\\s*${colons}`,
+      'g'
+    );
+    str = str.replace(regex, (_, attrs, content) => buildElement(attrs, content.trim()) );
+  }
+
+  // 3. restore code blocks
+  return str.replace(/__CODE_(\d+)__/g, (_, i) => codeBlocks[i]);
 }
+
+
+// test string: 
+// "Here is an inline note.^[Inlines notes are easier to write, since you don't have to pick an identifier and move down to type the note.]"
+function createInlineFootnotes(str) {
+  let count = 0;
+  return str.replace(/\^\[([\s\S]+?)\]/g, (_, text) => {
+    console.log("Inline note:", text);
+    count++;
+    const label = `<label tabindex="0" for="note${count}" class="notelbl">[${count}]</label>`;
+    return `<span class="note">
+      <input type="checkbox" id="note${count}" class="notebox">
+      ${label}
+      <aside class="inline-note"> 
+        ${label}
+        ${text}
+      </aside>
+    </span>`;
+  });
+}
+
+
+// Example: [This text is smallcaps]{.smallcaps #id} 
+function createSpans(str) {
+  // 1. Shield existing <pre>/<code> blocks
+  const codeBlocks = [];
+  str = str.replace(/<pre[\s\S]*?<\/pre>|<code[\s\S]*?<\/code>/g, m =>
+    `__CODE_${codeBlocks.push(m) - 1}__`
+  );
+
+  // helper to build id/class string
+  const buildAttrs = attrs => {
+    const idMatch = attrs.match(/#([A-Za-z0-9_-]+)/);
+    const classMatches = [...attrs.matchAll(/\.([A-Za-z0-9_-]+)/g)].map(m => m[1]);
+    return `${idMatch ? ` id="${idMatch[1]}"` : ''}${classMatches.length ? ` class="${classMatches.join(' ')}"` : ''}`;
+  };
+
+  // 2. replace [text]{attrs} with <span ...>text</span>
+  str = str.replace(
+    /\[([^\]]*?)\]\s*\{\s*([^}]*)\}/g,
+    (_, text, attrs) => `<span${buildAttrs(attrs)}>${text}</span>`
+  );
+
+  // 3. restore code blocks
+  return str.replace(/__CODE_(\d+)__/g, (_, i) => codeBlocks[i]);
+}
+
+
+
+
+
+
 
 /**
  * Replaces occurrences of a pattern in a string and optionally logs the replacement.
