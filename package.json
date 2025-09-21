@@ -24,7 +24,7 @@
   "author": "Charles Karpati",
   "license": "MIT",
   "type": "module",
-  "version": "1.0.24",
+  "version": "1.0.25",
   "main": "dist/ipynb2web.cjs",
   "browser": "dist/ipynb2web.browser.umd.js",
   "module": "./src/node.js",
