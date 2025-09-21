@@ -49,7 +49,7 @@
   "scripts": {
     "build": "npm unlink ipynb2web; clear; webpack --config webpack.config.cjs ; npm link --loglevel verbose; ",
     "docs": "npm run builddocs; npm run builddocu",
-    "publish": "npm version patch; npm publish",
+    "publish": "npm publish",
     "buildesm": "node esbuild.js",
     "testcli": "node ./bin/ipynb2web.cli.cjs audio",
     "testnodecommon": "node ./test/test_node_common.cjs",
@@ -60,7 +60,8 @@
     "builddocs": "jsdoc -c jsdoc.conf.json",
     "watchdocs": "nodemon --watch src --watch template --ext js,mjs,cjs,tmpl,css --exec \"npm run builddocs\"",
     "watchdocu": "cd docusaurus; npm run start",
-    "builddocu": "rm ./docs/* -r; rm docusaurus/docs/overview/getting-started.md; cp README.md docusaurus/docs/overview/getting-started.md; cd docusaurus; npm run build; cp -r build/* ../docs/; rm -r build/*;  cp CNAME ../docs/"
+    "builddocu": "rm ./docs/* -r; rm docusaurus/docs/overview/getting-started.md; cp README.md docusaurus/docs/overview/getting-started.md; cd docusaurus; npm run build; cp -r build/* ../docs/; rm -r build/*;  cp CNAME ../docs/",
+    "release": "npm version patch && npm publish"
   },
   "devDependencies": {
     "@babel/core": "^7.23.7",
