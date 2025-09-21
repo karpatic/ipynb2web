@@ -32,12 +32,16 @@ import { createAudio, createSitemap, cli_nbs2html } from './prerender.mjs';
  * @memberof module:Ipynb2web:cli
  */
 function help() {
-    console.log(`Usage: ipynb2web <COMMAND> <SAVETO> <FROM/or/SitemapName>
+    console.log(`Usage: ipynb2web <COMMAND> <SAVETO> <FROM/or/SitemapName> [PathPrefix]
     
 Commands:
   sitemap      Create a sitemap.
   audio        Create audio assets.
   help         Display this help message.
+
+For sitemap command:
+  PathPrefix   Optional prefix to add to all URLs (e.g., '/docs')
+               Example: ipynb2web sitemap ./ ./sitemap.txt /docs
 `);
 }
 
@@ -49,6 +53,7 @@ Commands:
  * - args[1]: 'SAVETO' - This directory path, used as a target directory for saving files.
  * - args[2]: 'FROM' - This directory path, used as an output directory for processing files (Whenever args[0] is NOT 'sitemap').
  * - args[2]: 'sitemapFile' - The file path for saving the sitemap (ONLY when args[0] is 'sitemap').
+ * - args[3]: 'pathPrefix' - Optional prefix to add to all URLs in the sitemap (ONLY when args[0] is 'sitemap').
  * @memberof module:Ipynb2web:cli
  */
 function cli(args) {
@@ -56,6 +61,7 @@ function cli(args) {
     const SAVETO = args[1] || false;
     const FROM = args[2] || false;
     const sitemapFile = args[2] || false;
+    const pathPrefix = args[3] || '';
 
     console.log('CLI RECEIVED ARGS:'); //, { directory, SAVETO, FROM, sitemapFile });
 
@@ -65,7 +71,7 @@ function cli(args) {
      * If 'audio', call createAudio.
      * Otherwise, call cli_nbs2html.
      */ 
-    if (directory === 'sitemap') { createSitemap(SAVETO || './', sitemapFile||'./sitemap.txt'); }
+    if (directory === 'sitemap') { createSitemap(SAVETO || './', sitemapFile||'./sitemap.txt', pathPrefix); }
     else if (directory === 'audio') { createAudio(FROM, SAVETO); }
     else { cli_nbs2html(FROM, directory, SAVETO, true); }
 }

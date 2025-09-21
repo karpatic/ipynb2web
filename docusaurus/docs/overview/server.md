@@ -51,7 +51,7 @@ For more details on the Node.js implementation of ipynb2web and its functionalit
 The Node.js version of ipynb2web exposes various functionalities, including the conversion of notebooks to HTML, creation of audio files, generation of sitemaps, and publishing processed files:
 
 - `createAudio(from, to)`: Converts content to audio files, based on YAML 'audio' tags.
-- `createSitemap(SAVETO, sitemapFile, verbose)`: Generates sitemaps for web navigation.
+- `createSitemap(search, sitemapFile, pathPrefix, verbose)`: Generates sitemaps for web navigation. Supports optional path prefix for subdirectory deployment.
 - `cli_nbs2html(FROM, directory, SAVETO, verbose)`: Processes .ipynb files and converts them to HTML.
 - `generate_sectionmap(pages, FROM, directory, SAVETO, verbose)`: Creates a section map for directories.
 - `ipynb_publish(fullFilePath, saveDir, type)`: Processes and publishes Jupyter Notebook files, converting them to specified formats.

@@ -39,7 +39,8 @@ import * as ConvertUtils from './convert_util.mjs';
 import * as Convert from './convert.mjs';
 
 /**
- * @type {Object} ipynb2web's Node implementation. This is not the same as the browser or the CLI implementation.
+ * ipynb2web's Node implementation. This is not the same as the browser or the CLI implementation.
+ * @type {Object}
  * @property {Function} createSitemap - Calls [prerender.createSitemap](module-prerender.html#.createSitemap) to create a sitemap.
  * @property {Function} createAudio - Calls [prerender.createAudio](module-prerender.html#.createAudio) to create audio.
  * @property {Function} cli_nbs2html - Calls [prerender.cli_nbs2html](module-prerender.html#.cli_nbs2html) to convert notebooks to HTML from command line.

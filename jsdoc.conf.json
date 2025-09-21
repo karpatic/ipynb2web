@@ -25,6 +25,6 @@
       "recurse": true,
       "verbose": true,
       "readme": "./README.md",
-      "template": "./template"
+      "template": "./jsdocs"
     }
   }

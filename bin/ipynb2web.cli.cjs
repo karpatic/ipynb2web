@@ -1072,6 +1072,7 @@ function createAudio() {
  * @memberof module:prerender
  * @param {string} [search='./'] - The directory to search for JSON map files.
  * @param {string} [sitemapFile='./sitemap.txt'] - The file path where the sitemap will be saved.
+ * @param {string} [pathPrefix=''] - A prefix to add to all URLs in the sitemap (e.g., '/docs').
  * @param {boolean} [verbose=false] - If set to true, enables verbose logging for detailed information.
  * @returns {void} Does not return a value; processes and writes to the sitemap file directly.
  * @throws {Error} Logs an error to the console if there is a failure in writing the sitemap file and verbose is true.
@@ -1111,6 +1112,7 @@ function createSitemap() {
  * @memberof module:prerender 
  * @param {string} directory - The directory to process.
  * @param {string} [subdir=''] - A subdirectory path to append to each URL in the sitemap.
+ * @param {string} [pathPrefix=''] - A prefix to add to all URLs in the sitemap (e.g., '/docs').
  * @param {boolean} [verbose=false] - If set to true, enables verbose logging for detailed information.
  * @returns {Array<string>} - An array to accumulate page URLs for the sitemap.
  * @throws {Error} Logs an error to the console if unable to process a directory and verbose is true.
@@ -1119,6 +1121,7 @@ function _createSitemap() {
   _createSitemap = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee2() {
     var search,
       sitemapFile,
+      pathPrefix,
       verbose,
       pages,
       _args2 = arguments,
@@ -1128,10 +1131,11 @@ function _createSitemap() {
         case 0:
           search = _args2.length > 0 && _args2[0] !== undefined ? _args2[0] : './';
           sitemapFile = _args2.length > 1 && _args2[1] !== undefined ? _args2[1] : './sitemap.txt';
-          verbose = _args2.length > 2 && _args2[2] !== undefined ? _args2[2] : true;
+          pathPrefix = _args2.length > 2 && _args2[2] !== undefined ? _args2[2] : '';
+          verbose = _args2.length > 3 && _args2[3] !== undefined ? _args2[3] : true;
           verbose && console.log("\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ START createSitemap \n\n");
           _context2.n = 1;
-          return processDirectory(search, '', verbose);
+          return processDirectory(search, '', pathPrefix, verbose);
         case 1:
           pages = _context2.v;
           console.log('pages', pages);
@@ -1171,6 +1175,7 @@ function processDirectory(_x) {
 function _processDirectory() {
   _processDirectory = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee4(directory) {
     var subdir,
+      pathPrefix,
       verbose,
       pages,
       excludedDirs,
@@ -1187,7 +1192,8 @@ function _processDirectory() {
       while (1) switch (_context4.p = _context4.n) {
         case 0:
           subdir = _args4.length > 1 && _args4[1] !== undefined ? _args4[1] : '';
-          verbose = _args4.length > 2 && _args4[2] !== undefined ? _args4[2] : false;
+          pathPrefix = _args4.length > 2 && _args4[2] !== undefined ? _args4[2] : '';
+          verbose = _args4.length > 3 && _args4[3] !== undefined ? _args4[3] : false;
           pages = []; // check if node_modules, .git, etc. are in the path
           excludedDirs = ['node_modules', '.git', 'venv', 'env', '__pycache__', 'dist', 'build', '.idea', '.vscode', '.DS_Store', '.pytest_cache', '.mypy_cache', 'venv3', 'venv2', 'docs'];
           isExcluded = excludedDirs.some(function (dir) {
@@ -1233,7 +1239,8 @@ function _processDirectory() {
                     jsonData = _t2.parse.call(_t2, _context3.v);
                     jsonData.forEach(function (obj) {
                       if (obj.filename) {
-                        pages.push("/".concat(file.split('_')[0].split('.')[0], "/").concat(subdir ? subdir + '/' : '').concat(obj.filename));
+                        var url = "/".concat(file.split('_')[0].split('.')[0], "/").concat(subdir ? subdir + '/' : '').concat(obj.filename);
+                        pages.push(pathPrefix ? pathPrefix + url : url);
                       }
                     });
                   case 2:
@@ -1259,7 +1266,7 @@ function _processDirectory() {
           }
           file = _step.value;
           _context4.n = 8;
-          return processDirectory(external_path_.join(directory, file), '', verbose);
+          return processDirectory(external_path_.join(directory, file), '', pathPrefix, verbose);
         case 8:
           subPages = _context4.v;
           pages = pages.concat(subPages);
@@ -1634,7 +1641,7 @@ function _ipynb_publish() {
  * @memberof module:Ipynb2web:cli
  */
 function help() {
-  console.log("Usage: ipynb2web <COMMAND> <SAVETO> <FROM/or/SitemapName>\n    \nCommands:\n  sitemap      Create a sitemap.\n  audio        Create audio assets.\n  help         Display this help message.\n");
+  console.log("Usage: ipynb2web <COMMAND> <SAVETO> <FROM/or/SitemapName> [PathPrefix]\n    \nCommands:\n  sitemap      Create a sitemap.\n  audio        Create audio assets.\n  help         Display this help message.\n\nFor sitemap command:\n  PathPrefix   Optional prefix to add to all URLs (e.g., '/docs')\n               Example: ipynb2web sitemap ./ ./sitemap.txt /docs\n");
 }
 
 /**
@@ -1645,6 +1652,7 @@ function help() {
  * - args[1]: 'SAVETO' - This directory path, used as a target directory for saving files.
  * - args[2]: 'FROM' - This directory path, used as an output directory for processing files (Whenever args[0] is NOT 'sitemap').
  * - args[2]: 'sitemapFile' - The file path for saving the sitemap (ONLY when args[0] is 'sitemap').
+ * - args[3]: 'pathPrefix' - Optional prefix to add to all URLs in the sitemap (ONLY when args[0] is 'sitemap').
  * @memberof module:Ipynb2web:cli
  */
 function cli(args) {
@@ -1652,6 +1660,7 @@ function cli(args) {
   var SAVETO = args[1] || false;
   var FROM = args[2] || false;
   var sitemapFile = args[2] || false;
+  var pathPrefix = args[3] || '';
   console.log('CLI RECEIVED ARGS:'); //, { directory, SAVETO, FROM, sitemapFile });
 
   /**
@@ -1661,7 +1670,7 @@ function cli(args) {
    * Otherwise, call cli_nbs2html.
    */
   if (directory === 'sitemap') {
-    createSitemap(SAVETO || './', sitemapFile || './sitemap.txt');
+    createSitemap(SAVETO || './', sitemapFile || './sitemap.txt', pathPrefix);
   } else if (directory === 'audio') {
     createAudio(FROM, SAVETO);
   } else {

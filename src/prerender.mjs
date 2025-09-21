@@ -35,14 +35,15 @@ async function createAudio(from = './src/posts/', to = './src/client/audio/') {
  * @memberof module:prerender
  * @param {string} [search='./'] - The directory to search for JSON map files.
  * @param {string} [sitemapFile='./sitemap.txt'] - The file path where the sitemap will be saved.
+ * @param {string} [pathPrefix=''] - A prefix to add to all URLs in the sitemap (e.g., '/docs').
  * @param {boolean} [verbose=false] - If set to true, enables verbose logging for detailed information.
  * @returns {void} Does not return a value; processes and writes to the sitemap file directly.
  * @throws {Error} Logs an error to the console if there is a failure in writing the sitemap file and verbose is true.
  */
 
-async function createSitemap(search='./', sitemapFile = './sitemap.txt', verbose = true) { 
+async function createSitemap(search='./', sitemapFile = './sitemap.txt', pathPrefix = '', verbose = true) { 
   verbose && console.log(`\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ START createSitemap \n\n`) 
-  const pages = await processDirectory(search, '', verbose);
+  const pages = await processDirectory(search, '', pathPrefix, verbose);
   console.log('pages', pages)
   try {  
     await fs.promises.writeFile(sitemapFile, pages.join('\n') + '\n');
@@ -59,11 +60,12 @@ async function createSitemap(search='./', sitemapFile = './sitemap.txt', verbose
  * @memberof module:prerender 
  * @param {string} directory - The directory to process.
  * @param {string} [subdir=''] - A subdirectory path to append to each URL in the sitemap.
+ * @param {string} [pathPrefix=''] - A prefix to add to all URLs in the sitemap (e.g., '/docs').
  * @param {boolean} [verbose=false] - If set to true, enables verbose logging for detailed information.
  * @returns {Array<string>} - An array to accumulate page URLs for the sitemap.
  * @throws {Error} Logs an error to the console if unable to process a directory and verbose is true.
  */
-async function processDirectory(directory, subdir = '', verbose = false) {
+async function processDirectory(directory, subdir = '', pathPrefix = '', verbose = false) {
   let pages = [];  
   // check if node_modules, .git, etc. are in the path
   const excludedDirs = ['node_modules', '.git', 'venv', 'env', '__pycache__', 'dist', 
@@ -88,14 +90,15 @@ async function processDirectory(directory, subdir = '', verbose = false) {
 
     jsonData.forEach(obj => {
       if (obj.filename) {
-        pages.push(`/${file.split('_')[0].split('.')[0]}/${subdir ? subdir + '/' : ''}${obj.filename}`);
+        const url = `/${file.split('_')[0].split('.')[0]}/${subdir ? subdir + '/' : ''}${obj.filename}`;
+        pages.push(pathPrefix ? pathPrefix + url : url);
       }
     });
   }));
 
   // Recursively process directories
   for (const file of files.filter(file => !path.extname(file))) {
-    const subPages = await processDirectory(path.join(directory, file), '', verbose);
+    const subPages = await processDirectory(path.join(directory, file), '', pathPrefix, verbose);
     pages = pages.concat(subPages);
   }
 

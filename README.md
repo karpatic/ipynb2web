@@ -29,6 +29,27 @@ Complete with [API documentation](https://ipynb2web.com/jsdocs/module-Ipynb2web_
 
 ## Development Notes
 
-1. Running `Build` will link/relink the repo to your global npm registry
-2. Rendered JSDocs are inserted as static asseets into Docsaurus.
-3. The node module does not get minified but served directly from source. BuildESM is not used.
+
+### Compiling 
+1. Running `Build` will link/relink the repo to your global npm registry. do not forget to `Publish` to NPM.
+2. The node module does not get minified but served directly from source. `BuildESM` is not used for prod. 
+
+### JSDocs & Docusaurus
+
+This project uses a sophisticated dual-documentation system combining JSDoc for API documentation and Docusaurus for the main documentation site.
+
+1. Use `watchdocs` and `watchdocu` in dev.
+2. Running `docs` will compile Docusaurus and the JSDocs from source code comments
+
+
+#### JSDoc Workflow
+1. **Source Scanning**: JSDoc parses all source files in `/src/` for documentation comments
+2. **Template Processing**: Uses custom templates from `/jsdocs/tmpl/` to generate HTML
+3. **Static Asset Generation**: Outputs documentation to `/docusaurus/static/jsdocs/`
+4. **Integration**: Generated docs become part of the Docusaurus static site
+
+#### Docusaurus Workflow
+1. **Content Preparation**: Copies README.md to `/docusaurus/docs/overview/getting-started.md`
+2. **Site Building**: Generates static site from Docusaurus configuration
+3. **Output**: Copies built site to `/docs/` for GitHub Pages deployment
+4. **CNAME Setup**: Includes custom domain configuration

@@ -66,16 +66,19 @@ let pyCode = [];
  * @returns {Object} An object with metadata and processed content of the notebook.
  * @memberof module:convert
  */
-async function nb2json(ipynbPath, verbose = false) {
+async function nb2json(ipynbPath, verbose = false) { 
   pyCode = []
   prettify = false;
   let url = ipynbPath;
   if (typeof process !== "undefined" &amp;&amp; !ipynbPath.startsWith("http")) {
     url = `http://localhost:8085/${ipynbPath}.ipynb`;
-  }
+  } 
 
   let ipynb = await fetch(url, { headers: { "Content-Type": "application/json; charset=utf-8" } });
+  // console.log('url', url);
+  // console.log('ipynb', ipynb);
   const nb = await ipynb.json();
+  // console.log('nb', nb);
 
   const meta = get_metadata(nb.cells[0]);
   meta.filename = ipynbPath.split("/")[ipynbPath.split("/").length - 1].toLowerCase().replaceAll(" ", "_");
@@ -83,7 +86,7 @@ async function nb2json(ipynbPath, verbose = false) {
   verbose &amp;&amp; console.log('- get_metadata', meta, '\n');
 
   // Convert file 
-  let content = convertNb(nb.cells.slice(1), meta).flat().join(" ");
+  let content = convertNb(nb.cells.slice(1), meta, verbose).flat().join(" ");
   verbose &amp;&amp; pyCode.length &amp;&amp; console.log({ pyCode });
 
   meta.pyCode = pyCode;
@@ -93,7 +96,7 @@ async function nb2json(ipynbPath, verbose = false) {
   &lt;link rel="stylesheet" href="https://cdn.rawgit.com/google/code-prettify/master/styles/desert.css"/>
   `);
 
-  verbose &amp;&amp; console.log('- - content Ran ~~~~~~~~~~~', content, '~~~~~~~~~~~\n');
+  // verbose &amp;&amp; console.log('- - content Ran ~~~~~~~~~~~', content, '~~~~~~~~~~~\n');
   let resp = replaceEmojis(content);
   verbose &amp;&amp; console.log('- - replaceEmojis Ran', '\n');
   return { meta, content: resp };
@@ -145,8 +148,10 @@ function get_metadata(data) {
  * @returns {string[]} An array of strings representing the processed content of each cell.
  */
 function convertNb(cells, meta, verbose = false) {
-  verbose &amp;&amp; console.log('- convertNb Running');
-  return cells.map((c) => cleanCell(c, meta));
+  verbose &amp;&amp; console.group('- convertNb Running');
+  let returnThis = cells.map((c) => cleanCell(c, meta, verbose));
+  verbose &amp;&amp; console.groupEnd();
+  return returnThis;
 }
 
 /**
@@ -158,14 +163,14 @@ function convertNb(cells, meta, verbose = false) {
  * @param {boolean} [verbose=false] - If set to true, enables verbose logging for detailed information.
  * @returns {string} The processed content of the cell.
  */
-function cleanCell(cell, meta, verbose = false) {
-  verbose &amp;&amp; console.log('- - cleanCell Running');//, cell ,'\n'); 
+function cleanCell(cell, meta, verbose = false) { 
   let x;
-  if (cell["cell_type"] == "markdown") {
-    verbose &amp;&amp; console.log('- - - Parsing Markdown');
+  if (cell["cell_type"] == "markdown") { 
     x = processMarkdown(cell["source"].join(" "))
-  } else {
-    x = processCode(cell, meta);
+    // verbose &amp;&amp; console.log('- - - Parsing Markdown', x);
+  } else {  
+    // verbose &amp;&amp; console.log('- - Parsing Code');//, cell ,'\n'); 
+    x = processCode(cell, meta, verbose);
   }
   return x;
 }
@@ -176,34 +181,33 @@ function cleanCell(cell, meta, verbose = false) {
  * @param {string} x - The markdown content to be processed.
  * @returns {string} The processed HTML content.
  */
-function processMarkdown(x) {
-  // check if matches regex: (((key1::value1))) and replace with aside
-  x = x.replace(/\(\(\((.*?)::(.*?)\)\)\)/g, function (match, key, value) {
-    if (key == 'note') { return match }
-    return `&lt;aside class="${key}">${value}&lt;/aside>`;
-  });
-  x = marked.parse(x)
+function processMarkdown(txt) {
 
-  // wrap li's in a div or p
-  x = x.replace(/&lt;li>(.*?)&lt;\/li>/g, (match, innerContent) => {
-    const containsBlockLevel = /&lt;(p|div|blockquote|pre|hr|form)/.test(innerContent);
-    let returnThis = `&lt;li>${containsBlockLevel ? `&lt;div>${innerContent}&lt;/div>` : `&lt;p>${innerContent}&lt;/p>`}&lt;/li>`
-    return returnThis;
-  });
+  // Does not process markdown wrapped in html
+  let x = marked(txt); 
+  
+  // Two spaces at lines end transform into line breaks 
+  x = x.replace(/\s{2,}&lt;\/p>/g, "&lt;/p>&lt;br>");
+
+  // Remove newline chars even though they dont get rendered. 
+  // x = x.replace(/\n/g, '');
 
   // replace code blocks with pre.prettyprint
-  x = replaceAndLog(x, /&lt;pre>&lt;code>([\s\S]*?)&lt;\/code>&lt;\/pre>/g, () => { prettify = true; "&lt;pre class='prettyprint'>$1&lt;/pre>" });
-  x = replaceAndLog(x, /&lt;code>([\s\S]*?)&lt;\/code>/g, () => { prettify = true; "&lt;pre class='prettyprint'>$1&lt;/pre>" });
+  x = replaceAndLog(x, /&lt;pre>&lt;code>([\s\S]*?)&lt;\/code>&lt;\/pre>/g, (match, content) => { prettify = true; return `&lt;pre class='prettyprint'>${content}&lt;/pre>`; });
+  
+  // Single line code blocks do NOT get prettified
+  // x = replaceAndLog(x, /&lt;code>([\s\S]*?)&lt;\/code>/g, (match, content) => { prettify = true; return `&lt;pre class='prettyprint' style='display:inline'>${content}&lt;/pre>`; });
 
-  // local redirects pingServer
+  // Open links in new tab
   x = replaceAndLog(x, /&lt;a\s+(?:[^>]*?\s+)?href="(.*?)"/g, (match, href) => {
-    // open links in new tab
     if (!href.startsWith("./")) {
-      match += ' onclick="window.pingServer(this)" target="_blank" rel="noopener noreferrer nofollow"';
+      match += ' target="_blank" rel="nosopener noreferrer nofollow"';
     }
-    return match;
+    return match; 
   });
 
+
+  // x = createSpans(createInlineFootnotes(createElement(str))
   x = convertNotes(x);
 
   return x
@@ -220,29 +224,28 @@ function processMarkdown(x) {
  * @returns {string[]} An array of strings representing the processed content of the code cell.
  */
 function processCode(cell, meta, verbose = false) {
-  verbose &amp;&amp; console.log('- - - processCode Running');
+  // verbose &amp;&amp; console.log('- - - processCode Running');
   let x = [];
   let flags = [];
   // source
-  if (cell["source"].length) {
-    verbose &amp;&amp; console.log('- - - - Raw Input Source', cell['source'])
+  // verbose &amp;&amp; console.group('ProcessCode');
+  if (cell["source"].length) { 
     let source = cell["source"];
     flags = getFlags(source[0]);
-    verbose &amp;&amp; console.log('- - - - - Flags: ', flags);
+    // verbose &amp;&amp; console.log('Input: ', {'Raw': cell['source'], 'Flags': flags } ) 
     if (flags.length > 0) { source = source.slice(1) }
     source = processSource(source.join(" "), flags, meta);
     x.push(source);
   }
   // output
-  if (cell["outputs"].length) {
-    verbose &amp;&amp; console.log('- - - - Raw Process Outputs', cell['outputs'])
+  if (cell["outputs"].length) { 
+    // verbose &amp;&amp; console.log(flags, cell['outputs']) 
     for (let o of cell["outputs"]) {
       x.push(processOutput(o, flags));
-    }
-    verbose &amp;&amp; console.log('- - - - - processOutput: ', x);
+    } 
     // clear_output();
   }
-  verbose &amp;&amp; console.log('- - - processCode Ran');
+  // verbose &amp;&amp; console.groupEnd();
   return x;
 }
 
@@ -324,12 +327,12 @@ function processOutput(source, flags, verbose = false) {
     source["data"] = { "text/html": source["text"] };
   }
 
-  const keys = Object.keys(source["data"]);
+  const keys = Object.keys(source["data"]); 
   if (keys.includes("text/html")) {
     source = source["data"]["text/html"];
     source = source.join("");
   } else if (keys.includes("application/javascript")) {
-    source = "&lt;script>" + source["data"]["application/javascript"] + "&lt;/script>";
+    source = "&lt;script>" + source["data"]["application/javascript"] + "&lt;/script>"; 
   } else if (keys.includes("image/png")) {
     source = '&lt;img src="data:image/png;base64,' + source["data"]["image/png"] + "\" alt='Image Alt Text'>";
   } else if (keys.includes("text/plain")) {
@@ -341,7 +344,7 @@ function processOutput(source, flags, verbose = false) {
       source = source.replaceAll(lbl + "\r\n", "");
       source = source.replaceAll(lbl + "\n", "");
     } catch {
-      verbose &amp;&amp; console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!processOutput... ", typeof source, source);
+      verbose &amp;&amp; console.log("ERROR: !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!processOutput... ", typeof source, source);
     }
     if (lbl == "#collapse_output_open") {
       source = makeDetails(source, true);
@@ -378,7 +381,7 @@ export { nb2json, get_metadata, convertNb } </code></pre>
 <br class="clear">
 
 <footer>
-    Documentation by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.3</a> on Thu Nov 07 2024 17:07:19 GMT-0500 (Eastern Standard Time)
+    Documentation by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sun Sep 21 2025 18:53:59 GMT-0400 (Eastern Daylight Time)
 </footer>
 
 <script> prettyPrint(); </script>

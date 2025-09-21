@@ -32,7 +32,8 @@
 import * as Convert from './convert.mjs';
 
 /**
- * @type {Object} ipynb2web's Node implementation. This is not the same as the browser or the CLI implementation.
+ * ipynb2web's Browser implementation. This is not the same as the Node or the CLI implementation.
+ * @type {Object}
  * @property {Function} nb2json - Calls [convert.nb2json](module-convert.html#.nb2json) to convert Jupyter Notebook to JSON.
  * @memberof module:Ipynb2web:browser
  */

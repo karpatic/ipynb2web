@@ -388,7 +388,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="prerender.mjs.html">prerender.mjs</a>, <a href="prerender.mjs.html#line106">line 106</a>
+        <a href="prerender.mjs.html">prerender.mjs</a>, <a href="prerender.mjs.html#line122">line 122</a>
     </li></ul></dd>
     
 
@@ -671,7 +671,7 @@
     
 
     
-    <h4 class="name" id=".createSitemap"><span class="type-signature">(async, static) </span>createSitemap<span class="signature">(SAVETO<span class="signature-attributes">opt</span>, sitemapFile<span class="signature-attributes">opt</span>, verbose<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {void}</span></h4>
+    <h4 class="name" id=".createSitemap"><span class="type-signature">(async, static) </span>createSitemap<span class="signature">(search<span class="signature-attributes">opt</span>, sitemapFile<span class="signature-attributes">opt</span>, pathPrefix<span class="signature-attributes">opt</span>, verbose<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {void}</span></h4>
     
 
     
@@ -679,7 +679,7 @@
 
 
 <div class="description">
-    <p>Appends each ipynb to sitemap.txt by calling <a href="module-prerender.html#.processDirectory">processDirectory</a>.</p>
+    <p>Appends each ipynb to sitemap.txt by calling <a href="module-prerender.html#.processDirectory">process Directory</a>.</p>
 </div>
 
 
@@ -719,7 +719,7 @@
 
         <tr>
             
-                <td class="name"><code>SAVETO</code></td>
+                <td class="name"><code>search</code></td>
             
 
             <td class="type">
@@ -746,7 +746,7 @@
             
                 <td class="default">
                 
-                    './src/posts/'
+                    './'
                 
                 </td>
             
@@ -791,6 +791,45 @@
             
 
             <td class="description last"><p>The file path where the sitemap will be saved.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>pathPrefix</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    ''
+                
+                </td>
+            
+
+            <td class="description last"><p>A prefix to add to all URLs in the sitemap (e.g., '/docs').</p></td>
         </tr>
 
     
@@ -870,7 +909,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="prerender.mjs.html">prerender.mjs</a>, <a href="prerender.mjs.html#line43">line 43</a>
+        <a href="prerender.mjs.html">prerender.mjs</a>, <a href="prerender.mjs.html#line44">line 44</a>
     </li></ul></dd>
     
 
@@ -1223,7 +1262,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="prerender.mjs.html">prerender.mjs</a>, <a href="prerender.mjs.html#line140">line 140</a>
+        <a href="prerender.mjs.html">prerender.mjs</a>, <a href="prerender.mjs.html#line156">line 156</a>
     </li></ul></dd>
     
 
@@ -1502,7 +1541,7 @@ Optionally, extracts and saves Python code from the notebook.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="prerender.mjs.html">prerender.mjs</a>, <a href="prerender.mjs.html#line226">line 226</a>
+        <a href="prerender.mjs.html">prerender.mjs</a>, <a href="prerender.mjs.html#line244">line 244</a>
     </li></ul></dd>
     
 
@@ -1589,7 +1628,7 @@ Optionally, extracts and saves Python code from the notebook.</p>
     
 
     
-    <h4 class="name" id=".processDirectory"><span class="type-signature">(async, static) </span>processDirectory<span class="signature">(pages, directory, subdir<span class="signature-attributes">opt</span>, verbose<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {void}</span></h4>
+    <h4 class="name" id=".processDirectory"><span class="type-signature">(async, static) </span>processDirectory<span class="signature">(directory, subdir<span class="signature-attributes">opt</span>, pathPrefix<span class="signature-attributes">opt</span>, verbose<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Array.&lt;string>}</span></h4>
     
 
     
@@ -1633,41 +1672,6 @@ Optionally, extracts and saves Python code from the notebook.</p>
     </thead>
 
     <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>pages</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Array.&lt;string></span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                </td>
-            
-
-            <td class="description last"><p>An array to accumulate page URLs for the sitemap.</p></td>
-        </tr>
-
     
 
         <tr>
@@ -1740,6 +1744,45 @@ Optionally, extracts and saves Python code from the notebook.</p>
             
 
             <td class="description last"><p>A subdirectory path to append to each URL in the sitemap.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>pathPrefix</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    ''
+                
+                </td>
+            
+
+            <td class="description last"><p>A prefix to add to all URLs in the sitemap (e.g., '/docs').</p></td>
         </tr>
 
     
@@ -1819,7 +1862,7 @@ Optionally, extracts and saves Python code from the notebook.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="prerender.mjs.html">prerender.mjs</a>, <a href="prerender.mjs.html#line67">line 67</a>
+        <a href="prerender.mjs.html">prerender.mjs</a>, <a href="prerender.mjs.html#line68">line 68</a>
     </li></ul></dd>
     
 
@@ -1877,7 +1920,9 @@ Optionally, extracts and saves Python code from the notebook.</p>
 
         
 <div class="param-desc">
-    <p>Does not return a value; modifies the 'pages' array by reference.</p>
+    <ul>
+<li>An array to accumulate page URLs for the sitemap.</li>
+</ul>
 </div>
 
 
@@ -1888,7 +1933,7 @@ Optionally, extracts and saves Python code from the notebook.</p>
     </dt>
     <dd>
         
-<span class="param-type">void</span>
+<span class="param-type">Array.&lt;string></span>
 
 
     </dd>
@@ -1922,7 +1967,7 @@ Optionally, extracts and saves Python code from the notebook.</p>
 <br class="clear">
 
 <footer>
-    Documentation by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.3</a> on Thu Nov 07 2024 17:07:19 GMT-0500 (Eastern Standard Time)
+    Documentation by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sun Sep 21 2025 18:53:59 GMT-0400 (Eastern Daylight Time)
 </footer>
 
 <script> prettyPrint(); </script>

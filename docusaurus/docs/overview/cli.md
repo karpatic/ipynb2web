@@ -32,10 +32,15 @@ ipynb2web <COMMAND> <SAVETO> <FROM/or/SitemapName>
    ```
 
 2. **Generate Sitemap**:
-   The sitemap command creates a `Sitemap.txt` file from multiple section navigations. It is useful for SEO and website navigation purposes.
+   The sitemap command creates a `Sitemap.txt` file from multiple section navigations. It is useful for SEO and website navigation purposes. Optionally supports a path prefix for deployment in subdirectories.
 
    ```bash
    ipynb2web sitemap "custom/sitemap/path.txt"
+   ```
+
+   With optional path prefix:
+   ```bash
+   ipynb2web sitemap ./ ./sitemap.txt /docs
    ```
 
 3. **Create Audio Assets**:
