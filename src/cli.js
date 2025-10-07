@@ -42,6 +42,19 @@ Commands:
 For sitemap command:
   PathPrefix   Optional prefix to add to all URLs (e.g., '/docs')
                Example: ipynb2web sitemap ./ ./sitemap.txt /docs
+
+For processing notebooks (non-sitemap, non-audio commands):
+  AssetsDir    Optional directory path for saving static assets separately
+               instead of inlining them. When provided, images and other 
+               assets will be saved as separate files in this directory.
+               Example: ipynb2web notebooks ./output ./input '' ./assets
+               
+Examples:
+  ipynb2web help
+  ipynb2web sitemap ./ ./sitemap.txt /docs
+  ipynb2web audio ./input ./output
+  ipynb2web notebooks ./output ./input
+  ipynb2web notebooks ./output ./input '' ./static-assets
 `);
 }
 
@@ -54,6 +67,7 @@ For sitemap command:
  * - args[2]: 'FROM' - This directory path, used as an output directory for processing files (Whenever args[0] is NOT 'sitemap').
  * - args[2]: 'sitemapFile' - The file path for saving the sitemap (ONLY when args[0] is 'sitemap').
  * - args[3]: 'pathPrefix' - Optional prefix to add to all URLs in the sitemap (ONLY when args[0] is 'sitemap').
+ * - args[4]: 'assetsDir' - Optional directory path for saving static assets separately instead of inlining them (NOT applicable for 'sitemap' and 'audio' commands).
  * @memberof module:Ipynb2web:cli
  */
 function cli(args) {
@@ -62,8 +76,9 @@ function cli(args) {
     const FROM = args[2] || false;
     const sitemapFile = args[2] || false;
     const pathPrefix = args[3] || '';
+    const assetsDir = args[4] || null;
 
-    console.log('CLI RECEIVED ARGS:'); //, { directory, SAVETO, FROM, sitemapFile });
+    console.log('CLI RECEIVED ARGS:'); //, { directory, SAVETO, FROM, sitemapFile, assetsDir });
 
     /**
      * Based on the first argument, call the appropriate function.
@@ -73,7 +88,7 @@ function cli(args) {
      */ 
     if (directory === 'sitemap') { createSitemap(SAVETO || './', sitemapFile||'./sitemap.txt', pathPrefix); }
     else if (directory === 'audio') { createAudio(FROM, SAVETO); }
-    else { cli_nbs2html(FROM, directory, SAVETO, true); }
+    else { cli_nbs2html(FROM, directory, SAVETO, true, assetsDir); }
 }
 
 /**

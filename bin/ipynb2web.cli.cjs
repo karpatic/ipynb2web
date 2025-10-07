@@ -220,6 +220,8 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
 
 var prettify = false;
 var pyCode = [];
+var assetsToWrite = [];
+var imageIndex = 0;
 
 /**
  * Converts a Jupyter Notebook (.ipynb) file to a JSON object containing metadata and content as two distinct entries.
@@ -227,6 +229,7 @@ var pyCode = [];
  * @async
  * @param {string} ipynbPath - The path to the Jupyter Notebook file.
  * @param {boolean} [verbose=false] - If set to true, enables verbose logging for detailed information.
+ * @param {string[]|boolean} [extractAssets=false] - Array of asset types to extract (e.g., ['png', 'js', 'txt', 'html']) or boolean for backward compatibility.
  * @returns {Object} An object with metadata and processed content of the notebook.
  * @memberof module:convert
  */
@@ -254,6 +257,7 @@ function nb2json(_x) {
 function _nb2json() {
   _nb2json = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee(ipynbPath) {
     var verbose,
+      extractAssets,
       url,
       ipynb,
       nb,
@@ -265,8 +269,11 @@ function _nb2json() {
       while (1) switch (_context.n) {
         case 0:
           verbose = _args.length > 1 && _args[1] !== undefined ? _args[1] : false;
+          extractAssets = _args.length > 2 && _args[2] !== undefined ? _args[2] : false;
           pyCode = [];
           prettify = false;
+          assetsToWrite = [];
+          imageIndex = 0;
           url = ipynbPath;
           if (typeof process !== "undefined" && !ipynbPath.startsWith("http")) {
             url = "http://localhost:8085/".concat(ipynbPath, ".ipynb");
@@ -289,7 +296,7 @@ function _nb2json() {
           verbose && console.log('- get_metadata', meta, '\n');
 
           // Convert file 
-          content = convertNb(nb.cells.slice(1), meta, verbose).flat().join(" ");
+          content = convertNb(nb.cells.slice(1), meta, verbose, extractAssets, meta.filename).flat().join(" ");
           verbose && pyCode.length && console.log({
             pyCode: pyCode
           });
@@ -301,7 +308,8 @@ function _nb2json() {
           verbose && console.log('- - replaceEmojis Ran', '\n');
           return _context.a(2, {
             meta: meta,
-            content: resp
+            content: resp,
+            assets: assetsToWrite
           });
       }
     }, _callee);
@@ -339,13 +347,17 @@ function get_metadata(data) {
  * @param {Object[]} cells - An array of cells from a Jupyter Notebook.
  * @param {Object} meta - Metadata associated with the notebook.
  * @param {boolean} [verbose=false] - If set to true, enables verbose logging for detailed information.
+ * @param {string[]|boolean} [extractAssets=false] - Array of asset types to extract (e.g., ['png', 'js', 'txt', 'html']) or boolean for backward compatibility.
+ * @param {string} [notebookName=null] - The name of the notebook for asset naming.
  * @returns {string[]} An array of strings representing the processed content of each cell.
  */
 function convertNb(cells, meta) {
   var verbose = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
+  var extractAssets = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
+  var notebookName = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : null;
   verbose && console.group('- convertNb Running');
   var returnThis = cells.map(function (c) {
-    return cleanCell(c, meta, verbose);
+    return cleanCell(c, meta, verbose, extractAssets, notebookName);
   });
   verbose && console.groupEnd();
   return returnThis;
@@ -358,17 +370,21 @@ function convertNb(cells, meta) {
  * @param {Object} cell - A cell from a Jupyter Notebook.
  * @param {Object} meta - Metadata associated with the notebook.
  * @param {boolean} [verbose=false] - If set to true, enables verbose logging for detailed information.
+ * @param {string[]|boolean} [extractAssets=false] - Array of asset types to extract (e.g., ['png', 'js', 'txt', 'html']) or boolean for backward compatibility.
+ * @param {string} [notebookName=null] - The name of the notebook for asset naming.
  * @returns {string} The processed content of the cell.
  */
 function cleanCell(cell, meta) {
   var verbose = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
+  var extractAssets = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
+  var notebookName = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : null;
   var x;
   if (cell["cell_type"] == "markdown") {
     x = processMarkdown(cell["source"].join(" "));
     // verbose && console.log('- - - Parsing Markdown', x);
   } else {
     // verbose && console.log('- - Parsing Code');//, cell ,'\n'); 
-    x = processCode(cell, meta, verbose);
+    x = processCode(cell, meta, verbose, extractAssets, notebookName);
   }
   return x;
 }
@@ -419,10 +435,14 @@ function processMarkdown(txt) {
  * @param {Object} cell - A code cell from a Jupyter Notebook.
  * @param {Object} meta - Metadata associated with the notebook.
  * @param {boolean} [verbose=false] - If set to true, enables verbose logging for detailed information.
+ * @param {string[]|boolean} [extractAssets=false] - Array of asset types to extract (e.g., ['png', 'js', 'txt', 'html']) or boolean for backward compatibility.
+ * @param {string} [notebookName=null] - The name of the notebook for asset naming.
  * @returns {string[]} An array of strings representing the processed content of the code cell.
  */
 function processCode(cell, meta) {
   var verbose = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
+  var extractAssets = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
+  var notebookName = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : null;
   // verbose && console.log('- - - processCode Running');
   var x = [];
   var flags = [];
@@ -446,7 +466,7 @@ function processCode(cell, meta) {
     try {
       for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
         var o = _step2.value;
-        x.push(processOutput(o, flags));
+        x.push(processOutput(o, flags, verbose, extractAssets, notebookName));
       }
       // clear_output();
     } catch (err) {
@@ -538,10 +558,15 @@ function processSource(source, flags, meta) {
  * @param {Object} source - The output of a code cell.
  * @param {string[]} flags - An array of flags affecting the processing.
  * @param {boolean} [verbose=false] - If set to true, enables verbose logging for detailed information.
+ * @param {string[]|boolean} [extractAssets=false] - Array of asset types to extract (e.g., ['png', 'js', 'txt', 'html']) or boolean for backward compatibility.
+ * @param {string} [notebookName=null] - The name of the notebook for asset naming.
  * @returns {string} The processed output content.
  */
 function processOutput(source, flags) {
   var verbose = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
+  var extractAssets = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
+  var notebookName = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : null;
+  // console.log('processOutput', source);
   if (source["output_type"] == "error") {
     return "";
   }
@@ -554,15 +579,191 @@ function processOutput(source, flags) {
     };
   }
   var keys = Object.keys(source["data"]);
+
+  // Debug logging to see what's happening
+  if (verbose || extractAssets) {
+    console.log('processOutput debug:', {
+      keys: keys,
+      data: source["data"],
+      hasTextHtml: keys.includes("text/html"),
+      hasTextPlain: keys.includes("text/plain"),
+      hasAppJs: keys.includes("application/javascript"),
+      imageKeys: keys.filter(function (k) {
+        return k.startsWith('image/');
+      })
+    });
+  }
+  var shouldExtract = function shouldExtract(type) {
+    var result = extractAssets === true || Array.isArray(extractAssets) && extractAssets.some(function (t) {
+      return t.toLowerCase() === type || t.toLowerCase() === type.split('/')[1] || type === 'application/javascript' && t.toLowerCase() === 'js' || type === 'text/html' && t.toLowerCase() === 'html';
+    });
+
+    // Debug logging for shouldExtract
+    if ((verbose || extractAssets) && (type === 'text/html' || type === 'application/javascript')) {
+      console.log('shouldExtract debug:', {
+        type: type,
+        extractAssets: extractAssets,
+        result: result,
+        isArray: Array.isArray(extractAssets)
+      });
+    }
+    return result;
+  };
   if (keys.includes("text/html")) {
-    source = source["data"]["text/html"];
-    source = source.join("");
+    var data = source["data"]["text/html"];
+    source = Array.isArray(data) ? data.join("") : data;
+
+    // Calculate size in bytes
+    var sizeInBytes = new TextEncoder().encode(source).length;
+    var sizeThreshold = 100 * 1024; // 100KB
+
+    // Only extract if starts with doctype, <html>, or is larger than 100KB
+    var startsWithDoctype = source.toLowerCase().includes('<!doctype');
+    var startsWithHtml = source.toLowerCase().trim().startsWith('<html');
+    var isLargeEnough = sizeInBytes > sizeThreshold;
+    if (shouldExtract('text/html') && typeof process !== "undefined" && (startsWithDoctype || startsWithHtml || isLargeEnough)) {
+      var hash = source.substring(0, 8).replace(/[^a-zA-Z0-9]/g, '');
+      var name = "".concat(notebookName ? "".concat(notebookName, "-") : '', "content-").concat(hash, ".html");
+
+      // Debug: Log what's being extracted as HTML
+      if (verbose || extractAssets) {
+        console.log('Extracting HTML asset:', {
+          name: name,
+          dataLength: source.length,
+          sizeInBytes: sizeInBytes,
+          startsWithDoctype: startsWithDoctype,
+          startsWithHtml: startsWithHtml,
+          isLargeEnough: isLargeEnough,
+          hash: hash
+        });
+      }
+      assetsToWrite.push({
+        placeholderName: name,
+        data: source,
+        encoding: 'utf8',
+        type: 'text/html',
+        notebookPrefix: notebookName ? "".concat(notebookName, "-") : ''
+      });
+      source = "<iframe src=\"ASSET_PLACEHOLDER_".concat(name, "\" width=\"100%\" height=\"400px\"></iframe>");
+    }
   } else if (keys.includes("application/javascript")) {
-    source = "<script>" + source["data"]["application/javascript"] + "</script>";
-  } else if (keys.includes("image/png")) {
-    source = '<img src="data:image/png;base64,' + source["data"]["image/png"] + "\" alt='Image Alt Text'>";
-  } else if (keys.includes("text/plain")) {
-    source = !/<Figure/.test(source["data"]["text/plain"]) ? source["data"]["text/plain"] : "";
+    var _data = source["data"]["application/javascript"];
+
+    // Calculate size in bytes for JS content
+    var jsContent = Array.isArray(_data) ? _data.join("") : _data;
+    var _sizeInBytes = new TextEncoder().encode(jsContent).length;
+    var _sizeThreshold = 100 * 1024; // 100KB
+    var _isLargeEnough = _sizeInBytes > _sizeThreshold;
+    if (shouldExtract('application/javascript') && typeof process !== "undefined" && _isLargeEnough) {
+      var _hash = jsContent.toString().substring(0, 8).replace(/[^a-zA-Z0-9]/g, '');
+      var _name = "".concat(notebookName ? "".concat(notebookName, "-") : '', "script-").concat(_hash, ".js");
+
+      // Debug: Log what's being extracted as JS
+      if (verbose || extractAssets) {
+        console.log('Extracting JS asset:', {
+          name: _name,
+          sizeInBytes: _sizeInBytes,
+          isLargeEnough: _isLargeEnough
+        });
+      }
+      assetsToWrite.push({
+        placeholderName: _name,
+        data: jsContent,
+        encoding: 'utf8',
+        type: 'application/javascript'
+      });
+      source = "<script src=\"ASSET_PLACEHOLDER_".concat(_name, "\"></script>");
+    } else {
+      source = "<script>" + jsContent + "</script>";
+    }
+  } else {
+    // Check for images first, then fall back to text/plain if no image found
+    var imageKey = keys.filter(function (key) {
+      return key.startsWith('image/');
+    })[0];
+    if (imageKey && source["data"][imageKey]) {
+      var _data2 = source["data"][imageKey];
+
+      // Debug logging for image processing
+      if (verbose || extractAssets) {
+        console.log('Image processing debug:', {
+          imageKey: imageKey,
+          dataType: _typeof(_data2),
+          dataLength: _data2 === null || _data2 === void 0 ? void 0 : _data2.length,
+          shouldExtractResult: shouldExtract(imageKey),
+          processEnv: typeof process !== "undefined"
+        });
+      }
+
+      // Additional check to make sure this is actually image data
+      if (typeof _data2 === 'string' && _data2.length > 50) {
+        // Basic sanity check for image data
+        var imageType = imageKey.split('/')[1]; // Extract format (png, jpeg, gif, svg+xml, etc.)
+
+        if (shouldExtract(imageKey) && typeof process !== "undefined") {
+          // Use simple index-based naming instead of complex unique ID
+          imageIndex++;
+
+          // Handle special cases for file extensions
+          var extension = imageType;
+          if (imageType === 'jpeg') extension = 'jpg';
+          if (imageType === 'svg+xml') extension = 'svg';
+          var _name2 = "".concat(notebookName ? "".concat(notebookName, "-") : '', "image-").concat(imageIndex, ".").concat(extension);
+          var encoding = imageType === 'svg+xml' ? 'utf8' : 'base64';
+
+          // Debug: Log what's being extracted as image
+          if (verbose || extractAssets) {
+            console.log('Extracting image asset:', {
+              name: _name2,
+              imageType: imageType,
+              extension: extension,
+              encoding: encoding,
+              dataLength: _data2.length,
+              imageIndex: imageIndex
+            });
+          }
+          assetsToWrite.push({
+            placeholderName: _name2,
+            data: _data2,
+            encoding: encoding,
+            type: imageKey,
+            notebookPrefix: notebookName ? "".concat(notebookName, "-") : ''
+          });
+          source = "<img src=\"ASSET_PLACEHOLDER_".concat(_name2, "\" alt=\"Image Alt Text\">");
+        } else {
+          if (verbose || extractAssets) {
+            console.log('Image not extracted - inline instead:', {
+              shouldExtract: shouldExtract(imageKey),
+              processUndefined: typeof process === "undefined"
+            });
+          }
+          source = "<img src=\"data:".concat(imageKey, ";base64,").concat(_data2, "\" alt=\"Image Alt Text\">");
+        }
+      } else {
+        // If we reach here, there was an image key but no valid image data
+        if (verbose || extractAssets) {
+          console.log('Found image key but invalid data:', {
+            imageKey: imageKey,
+            dataType: _typeof(_data2),
+            dataLength: _data2 === null || _data2 === void 0 ? void 0 : _data2.length
+          });
+        }
+        source = "";
+      }
+    } else if (keys.includes("text/plain")) {
+      var _data3 = source["data"]["text/plain"];
+      // Always keep text/plain inline, don't extract to separate files
+      source = !/<Figure/.test(_data3) ? Array.isArray(_data3) ? _data3.join('') : _data3 : "";
+    } else {
+      // No recognized content type found
+      if (verbose || extractAssets) {
+        console.log('No recognized content type found:', {
+          keys: keys,
+          availableData: Object.keys(source["data"])
+        });
+      }
+      source = "";
+    }
   }
   var _iterator5 = _createForOfIteratorHelper(flags),
     _step5;
@@ -1025,6 +1226,8 @@ __webpack_require__.d(__webpack_exports__, {
 var external_fs_ = __webpack_require__(383);
 // EXTERNAL MODULE: external "path"
 var external_path_ = __webpack_require__(3);
+;// external "crypto"
+const external_crypto_namespaceObject = require("crypto");
 ;// external "http-server"
 const external_http_server_namespaceObject = require("http-server");
 ;// ./src/prerender.mjs
@@ -1053,6 +1256,27 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
 
 
 
+
+
+/**
+ * Helper function to get file extension from MIME type
+ * @param {string} mimeType - The MIME type (e.g., 'text/html', 'image/png')
+ * @returns {string} The file extension (e.g., 'html', 'png')
+ */
+function getExtensionFromType(mimeType) {
+  if (!mimeType) return 'txt';
+  var typeMap = {
+    'text/html': 'html',
+    'text/plain': 'txt',
+    'application/javascript': 'js',
+    'image/png': 'png',
+    'image/jpeg': 'jpg',
+    'image/gif': 'gif',
+    'image/svg+xml': 'svg',
+    'image/webp': 'webp'
+  };
+  return typeMap[mimeType] || mimeType.split('/')[1] || 'txt';
+}
 
 /** 
  * Checks YAML for `audio` tag and creates the file
@@ -1169,6 +1393,7 @@ function processDirectory(_x) {
  * @param {string} directory - A subdirectory to process within the FROM path.
  * @param {string} [SAVETO='./'] - The directory where the processed files will be saved.
  * @param {boolean} [verbose=false] - If set to true, enables verbose logging for detailed information.
+ * @param {string} [assetsDir=null] - Optional directory path for saving static assets separately instead of inlining them.
  * @returns {void} Does not return a value; the function is used for processing files in place.
  * @throws {Error} Logs an error to the console if unable to process the specified directory and verbose is true.
  */
@@ -1307,12 +1532,14 @@ function cli_nbs2html(_x2, _x3, _x4) {
  * @param {string} directory - A subdirectory to process.
  * @param {string} SAVETO - The directory where the section map will be saved.
  * @param {boolean} [verbose=false] - If set to true, enables verbose logging for detailed information.
+ * @param {string} [assetsDir=null] - Optional directory path for saving static assets separately instead of inlining them.
  * @returns {void} Does not return a value; processes files and creates a section map.
  * @throws {Error} Logs an error to the console if there are issues creating the directory or writing the section map file and verbose is true.
  */
 function _cli_nbs2html() {
   _cli_nbs2html = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee5(FROM, directory, SAVETO) {
     var verbose,
+      assetsDir,
       stat,
       pages,
       _args5 = arguments;
@@ -1320,6 +1547,7 @@ function _cli_nbs2html() {
       while (1) switch (_context5.n) {
         case 0:
           verbose = _args5.length > 3 && _args5[3] !== undefined ? _args5[3] : false;
+          assetsDir = _args5.length > 4 && _args5[4] !== undefined ? _args5[4] : null;
           FROM || (FROM = './');
           SAVETO || (SAVETO = './');
           // Search the pathto directory for .ipynb files
@@ -1345,7 +1573,7 @@ function _cli_nbs2html() {
             return external_path_.parse(file).name;
           });
           // filename without extension 
-          generate_sectionmap(pages, FROM, directory, SAVETO, verbose);
+          generate_sectionmap(pages, FROM, directory, SAVETO, verbose, assetsDir);
         case 4:
           return _context5.a(2);
       }
@@ -1365,14 +1593,17 @@ function generate_sectionmap(_x5, _x6, _x7, _x8) {
  * @param {string} fullFilePath - The full path to the Jupyter Notebook file, including the filename and extension.
  * @param {string} saveDir - The directory where the processed file and any extracted Python code will be saved.
  * @param {string} [type='json'] - The format for the output file ('json' is the default format).
+ * @param {string} [assetsDir=null] - Optional directory path for saving static assets separately instead of inlining them.
  * @returns {Object} The final processed data of the notebook.
  * @throws {Error} Logs an error to the console if there is a failure in writing the output file.
  */
 function _generate_sectionmap() {
   _generate_sectionmap = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee6(pages, FROM, directory, SAVETO) {
     var verbose,
+      assetsDir,
       server,
       links,
+      assetsDirPath,
       _yield$ipynb_publish$,
       csp,
       sitemap,
@@ -1407,11 +1638,13 @@ function _generate_sectionmap() {
       _t5,
       _t6,
       _t7,
-      _t8;
+      _t8,
+      _t9;
     return _regenerator().w(function (_context6) {
       while (1) switch (_context6.p = _context6.n) {
         case 0:
           verbose = _args6.length > 4 && _args6[4] !== undefined ? _args6[4] : false;
+          assetsDir = _args6.length > 5 && _args6[5] !== undefined ? _args6[5] : null;
           verbose && console.log("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ cli_nbs2html: generate_sectionmap: ", pages, directory, verbose = false);
           server = external_http_server_namespaceObject.createServer({
             root: "./",
@@ -1451,13 +1684,33 @@ function _generate_sectionmap() {
         case 8:
           console.error("Error accessing directory:", _t4);
         case 9:
-          if (!directory) {
-            _context6.n = 11;
+          if (!assetsDir) {
+            _context6.n = 13;
             break;
           }
-          _context6.n = 10;
-          return ipynb_publish("".concat(FROM).concat(directory), SAVETO);
-        case 10:
+          _context6.p = 10;
+          assetsDirPath = external_path_.isAbsolute(assetsDir) ? assetsDir : external_path_.join(SAVETO, assetsDir); // Try to create directory, will succeed silently if it already exists due to recursive: true
+          _context6.n = 11;
+          return external_fs_.promises.mkdir(assetsDirPath, {
+            recursive: true
+          });
+        case 11:
+          verbose && console.log("Assets directory ready: ".concat(assetsDirPath));
+          _context6.n = 13;
+          break;
+        case 12:
+          _context6.p = 12;
+          _t6 = _context6.v;
+          // Only log warning, don't throw - the directory might still be usable
+          verbose && console.warn("Warning: Could not ensure assets directory exists:", _t6.message);
+        case 13:
+          if (!directory) {
+            _context6.n = 15;
+            break;
+          }
+          _context6.n = 14;
+          return ipynb_publish("".concat(FROM).concat(directory), SAVETO, "json", assetsDir);
+        case 14:
           _yield$ipynb_publish$ = _context6.v.meta;
           csp = _yield$ipynb_publish$.csp;
           sitemap = _yield$ipynb_publish$.sitemap;
@@ -1471,69 +1724,69 @@ function _generate_sectionmap() {
           title = _yield$ipynb_publish$.title;
           rest = _objectWithoutProperties(_yield$ipynb_publish$, _excluded);
           links.push(rest);
-        case 11:
+        case 15:
           // Call ipynb_publish and save for each page
           _iterator2 = _createForOfIteratorHelper(pages);
-          _context6.p = 12;
+          _context6.p = 16;
           _iterator2.s();
-        case 13:
+        case 17:
           if ((_step2 = _iterator2.n()).done) {
-            _context6.n = 17;
+            _context6.n = 21;
             break;
           }
           page = _step2.value;
-          _t6 = !page.startsWith("_");
-          if (!_t6) {
-            _context6.n = 15;
+          _t7 = !page.startsWith("_");
+          if (!_t7) {
+            _context6.n = 19;
             break;
           }
-          _context6.n = 14;
-          return ipynb_publish("".concat(FROM).concat(directory, "/").concat(page), "".concat(SAVETO).concat(directory));
-        case 14:
-          _t6 = _context6.v;
-        case 15:
-          _r = _t6;
+          _context6.n = 18;
+          return ipynb_publish("".concat(FROM).concat(directory, "/").concat(page), "".concat(SAVETO).concat(directory), "json", assetsDir);
+        case 18:
+          _t7 = _context6.v;
+        case 19:
+          _r = _t7;
           if (_r && !!!_r.meta.hide) {
             _r$meta = _r.meta, _csp = _r$meta.csp, _sitemap = _r$meta.sitemap, _breadcrumbs = _r$meta.breadcrumbs, _badges = _r$meta.badges, _keywords = _r$meta.keywords, _comments = _r$meta.comments, _hide = _r$meta.hide, _image = _r$meta.image, _toc = _r$meta.toc, _title = _r$meta.title, _rest = _objectWithoutProperties(_r$meta, _excluded2);
             links.push(_rest);
           }
-        case 16:
-          _context6.n = 13;
-          break;
-        case 17:
-          _context6.n = 19;
-          break;
-        case 18:
-          _context6.p = 18;
-          _t7 = _context6.v;
-          _iterator2.e(_t7);
-        case 19:
-          _context6.p = 19;
-          _iterator2.f();
-          return _context6.f(19);
         case 20:
-          sitemapPath = "".concat(SAVETO).concat(directory || 'index', "_map.json");
-          _context6.p = 21;
-          _context6.n = 22;
-          return external_fs_.promises.writeFile(sitemapPath, JSON.stringify(links));
-        case 22:
-          _context6.n = 25;
+          _context6.n = 17;
           break;
+        case 21:
+          _context6.n = 23;
+          break;
+        case 22:
+          _context6.p = 22;
+          _t8 = _context6.v;
+          _iterator2.e(_t8);
         case 23:
           _context6.p = 23;
-          _t8 = _context6.v;
-          _context6.n = 24;
-          return external_fs_.promises.writeFile(sitemapPath, "{}");
+          _iterator2.f();
+          return _context6.f(23);
         case 24:
+          sitemapPath = "".concat(SAVETO).concat(directory || 'index', "_map.json");
+          _context6.p = 25;
+          _context6.n = 26;
+          return external_fs_.promises.writeFile(sitemapPath, JSON.stringify(links));
+        case 26:
+          _context6.n = 29;
+          break;
+        case 27:
+          _context6.p = 27;
+          _t9 = _context6.v;
+          _context6.n = 28;
+          return external_fs_.promises.writeFile(sitemapPath, "{}");
+        case 28:
           verbose && console.log("----ERROR:", r.meta);
-        case 25:
+        case 29:
           server.close(function () {
             verbose && console.log("Server closed.");
           });
-        case 26:
+        case 30:
           return _context6.a(2);
       }
-    }, _callee6, null, [[21, 23], [12, 18, 19, 20], [4, 6], [1, 3]]);
+    }, _callee6, null, [[25, 27], [16, 22, 23, 24], [10, 12], [4, 6], [1, 3]]);
   }));
   return _generate_sectionmap.apply(this, arguments);
 }
@@ -1543,20 +1796,34 @@ function ipynb_publish(_x9, _x0) {
 function _ipynb_publish() {
   _ipynb_publish = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee7(fullFilePath, saveDir) {
     var type,
+      assetsDir,
       _final,
       _yield$import2,
       nb2json,
+      _iterator3,
+      _step3,
+      _asset$type,
+      asset,
+      dataForHash,
+      contentHash,
+      finalFileName,
+      assetPath,
+      dataForWriting,
+      relativePath,
       pyCode,
       file,
       pyCodeFilePath,
       txt,
       t,
       _args7 = arguments,
-      _t9;
+      _t0,
+      _t1,
+      _t10;
     return _regenerator().w(function (_context7) {
       while (1) switch (_context7.p = _context7.n) {
         case 0:
           type = _args7.length > 2 && _args7[2] !== undefined ? _args7[2] : "json";
+          assetsDir = _args7.length > 3 && _args7[3] !== undefined ? _args7[3] : null;
           if (!(type === "json")) {
             _context7.n = 3;
             break;
@@ -1567,13 +1834,82 @@ function _ipynb_publish() {
           _yield$import2 = _context7.v;
           nb2json = _yield$import2.nb2json;
           _context7.n = 2;
-          return nb2json(fullFilePath);
+          return nb2json(fullFilePath, false, !assetsDir ? false : ["svg", "png", "jpeg", "webp", "gif", "html", "js"]);
         case 2:
           _final = _context7.v;
         case 3:
+          if (!(_final.assets && _final.assets.length > 0 && assetsDir)) {
+            _context7.n = 17;
+            break;
+          }
+          _context7.p = 4;
+          _context7.n = 5;
+          return external_fs_.promises.mkdir(assetsDir, {
+            recursive: true
+          });
+        case 5:
+          // Write each asset file and replace placeholders in content
+          _iterator3 = _createForOfIteratorHelper(_final.assets);
+          _context7.p = 6;
+          _iterator3.s();
+        case 7:
+          if ((_step3 = _iterator3.n()).done) {
+            _context7.n = 12;
+            break;
+          }
+          asset = _step3.value;
+          // Ensure data is a string or buffer for hash generation
+          dataForHash = Array.isArray(asset.data) ? asset.data.join('') : asset.data; // Generate proper hash for filename
+          contentHash = external_crypto_namespaceObject.createHash('md5').update(dataForHash).digest('hex').substring(0, 8); // Use the actual file extension from the asset's placeholderName instead of hardcoding .png
+          finalFileName = asset.placeholderName.includes('.') ? asset.placeholderName : "".concat(asset.notebookPrefix || '').concat(((_asset$type = asset.type) === null || _asset$type === void 0 ? void 0 : _asset$type.split('/')[0]) || 'content', "-").concat(contentHash, ".").concat(getExtensionFromType(asset.type));
+          assetPath = external_path_.join(assetsDir, finalFileName); // Ensure data is properly formatted for file writing
+          dataForWriting = Array.isArray(asset.data) ? asset.data.join('') : asset.data; // For base64 encoded files (images), convert string to buffer
+          if (!(asset.encoding === 'base64')) {
+            _context7.n = 9;
+            break;
+          }
+          dataForWriting = Buffer.from(dataForWriting, 'base64');
+          _context7.n = 8;
+          return external_fs_.promises.writeFile(assetPath, dataForWriting);
+        case 8:
+          _context7.n = 10;
+          break;
+        case 9:
+          _context7.n = 10;
+          return external_fs_.promises.writeFile(assetPath, dataForWriting, asset.encoding);
+        case 10:
+          console.log("Asset saved: ".concat(assetPath));
+
+          // Replace placeholder in content with actual path
+          relativePath = "".concat(assetsDir, "/").concat(finalFileName).replace(/^\.\//, '');
+          _final.content = _final.content.replace("ASSET_PLACEHOLDER_".concat(asset.placeholderName), relativePath);
+        case 11:
+          _context7.n = 7;
+          break;
+        case 12:
+          _context7.n = 14;
+          break;
+        case 13:
+          _context7.p = 13;
+          _t0 = _context7.v;
+          _iterator3.e(_t0);
+        case 14:
+          _context7.p = 14;
+          _iterator3.f();
+          return _context7.f(14);
+        case 15:
+          _context7.n = 17;
+          break;
+        case 16:
+          _context7.p = 16;
+          _t1 = _context7.v;
+          console.error("Error saving assets:", _t1);
+        case 17:
+          // Remove assets from final object before saving
+          delete _final.assets;
           pyCode = _final.meta.pyCode;
           if (!(pyCode !== null && pyCode !== void 0 && pyCode.length)) {
-            _context7.n = 4;
+            _context7.n = 18;
             break;
           }
           file = external_path_.basename(fullFilePath, '.ipynb'); // Extracts filename without extension
@@ -1583,27 +1919,27 @@ function _ipynb_publish() {
           // Construct the path for Python code file
           pyCodeFilePath = external_path_.join(saveDir, "".concat(file, ".py"));
           txt = pyCode.join('\n').replace(/(^|\n) /g, '$1');
-          _context7.n = 4;
+          _context7.n = 18;
           return external_fs_.promises.writeFile(pyCodeFilePath, txt);
-        case 4:
+        case 18:
           delete _final.meta.pyCode;
 
           // Save the final file in the specified format
           t = external_path_.join(saveDir, "".concat(_final.meta.filename, ".").concat(type));
-          _context7.p = 5;
-          _context7.n = 6;
+          _context7.p = 19;
+          _context7.n = 20;
           return external_fs_.promises.writeFile(t, type === "json" ? JSON.stringify(_final) : _final);
-        case 6:
-          _context7.n = 8;
+        case 20:
+          _context7.n = 22;
           break;
-        case 7:
-          _context7.p = 7;
-          _t9 = _context7.v;
+        case 21:
+          _context7.p = 21;
+          _t10 = _context7.v;
           console.log("ERROR writing file:", t);
-        case 8:
+        case 22:
           return _context7.a(2, _final);
       }
-    }, _callee7, null, [[5, 7]]);
+    }, _callee7, null, [[19, 21], [6, 13, 14, 15], [4, 16]]);
   }));
   return _ipynb_publish.apply(this, arguments);
 }
@@ -1641,7 +1977,7 @@ function _ipynb_publish() {
  * @memberof module:Ipynb2web:cli
  */
 function help() {
-  console.log("Usage: ipynb2web <COMMAND> <SAVETO> <FROM/or/SitemapName> [PathPrefix]\n    \nCommands:\n  sitemap      Create a sitemap.\n  audio        Create audio assets.\n  help         Display this help message.\n\nFor sitemap command:\n  PathPrefix   Optional prefix to add to all URLs (e.g., '/docs')\n               Example: ipynb2web sitemap ./ ./sitemap.txt /docs\n");
+  console.log("Usage: ipynb2web <COMMAND> <SAVETO> <FROM/or/SitemapName> [PathPrefix]\n    \nCommands:\n  sitemap      Create a sitemap.\n  audio        Create audio assets.\n  help         Display this help message.\n\nFor sitemap command:\n  PathPrefix   Optional prefix to add to all URLs (e.g., '/docs')\n               Example: ipynb2web sitemap ./ ./sitemap.txt /docs\n\nFor processing notebooks (non-sitemap, non-audio commands):\n  AssetsDir    Optional directory path for saving static assets separately\n               instead of inlining them. When provided, images and other \n               assets will be saved as separate files in this directory.\n               Example: ipynb2web notebooks ./output ./input '' ./assets\n               \nExamples:\n  ipynb2web help\n  ipynb2web sitemap ./ ./sitemap.txt /docs\n  ipynb2web audio ./input ./output\n  ipynb2web notebooks ./output ./input\n  ipynb2web notebooks ./output ./input '' ./static-assets\n");
 }
 
 /**
@@ -1653,6 +1989,7 @@ function help() {
  * - args[2]: 'FROM' - This directory path, used as an output directory for processing files (Whenever args[0] is NOT 'sitemap').
  * - args[2]: 'sitemapFile' - The file path for saving the sitemap (ONLY when args[0] is 'sitemap').
  * - args[3]: 'pathPrefix' - Optional prefix to add to all URLs in the sitemap (ONLY when args[0] is 'sitemap').
+ * - args[4]: 'assetsDir' - Optional directory path for saving static assets separately instead of inlining them (NOT applicable for 'sitemap' and 'audio' commands).
  * @memberof module:Ipynb2web:cli
  */
 function cli(args) {
@@ -1661,7 +1998,8 @@ function cli(args) {
   var FROM = args[2] || false;
   var sitemapFile = args[2] || false;
   var pathPrefix = args[3] || '';
-  console.log('CLI RECEIVED ARGS:'); //, { directory, SAVETO, FROM, sitemapFile });
+  var assetsDir = args[4] || null;
+  console.log('CLI RECEIVED ARGS:'); //, { directory, SAVETO, FROM, sitemapFile, assetsDir });
 
   /**
    * Based on the first argument, call the appropriate function.
@@ -1674,7 +2012,7 @@ function cli(args) {
   } else if (directory === 'audio') {
     createAudio(FROM, SAVETO);
   } else {
-    cli_nbs2html(FROM, directory, SAVETO, true);
+    cli_nbs2html(FROM, directory, SAVETO, true, assetsDir);
   }
 }
 
