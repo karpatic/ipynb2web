@@ -17,7 +17,7 @@
 
 
 import { marked } from "marked";
-import { makeDetails, replaceEmojis, convertNotes, replaceAndLog } from './convert_util.mjs'
+import { makeDetails, replaceEmojis, convertNotes, replaceAndLog, collapseHeaders } from './convert_util.mjs'
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // fname = ./src/ipynb/route/filename (wihout the .ipynb extension, when server calling it)
@@ -29,6 +29,7 @@ let prettify = false;
 let pyCode = [];
 let assetsToWrite = [];
 let imageIndex = 0;
+let footnoteCount = 0;
 
 /**
  * Converts a Jupyter Notebook (.ipynb) file to a JSON object containing metadata and content as two distinct entries.
@@ -45,6 +46,7 @@ async function nb2json(ipynbPath, verbose = false, extractAssets = false) {
   prettify = false;
   assetsToWrite = [];
   imageIndex = 0;
+  footnoteCount = 0;
   
   let url = ipynbPath;
   if (typeof process !== "undefined" && !ipynbPath.startsWith("http")) {
@@ -76,6 +78,13 @@ async function nb2json(ipynbPath, verbose = false, extractAssets = false) {
   // verbose && console.log('- - content Ran ~~~~~~~~~~~', content, '~~~~~~~~~~~\n');
   let resp = replaceEmojis(content);
   verbose && console.log('- - replaceEmojis Ran', '\n');
+
+  resp = collapseHeaders(resp, meta.collapse, false);
+  verbose && console.log('- - collapseHeaders Ran', '\n');
+
+  resp = collapseHeaders(resp, meta.collapsable, true);
+  verbose && console.log('- - collapsableHeaders Ran', '\n');
+
   return { meta, content: resp, assets: assetsToWrite };
 }
 
@@ -185,11 +194,12 @@ function processMarkdown(txt) {
       match += ' target="_blank" rel="nosopener noreferrer nofollow"';
     }
     return match; 
-  });
+  }); 
 
-
-  // x = createSpans(createInlineFootnotes(createElement(str))
-  x = convertNotes(x);
+  // create spans, inline footnotes ( Here is an inline note.^[Inlines notes are] ) , create elements ( :::{#id .class} )
+  const result = convertNotes(x, footnoteCount);
+  x = result.content;
+  footnoteCount = result.count;
 
   return x
 }
@@ -281,8 +291,8 @@ function processSource(source, flags, meta, verbose = false) {
     for (let lbl of flags) {
       source = source.replaceAll(lbl + "\r\n", "");
       source = source.replaceAll(lbl + "\n", ""); // Strip the Flag  
-      if (lbl == "#collapse_input_open") source = makeDetails(source, true);
-      else if (lbl == "#collapse_input") source = makeDetails(source, false);
+  if (lbl == "#collapse_input_open") source = makeDetails(source, true, 'input');
+  else if (lbl == "#collapse_input") source = makeDetails(source, false, 'input');
     }
     return source;
   }
@@ -490,10 +500,10 @@ function processOutput(source, flags, verbose = false, extractAssets = false, no
       verbose && console.log("ERROR: !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!processOutput... ", typeof source, source);
     }
     if (lbl == "#collapse_output_open") {
-      source = makeDetails(source, true);
+      source = makeDetails(source, true, 'output');
     }
     if (lbl == "#collapse_output") {
-      source = makeDetails(source, false);
+      source = makeDetails(source, false, 'output');
     }
     if (lbl == "#hide_output") {
       source = "";
@@ -508,4 +518,4 @@ function processOutput(source, flags, verbose = false, extractAssets = false, no
   //output_type == 'display_data' ==> data{'application/javascript' or 'text/html' or 'execute_result'}
 }
 
-export { nb2json, get_metadata, convertNb } 
+export { nb2json, get_metadata, convertNb }

@@ -1,0 +1,20 @@
+Nov 17 13:40:56 karen spacenavd[1031]: Authorization required, but no authorization protocol specified
+Nov 17 13:40:57 karen spacenavd[1031]: Authorization required, but no authorization protocol specified
+Nov 17 13:40:58 karen spacenavd[1031]: Authorization required, but no authorization protocol specified
+Nov 17 13:40:59 karen spacenavd[1031]: Authorization required, but no authorization protocol specified
+Nov 17 13:41:00 karen spacenavd[1031]: Authorization required, but no authorization protocol specified
+Nov 17 13:41:01 karen spacenavd[1031]: Authorization required, but no authorization protocol specified
+Nov 17 13:41:02 karen spacenavd[1031]: Authorization required, but no authorization protocol specified
+Nov 17 13:41:03 karen spacenavd[1031]: Authorization required, but no authorization protocol specified
+Nov 17 13:41:04 karen spacenavd[1031]: Authorization required, but no authorization protocol specified
+Nov 17 13:41:05 karen spacenavd[1031]: Authorization required, but no authorization protocol specified
+Nov 17 13:41:06 karen spacenavd[1031]: Authorization required, but no authorization protocol specified
+Nov 17 13:41:07 karen spacenavd[1031]: Authorization required, but no authorization protocol specified
+Nov 17 13:41:08 karen spacenavd[1031]: Authorization required, but no authorization protocol specified
+Nov 17 13:41:09 karen spacenavd[1031]: Authorization required, but no authorization protocol specified
+Nov 17 13:41:10 karen spacenavd[1031]: Authorization required, but no authorization protocol specified
+Nov 17 13:42:49 karen systemd[1]: Stopping spacenavd.service - 3Dconnexion Input Devices Userspace Driver...
+Nov 17 13:42:49 karen systemd[1]: spacenavd.service: Deactivated successfully.
+Nov 17 13:42:49 karen systemd[1]: Stopped spacenavd.service - 3Dconnexion Input Devices Userspace Driver.
+Nov 17 13:42:49 karen systemd[1]: Started spacenavd.service - 3Dconnexion Input Devices Userspace Driver.
+Nov 17 13:42:49 karen spacenavd[7664]: Authorization required, but no authorization protocol specified

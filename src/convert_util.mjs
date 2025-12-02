@@ -15,8 +15,10 @@
  * @returns {string} An HTML string representing a details element.
  * @memberof module:convert_util
  */
-function makeDetails(content, open) {
-  return "<details " + (open ? "open" : "") + "> <summary>Click to toggle</summary> " + content + "</details>";
+function makeDetails(content, open, cellType = 'input') {
+  const normalizedType = cellType === 'output' ? 'output' : 'input';
+  const classes = `ipynb  ipynb-${normalizedType}`;
+  return `<details class='${classes}' data-cell-type='${normalizedType}' ${open ? 'open' : ''}> <summary></summary> ${content}</details>`;
 }
 
 /**
@@ -41,17 +43,87 @@ function replaceEmojis(text) {
  * Converts special note syntax in a string to HTML elements for displaying notes.
  *
  * @param {string} str - The string containing note syntax to be converted.
- * @returns {string} The string with note syntax converted to HTML elements.
+ * @param {number} startCount - The starting count for footnotes.
+ * @returns {Object} Object with content and updated count.
  * @memberof module:convert_util
  */
-function convertNotes(str) {
+function convertNotes(str, startCount = 0) {
   // console.log("Converting notes", str);
-  str = createElement(str); 
-  str = createInlineFootnotes(str);
-  str = createSpans(str)
-  return str
+  str = createElement(str); // :::{#id .class} ... :::
+  const result = createInlineFootnotes(str, startCount); // inline notes ^[This is an inline note.]
+  str = createSpans(result.content) // [This text is smallcaps]{.smallcaps #id}
+  return { content: str, count: result.count }
 }
 
+
+/**
+ * Wraps specified header levels and their content in collapsible details elements.
+ * Processes headers from highest level (h2) to lowest (h6) to maintain hierarchy.
+ * A header's content includes all content until the next header of equal or higher significance.
+ *
+ * @param {string} content - The HTML content containing headers to be collapsed.
+ * @param {string} headers - Comma-separated list of header levels to collapse (e.g., "h2,h3").
+ * @param {boolean} open - Determines if the details should be open by default.
+ * @returns {string} The HTML content with specified headers wrapped in details elements.
+ * @memberof module:convert_util
+ */
+function collapseHeaders(content, headers, open) {
+  // console.log('%c Collapsing headers:', 'font-size: 24px; font-weight: bold; color: #0066cc;', headers, 'open:', open);
+  if (!headers || headers.length === 0) {
+    return content;
+  }
+
+  // Parse header levels (e.g., "h2,h3" -> [2, 3]) and sort ascending
+  const headerLevels = headers.split(',').map(h => parseInt(h.trim().slice(1))).sort((a, b) => a - b);
+  
+  // console.log('Header levels to collapse:', headerLevels);
+
+  // Process from highest level (h2) to lowest (h6) to maintain hierarchy
+  for (const level of headerLevels) {
+    const headerPattern = `<(h${level})([^>]*)>([\\s\\S]*?)</\\1>`;
+    const regex = new RegExp(headerPattern, 'gi');
+
+    const parts = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = regex.exec(content)) !== null) {
+      const [fullMatch, tag, attrs, headerText] = match;
+      
+      // Add content before this header
+      if (match.index > lastIndex) {
+        parts.push(content.slice(lastIndex, match.index));
+      }
+
+      // Find content until next header of equal or higher significance (lower number)
+      const nextHeaderRegex = new RegExp(`<h[1-${level}][^>]*>`, 'i');
+      const searchStart = match.index + fullMatch.length;
+      const nextMatch = nextHeaderRegex.exec(content.slice(searchStart));
+      
+      const contentEnd = nextMatch ? searchStart + nextMatch.index : content.length;
+      const innerContent = content.slice(searchStart, contentEnd);
+
+      parts.push(
+        `<details${open ? ' open' : ''}>` +
+        `<summary><${tag}${attrs}>${headerText}</${tag}></summary>` +
+        innerContent +
+        `</details>`
+      );
+      
+      lastIndex = contentEnd;
+      regex.lastIndex = contentEnd;
+    }
+
+    // Add remaining content
+    if (lastIndex < content.length) {
+      parts.push(content.slice(lastIndex));
+    }
+
+    content = parts.join('');
+  }
+
+  return content;
+}
 
 
 
@@ -62,7 +134,7 @@ function convertNotes(str) {
 
  
 //  
-// Markdown content will be prefaced with :::{#id .class} 
+// Markdown content may be prefaced with :::{#id .class} 
 // Removes 'pre' and 'code' blocks while processing and then reinserts at end.
 // check six layers deep. do this by first by creating an array of substrings that are wrapped by an opening and closing 
 // ':::' * 6,  then within the resulting arrays, create sub arrays for ':::' * 5, and so on and so on, then handle each 
@@ -99,25 +171,6 @@ function createElement(str) {
 }
 
 
-// test string: 
-// "Here is an inline note.^[Inlines notes are easier to write, since you don't have to pick an identifier and move down to type the note.]"
-function createInlineFootnotes(str) {
-  let count = 0;
-  return str.replace(/\^\[([\s\S]+?)\]/g, (_, text) => {
-    console.log("Inline note:", text);
-    count++;
-    const label = `<label tabindex="0" for="note${count}" class="notelbl">[${count}]</label>`;
-    return `<span class="note">
-      <input type="checkbox" id="note${count}" class="notebox">
-      ${label}
-      <aside class="inline-note"> 
-        ${label}
-        ${text}
-      </aside>
-    </span>`;
-  });
-}
-
 
 // Example: [This text is smallcaps]{.smallcaps #id} 
 function createSpans(str) {
@@ -146,6 +199,67 @@ function createSpans(str) {
 
 
 
+// test string: 
+// "Here is an inline note.^[Inlines notes are easier to write, since you don't have to pick an identifier and move down to type the note.]{.tip}"
+function createInlineFootnotes(str, startCount = 0) {
+  // 1. Shield existing <pre>/<code> blocks and inline code
+  const codeBlocks = [];
+  str = str.replace(/<pre[\s\S]*?<\/pre>|<code[\s\S]*?<\/code>|`[^`]+`/g, m =>
+    `__CODE_${codeBlocks.push(m) - 1}__`
+  );
+
+  let count = startCount;
+  
+  const parseAttrs = attrs => {
+    const cleaned = attrs?.trim();
+    if (!cleaned) {
+      return { id: null, classes: [] };
+    }
+
+    const idMatch = cleaned.match(/#([A-Za-z0-9_-]+)/);
+    const classMatches = [...cleaned.matchAll(/\.([A-Za-z0-9_-]+)/g)].map(m => m[1]);
+
+    return {
+      id: idMatch ? idMatch[1] : null,
+      classes: classMatches
+    };
+  };
+
+  const buildAttrString = (attrs = {}, baseClasses = []) => {
+    const mergedClasses = [...new Set([...(baseClasses || []), ...((attrs.classes) || [])])].filter(Boolean);
+    const idStr = attrs.id ? ` id="${attrs.id}"` : '';
+    const classStr = mergedClasses.length ? ` class="${mergedClasses.join(' ')}"` : '';
+    return `${idStr}${classStr}`;
+  };
+  
+  // Replace inline notes with optional {.class #id} attributes
+  str = str.replace(/\^\[([\s\S]+?)\](?:\s*\{\s*([^}]*)\})?/g, (_, text, attrs) => {
+    // console.log("Inline note:", text, "attrs:", attrs);
+    count++;
+    const label = `<label tabindex="0" for="note${count}" class="notelbl">[${count}]</label>`;
+    const parsedAttrs = parseAttrs(attrs);
+    const wrapperAttrs = buildAttrString(parsedAttrs, ['note']);
+    const inlineNoteAttrs = buildAttrString({ classes: parsedAttrs.classes }, ['inline-note']);
+    
+    // Return the trigger with its associated aside as siblings
+    // Apply custom attributes to the outer wrapper span
+    return `<span${wrapperAttrs}>
+      <input type="checkbox" id="note${count}" class="notebox">
+      ${label}
+      <span${inlineNoteAttrs}>
+        ${label}
+        ${text}
+      </span>
+    </span>`;
+  });
+  
+  // 4. Restore code blocks
+  str = str.replace(/__CODE_(\d+)__/g, (_, i) => codeBlocks[i]);
+  
+  return { content: str, count };
+}
+ 
+
 
 
 
@@ -165,4 +279,4 @@ function replaceAndLog(text, input, output) {
   });
 };
 
-export { makeDetails, replaceEmojis, convertNotes, replaceAndLog } 
+export { makeDetails, replaceEmojis, convertNotes, replaceAndLog, collapseHeaders };
