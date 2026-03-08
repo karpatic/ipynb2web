@@ -38,7 +38,20 @@ jobs:
       - name: Verify package payload
         run: npm pack --dry-run
 
+      - name: Check if this version already exists on npm
+        id: npm_exists
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "ipynb2web@${VERSION}" version >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "npm version ${VERSION} already exists; skipping npm publish"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "npm version ${VERSION} not found; publishing to npm"
+          fi
+
       - name: Publish to npm (trusted publishing)
+        if: steps.npm_exists.outputs.exists != 'true'
         run: npm publish --provenance --access public
 
       - name: Publish mirror to GitHub Packages
