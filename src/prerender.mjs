@@ -59,17 +59,29 @@ async function createAudio(from = './src/posts/', to = './src/client/audio/') {
  * @param {string} [search='./'] - The directory to search for JSON map files.
  * @param {string} [sitemapFile='./sitemap.txt'] - The file path where the sitemap will be saved.
  * @param {string} [pathPrefix=''] - A prefix to add to all URLs in the sitemap (e.g., '/docs').
+ * @param {string|boolean} [domain=''] - Optional domain (or site URL) to prefix all sitemap URLs (e.g., 'https://example.com').
+ *   Backwards compatible: if a boolean is passed here, it will be treated as `verbose` (older signature).
  * @param {boolean} [verbose=false] - If set to true, enables verbose logging for detailed information.
  * @returns {void} Does not return a value; processes and writes to the sitemap file directly.
  * @throws {Error} Logs an error to the console if there is a failure in writing the sitemap file and verbose is true.
  */
 
-async function createSitemap(search='./', sitemapFile = './sitemap.txt', pathPrefix = '', verbose = true) { 
-  verbose && console.log(`\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ START createSitemap \n\n`) 
-  const pages = await processDirectory(search, '', pathPrefix, verbose);
-  console.log('pages', pages)
+async function createSitemap(search='./', sitemapFile = './sitemap.txt', pathPrefix = '', domain = '', verbose = true) { 
+  // Backwards compatibility: older callers used createSitemap(search, sitemapFile, pathPrefix, verbose)
+  typeof domain === 'boolean' && (verbose = domain, domain = '');
+
+  let prefix = pathPrefix ? String(pathPrefix).trim() : '';
+  prefix = !prefix || prefix === "''" || prefix === '""' ? '' : (prefix = prefix.replace(/\/+$/, ''), prefix && !prefix.startsWith('/') ? '/' + prefix : prefix);
+
+  let d = domain ? String(domain).trim().replace(/\s+/g, '') : '';
+  d = !d || d === "''" || d === '""' ? '' : (d = d.replace(/\/+$/, ''), d && !/^https?:\/\//i.test(d) ? `https://${d}` : d);
+
+  verbose && console.log(`\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ START createSitemap \n\n`);
+  const pages = await processDirectory(search, '', prefix, verbose);
+  const finalPages = d ? pages.map(p => (!p ? `${d}/` : (/^https?:\/\//i.test(p) ? p : d + (p.startsWith('/') ? p : '/' + p)))) : pages;
+  verbose && console.log('pages', finalPages);
   try {  
-    await fs.promises.writeFile(sitemapFile, pages.join('\n') + '\n');
+    await fs.promises.writeFile(sitemapFile, finalPages.join('\n') + '\n');
     verbose && console.log('Sitemap file created successfully:', sitemapFile);
   } catch (err) {
     verbose && console.error(`Error creating or truncating sitemap file: ${sitemapFile}`, err);

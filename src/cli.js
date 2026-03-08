@@ -32,7 +32,7 @@ import { createAudio, createSitemap, cli_nbs2html } from './prerender.mjs';
  * @memberof module:Ipynb2web:cli
  */
 function help() {
-    console.log(`Usage: ipynb2web <COMMAND> <SAVETO> <FROM/or/SitemapName> [PathPrefix]
+  console.log(`Usage: ipynb2web <COMMAND> <SAVETO> <FROM/or/SitemapName> [PathPrefix] [Domain]
     
 Commands:
   sitemap      Create a sitemap.
@@ -43,6 +43,9 @@ For sitemap command:
   PathPrefix   Optional prefix to add to all URLs (e.g., '/docs')
                Example: ipynb2web sitemap ./ ./sitemap.txt /docs
 
+  Domain       Optional domain to prefix all sitemap URLs (e.g., 'https://example.com')
+               Example: ipynb2web sitemap ./ ./sitemap.txt /docs example.com
+
 For processing notebooks (non-sitemap, non-audio commands):
   AssetsDir    Optional directory path for saving static assets separately
                instead of inlining them. When provided, images and other 
@@ -52,6 +55,7 @@ For processing notebooks (non-sitemap, non-audio commands):
 Examples:
   ipynb2web help
   ipynb2web sitemap ./ ./sitemap.txt /docs
+  ipynb2web sitemap ./ ./sitemap.txt /docs example.com
   ipynb2web audio ./input ./output
   ipynb2web notebooks ./output ./input
   ipynb2web notebooks ./output ./input '' ./static-assets
@@ -67,6 +71,7 @@ Examples:
  * - args[2]: 'FROM' - This directory path, used as an output directory for processing files (Whenever args[0] is NOT 'sitemap').
  * - args[2]: 'sitemapFile' - The file path for saving the sitemap (ONLY when args[0] is 'sitemap').
  * - args[3]: 'pathPrefix' - Optional prefix to add to all URLs in the sitemap (ONLY when args[0] is 'sitemap').
+ * - args[4]: 'domain' - Optional domain to prefix all URLs in the sitemap (ONLY when args[0] is 'sitemap').
  * - args[4]: 'assetsDir' - Optional directory path for saving static assets separately instead of inlining them (NOT applicable for 'sitemap' and 'audio' commands).
  * @memberof module:Ipynb2web:cli
  */
@@ -76,7 +81,8 @@ function cli(args) {
     const FROM = args[2] || false;
     const sitemapFile = args[2] || false;
     const pathPrefix = args[3] || '';
-    const assetsDir = args[4] || null;
+   const domain = args[4] || '';
+   const assetsDir = args[4] || null;
 
     console.log('CLI RECEIVED ARGS:'); //, { directory, SAVETO, FROM, sitemapFile, assetsDir });
 
@@ -86,7 +92,25 @@ function cli(args) {
      * If 'audio', call createAudio.
      * Otherwise, call cli_nbs2html.
      */ 
-    if (directory === 'sitemap') { createSitemap(SAVETO || './', sitemapFile||'./sitemap.txt', pathPrefix); }
+    if (directory === 'sitemap') {
+      // New signature:
+      //   ipynb2web sitemap <searchDir> <sitemapFile> [pathPrefix] [domain]
+      // Legacy signature (kept for compatibility with older usage):
+      //   ipynb2web sitemap '' <sitemapFile> <searchDir> <pathPrefix> [domain]
+      let searchDir = SAVETO || './';
+      let sitemapOutFile = sitemapFile || './sitemap.txt';
+      let sitemapPathPrefix = pathPrefix || '';
+      let sitemapDomain = domain || '';
+
+      if ((SAVETO === '' || SAVETO === false) && typeof pathPrefix === 'string' && pathPrefix.trim().startsWith('.') && args[4]) {
+        // Your legacy call style puts searchDir in args[3] and pathPrefix in args[4]
+        searchDir = args[3] || './';
+        sitemapPathPrefix = args[4] || '';
+        sitemapDomain = args[5] || '';
+      }
+
+      createSitemap(searchDir, sitemapOutFile, sitemapPathPrefix, sitemapDomain);
+    }
     else if (directory === 'audio') { createAudio(FROM, SAVETO); }
     else { cli_nbs2html(FROM, directory, SAVETO, true, assetsDir); }
 }

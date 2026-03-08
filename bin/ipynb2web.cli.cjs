@@ -28,9 +28,14 @@ const external_marked_namespaceObject = require("marked");
 ;// ./src/convert_util.mjs
 function _toConsumableArray(r) { return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableSpread(); }
 function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
 function _iterableToArray(r) { if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) return Array.from(r); }
 function _arrayWithoutHoles(r) { if (Array.isArray(r)) return _arrayLikeToArray(r); }
+function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t["return"] && (u = t["return"](), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
+function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
+function _createForOfIteratorHelper(r, e) { var t = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (!t) { if (Array.isArray(r) || (t = _unsupportedIterableToArray(r)) || e && r && "number" == typeof r.length) { t && (r = t); var _n = 0, F = function F() {}; return { s: F, n: function n() { return _n >= r.length ? { done: !0 } : { done: !1, value: r[_n++] }; }, e: function e(r) { throw r; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var o, a = !0, u = !1; return { s: function s() { t = t.call(r); }, n: function n() { var r = t.next(); return a = r.done, r; }, e: function e(r) { u = !0, o = r; }, f: function f() { try { a || null == t["return"] || t["return"](); } finally { if (u) throw o; } } }; }
+function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
 function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
 /** 
  *  @fileOverview Utility functions used by the [convert](module-convert.html).
@@ -48,7 +53,10 @@ function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length)
  * @memberof module:convert_util
  */
 function makeDetails(content, open) {
-  return "<details " + (open ? "open" : "") + "> <summary>Click to toggle</summary> " + content + "</details>";
+  var cellType = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 'input';
+  var normalizedType = cellType === 'output' ? 'output' : 'input';
+  var classes = "ipynb  ipynb-".concat(normalizedType);
+  return "<details class='".concat(classes, "' data-cell-type='").concat(normalizedType, "' ").concat(open ? 'open' : '', "> <summary></summary> ").concat(content, "</details>");
 }
 
 /**
@@ -73,19 +81,99 @@ function replaceEmojis(text) {
  * Converts special note syntax in a string to HTML elements for displaying notes.
  *
  * @param {string} str - The string containing note syntax to be converted.
- * @returns {string} The string with note syntax converted to HTML elements.
+ * @param {number} startCount - The starting count for footnotes.
+ * @returns {Object} Object with content and updated count.
  * @memberof module:convert_util
  */
 function convertNotes(str) {
+  var startCount = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
   // console.log("Converting notes", str);
-  str = createElement(str);
-  str = createInlineFootnotes(str);
-  str = createSpans(str);
-  return str;
+  str = createElement(str); // :::{#id .class} ... :::
+  var result = createInlineFootnotes(str, startCount); // inline notes ^[This is an inline note.]
+  str = createSpans(result.content); // [This text is smallcaps]{.smallcaps #id}
+  return {
+    content: str,
+    count: result.count
+  };
+}
+
+/**
+ * Wraps specified header levels and their content in collapsible details elements.
+ * Processes headers from highest level (h2) to lowest (h6) to maintain hierarchy.
+ * A header's content includes all content until the next header of equal or higher significance.
+ *
+ * @param {string} content - The HTML content containing headers to be collapsed.
+ * @param {string} headers - Comma-separated list of header levels to collapse (e.g., "h2,h3").
+ * @param {boolean} open - Determines if the details should be open by default.
+ * @returns {string} The HTML content with specified headers wrapped in details elements.
+ * @memberof module:convert_util
+ */
+function collapseHeaders(content, headers, open) {
+  // console.log('%c Collapsing headers:', 'font-size: 24px; font-weight: bold; color: #0066cc;', headers, 'open:', open);
+  if (!headers || headers.length === 0) {
+    return content;
+  }
+
+  // Parse header levels (e.g., "h2,h3" -> [2, 3]) and sort ascending
+  var headerLevels = headers.split(',').map(function (h) {
+    return parseInt(h.trim().slice(1));
+  }).sort(function (a, b) {
+    return a - b;
+  });
+
+  // console.log('Header levels to collapse:', headerLevels);
+
+  // Process from highest level (h2) to lowest (h6) to maintain hierarchy
+  var _iterator = _createForOfIteratorHelper(headerLevels),
+    _step;
+  try {
+    for (_iterator.s(); !(_step = _iterator.n()).done;) {
+      var level = _step.value;
+      var headerPattern = "<(h".concat(level, ")([^>]*)>([\\s\\S]*?)</\\1>");
+      var regex = new RegExp(headerPattern, 'gi');
+      var parts = [];
+      var lastIndex = 0;
+      var match = void 0;
+      while ((match = regex.exec(content)) !== null) {
+        var _match = match,
+          _match2 = _slicedToArray(_match, 4),
+          fullMatch = _match2[0],
+          tag = _match2[1],
+          attrs = _match2[2],
+          headerText = _match2[3];
+
+        // Add content before this header
+        if (match.index > lastIndex) {
+          parts.push(content.slice(lastIndex, match.index));
+        }
+
+        // Find content until next header of equal or higher significance (lower number)
+        var nextHeaderRegex = new RegExp("<h[1-".concat(level, "][^>]*>"), 'i');
+        var searchStart = match.index + fullMatch.length;
+        var nextMatch = nextHeaderRegex.exec(content.slice(searchStart));
+        var contentEnd = nextMatch ? searchStart + nextMatch.index : content.length;
+        var innerContent = content.slice(searchStart, contentEnd);
+        parts.push("<details".concat(open ? ' open' : '', ">") + "<summary><".concat(tag).concat(attrs, ">").concat(headerText, "</").concat(tag, "></summary>") + innerContent + "</details>");
+        lastIndex = contentEnd;
+        regex.lastIndex = contentEnd;
+      }
+
+      // Add remaining content
+      if (lastIndex < content.length) {
+        parts.push(content.slice(lastIndex));
+      }
+      content = parts.join('');
+    }
+  } catch (err) {
+    _iterator.e(err);
+  } finally {
+    _iterator.f();
+  }
+  return content;
 }
 
 //  
-// Markdown content will be prefaced with :::{#id .class} 
+// Markdown content may be prefaced with :::{#id .class} 
 // Removes 'pre' and 'code' blocks while processing and then reinserts at end.
 // check six layers deep. do this by first by creating an array of substrings that are wrapped by an opening and closing 
 // ':::' * 6,  then within the resulting arrays, create sub arrays for ':::' * 5, and so on and so on, then handle each 
@@ -126,18 +214,6 @@ function createElement(str) {
   });
 }
 
-// test string: 
-// "Here is an inline note.^[Inlines notes are easier to write, since you don't have to pick an identifier and move down to type the note.]"
-function createInlineFootnotes(str) {
-  var count = 0;
-  return str.replace(/\^\[([\s\S]+?)\]/g, function (_, text) {
-    console.log("Inline note:", text);
-    count++;
-    var label = "<label tabindex=\"0\" for=\"note".concat(count, "\" class=\"notelbl\">[").concat(count, "]</label>");
-    return "<span class=\"note\">\n      <input type=\"checkbox\" id=\"note".concat(count, "\" class=\"notebox\">\n      ").concat(label, "\n      <aside class=\"inline-note\"> \n        ").concat(label, "\n        ").concat(text, "\n      </aside>\n    </span>");
-  });
-}
-
 // Example: [This text is smallcaps]{.smallcaps #id} 
 function createSpans(str) {
   // 1. Shield existing <pre>/<code> blocks
@@ -166,6 +242,68 @@ function createSpans(str) {
   });
 }
 
+// test string: 
+// "Here is an inline note.^[Inlines notes are easier to write, since you don't have to pick an identifier and move down to type the note.]{.tip}"
+function createInlineFootnotes(str) {
+  var startCount = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+  // 1. Shield existing <pre>/<code> blocks and inline code
+  var codeBlocks = [];
+  str = str.replace(/<pre[\s\S]*?<\/pre>|<code[\s\S]*?<\/code>|`[^`]+`/g, function (m) {
+    return "__CODE_".concat(codeBlocks.push(m) - 1, "__");
+  });
+  var count = startCount;
+  var parseAttrs = function parseAttrs(attrs) {
+    var cleaned = attrs === null || attrs === void 0 ? void 0 : attrs.trim();
+    if (!cleaned) {
+      return {
+        id: null,
+        classes: []
+      };
+    }
+    var idMatch = cleaned.match(/#([A-Za-z0-9_-]+)/);
+    var classMatches = _toConsumableArray(cleaned.matchAll(/\.([A-Za-z0-9_-]+)/g)).map(function (m) {
+      return m[1];
+    });
+    return {
+      id: idMatch ? idMatch[1] : null,
+      classes: classMatches
+    };
+  };
+  var buildAttrString = function buildAttrString() {
+    var attrs = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    var baseClasses = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
+    var mergedClasses = _toConsumableArray(new Set([].concat(_toConsumableArray(baseClasses || []), _toConsumableArray(attrs.classes || [])))).filter(Boolean);
+    var idStr = attrs.id ? " id=\"".concat(attrs.id, "\"") : '';
+    var classStr = mergedClasses.length ? " class=\"".concat(mergedClasses.join(' '), "\"") : '';
+    return "".concat(idStr).concat(classStr);
+  };
+
+  // Replace inline notes with optional {.class #id} attributes
+  str = str.replace(/\^\[([\s\S]+?)\](?:\s*\{\s*([^}]*)\})?/g, function (_, text, attrs) {
+    // console.log("Inline note:", text, "attrs:", attrs);
+    count++;
+    var label = "<label tabindex=\"0\" for=\"note".concat(count, "\" class=\"notelbl\">[").concat(count, "]</label>");
+    var parsedAttrs = parseAttrs(attrs);
+    var wrapperAttrs = buildAttrString(parsedAttrs, ['note']);
+    var inlineNoteAttrs = buildAttrString({
+      classes: parsedAttrs.classes
+    }, ['inline-note']);
+
+    // Return the trigger with its associated aside as siblings
+    // Apply custom attributes to the outer wrapper span
+    return "<span".concat(wrapperAttrs, ">\n      <input type=\"checkbox\" id=\"note").concat(count, "\" class=\"notebox\">\n      ").concat(label, "\n      <span").concat(inlineNoteAttrs, ">\n        ").concat(label, "\n        ").concat(text, "\n      </span>\n    </span>");
+  });
+
+  // 4. Restore code blocks
+  str = str.replace(/__CODE_(\d+)__/g, function (_, i) {
+    return codeBlocks[i];
+  });
+  return {
+    content: str,
+    count: count
+  };
+}
+
 /**
  * Replaces occurrences of a pattern in a string and optionally logs the replacement.
  *
@@ -187,7 +325,7 @@ function replaceAndLog(text, input, output) {
 function _regenerator() { /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE */ var e, t, r = "function" == typeof Symbol ? Symbol : {}, n = r.iterator || "@@iterator", o = r.toStringTag || "@@toStringTag"; function i(r, n, o, i) { var c = n && n.prototype instanceof Generator ? n : Generator, u = Object.create(c.prototype); return _regeneratorDefine2(u, "_invoke", function (r, n, o) { var i, c, u, f = 0, p = o || [], y = !1, G = { p: 0, n: 0, v: e, a: d, f: d.bind(e, 4), d: function d(t, r) { return i = t, c = 0, u = e, G.n = r, a; } }; function d(r, n) { for (c = r, u = n, t = 0; !y && f && !o && t < p.length; t++) { var o, i = p[t], d = G.p, l = i[2]; r > 3 ? (o = l === n) && (u = i[(c = i[4]) ? 5 : (c = 3, 3)], i[4] = i[5] = e) : i[0] <= d && ((o = r < 2 && d < i[1]) ? (c = 0, G.v = n, G.n = i[1]) : d < l && (o = r < 3 || i[0] > n || n > l) && (i[4] = r, i[5] = n, G.n = l, c = 0)); } if (o || r > 1) return a; throw y = !0, n; } return function (o, p, l) { if (f > 1) throw TypeError("Generator is already running"); for (y && 1 === p && d(p, l), c = p, u = l; (t = c < 2 ? e : u) || !y;) { i || (c ? c < 3 ? (c > 1 && (G.n = -1), d(c, u)) : G.n = u : G.v = u); try { if (f = 2, i) { if (c || (o = "next"), t = i[o]) { if (!(t = t.call(i, u))) throw TypeError("iterator result is not an object"); if (!t.done) return t; u = t.value, c < 2 && (c = 0); } else 1 === c && (t = i["return"]) && t.call(i), c < 2 && (u = TypeError("The iterator does not provide a '" + o + "' method"), c = 1); i = e; } else if ((t = (y = G.n < 0) ? u : r.call(n, G)) !== a) break; } catch (t) { i = e, c = 1, u = t; } finally { f = 1; } } return { value: t, done: y }; }; }(r, o, i), !0), u; } var a = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} t = Object.getPrototypeOf; var c = [][n] ? t(t([][n]())) : (_regeneratorDefine2(t = {}, n, function () { return this; }), t), u = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(c); function f(e) { return Object.setPrototypeOf ? Object.setPrototypeOf(e, GeneratorFunctionPrototype) : (e.__proto__ = GeneratorFunctionPrototype, _regeneratorDefine2(e, o, "GeneratorFunction")), e.prototype = Object.create(u), e; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, _regeneratorDefine2(u, "constructor", GeneratorFunctionPrototype), _regeneratorDefine2(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = "GeneratorFunction", _regeneratorDefine2(GeneratorFunctionPrototype, o, "GeneratorFunction"), _regeneratorDefine2(u), _regeneratorDefine2(u, o, "Generator"), _regeneratorDefine2(u, n, function () { return this; }), _regeneratorDefine2(u, "toString", function () { return "[object Generator]"; }), (_regenerator = function _regenerator() { return { w: i, m: f }; })(); }
 function _regeneratorDefine2(e, r, n, t) { var i = Object.defineProperty; try { i({}, "", {}); } catch (e) { i = 0; } _regeneratorDefine2 = function _regeneratorDefine(e, r, n, t) { function o(r, n) { _regeneratorDefine2(e, r, function (e) { return this._invoke(r, n, e); }); } r ? i ? i(e, r, { value: n, enumerable: !t, configurable: !t, writable: !t }) : e[r] = n : (o("next", 0), o("throw", 1), o("return", 2)); }, _regeneratorDefine2(e, r, n, t); }
 function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
-function _createForOfIteratorHelper(r, e) { var t = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (!t) { if (Array.isArray(r) || (t = convert_unsupportedIterableToArray(r)) || e && r && "number" == typeof r.length) { t && (r = t); var _n = 0, F = function F() {}; return { s: F, n: function n() { return _n >= r.length ? { done: !0 } : { done: !1, value: r[_n++] }; }, e: function e(r) { throw r; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var o, a = !0, u = !1; return { s: function s() { t = t.call(r); }, n: function n() { var r = t.next(); return a = r.done, r; }, e: function e(r) { u = !0, o = r; }, f: function f() { try { a || null == t["return"] || t["return"](); } finally { if (u) throw o; } } }; }
+function convert_createForOfIteratorHelper(r, e) { var t = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (!t) { if (Array.isArray(r) || (t = convert_unsupportedIterableToArray(r)) || e && r && "number" == typeof r.length) { t && (r = t); var _n = 0, F = function F() {}; return { s: F, n: function n() { return _n >= r.length ? { done: !0 } : { done: !1, value: r[_n++] }; }, e: function e(r) { throw r; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var o, a = !0, u = !1; return { s: function s() { t = t.call(r); }, n: function n() { var r = t.next(); return a = r.done, r; }, e: function e(r) { u = !0, o = r; }, f: function f() { try { a || null == t["return"] || t["return"](); } finally { if (u) throw o; } } }; }
 function convert_unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return convert_arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? convert_arrayLikeToArray(r, a) : void 0; } }
 function convert_arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
 function asyncGeneratorStep(n, t, e, r, o, a, c) { try { var i = n[a](c), u = i.value; } catch (n) { return void e(n); } i.done ? t(u) : Promise.resolve(u).then(r, o); }
@@ -222,6 +360,7 @@ var prettify = false;
 var pyCode = [];
 var assetsToWrite = [];
 var imageIndex = 0;
+var footnoteCount = 0;
 
 /**
  * Converts a Jupyter Notebook (.ipynb) file to a JSON object containing metadata and content as two distinct entries.
@@ -274,6 +413,7 @@ function _nb2json() {
           prettify = false;
           assetsToWrite = [];
           imageIndex = 0;
+          footnoteCount = 0;
           url = ipynbPath;
           if (typeof process !== "undefined" && !ipynbPath.startsWith("http")) {
             url = "http://localhost:8085/".concat(ipynbPath, ".ipynb");
@@ -306,6 +446,10 @@ function _nb2json() {
           // verbose && console.log('- - content Ran ~~~~~~~~~~~', content, '~~~~~~~~~~~\n');
           resp = replaceEmojis(content);
           verbose && console.log('- - replaceEmojis Ran', '\n');
+          resp = collapseHeaders(resp, meta.collapse, false);
+          verbose && console.log('- - collapseHeaders Ran', '\n');
+          resp = collapseHeaders(resp, meta.collapsable, true);
+          verbose && console.log('- - collapsableHeaders Ran', '\n');
           return _context.a(2, {
             meta: meta,
             content: resp,
@@ -318,7 +462,7 @@ function _nb2json() {
 }
 function get_metadata(data) {
   var returnThis = {};
-  var _iterator = _createForOfIteratorHelper(data.source),
+  var _iterator = convert_createForOfIteratorHelper(data.source),
     _step;
   try {
     for (_iterator.s(); !(_step = _iterator.n()).done;) {
@@ -422,8 +566,10 @@ function processMarkdown(txt) {
     return match;
   });
 
-  // x = createSpans(createInlineFootnotes(createElement(str))
-  x = convertNotes(x);
+  // create spans, inline footnotes ( Here is an inline note.^[Inlines notes are] ) , create elements ( :::{#id .class} )
+  var result = convertNotes(x, footnoteCount);
+  x = result.content;
+  footnoteCount = result.count;
   return x;
 }
 
@@ -461,7 +607,7 @@ function processCode(cell, meta) {
   // output
   if (cell["outputs"].length) {
     // verbose && console.log(flags, cell['outputs']) 
-    var _iterator2 = _createForOfIteratorHelper(cell["outputs"]),
+    var _iterator2 = convert_createForOfIteratorHelper(cell["outputs"]),
       _step2;
     try {
       for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
@@ -510,7 +656,7 @@ function processSource(source, flags, meta) {
   if ('#export' == flags[flags.length - 1]) {
     pyCode.push(source);
   }
-  var _iterator3 = _createForOfIteratorHelper(flags),
+  var _iterator3 = convert_createForOfIteratorHelper(flags),
     _step3;
   try {
     for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
@@ -531,14 +677,14 @@ function processSource(source, flags, meta) {
   var flagg = flags && !!flags.includes('#collapse_input_open');
   if (flagg) {
     verbose && console.log(flags);
-    var _iterator4 = _createForOfIteratorHelper(flags),
+    var _iterator4 = convert_createForOfIteratorHelper(flags),
       _step4;
     try {
       for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
         var lbl = _step4.value;
         source = source.replaceAll(lbl + "\r\n", "");
         source = source.replaceAll(lbl + "\n", ""); // Strip the Flag  
-        if (lbl == "#collapse_input_open") source = makeDetails(source, true);else if (lbl == "#collapse_input") source = makeDetails(source, false);
+        if (lbl == "#collapse_input_open") source = makeDetails(source, true, 'input');else if (lbl == "#collapse_input") source = makeDetails(source, false, 'input');
       }
     } catch (err) {
       _iterator4.e(err);
@@ -765,7 +911,7 @@ function processOutput(source, flags) {
       source = "";
     }
   }
-  var _iterator5 = _createForOfIteratorHelper(flags),
+  var _iterator5 = convert_createForOfIteratorHelper(flags),
     _step5;
   try {
     for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
@@ -777,10 +923,10 @@ function processOutput(source, flags) {
         verbose && console.log("ERROR: !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!processOutput... ", _typeof(source), source);
       }
       if (lbl == "#collapse_output_open") {
-        source = makeDetails(source, true);
+        source = makeDetails(source, true, 'output');
       }
       if (lbl == "#collapse_output") {
-        source = makeDetails(source, false);
+        source = makeDetails(source, false, 'output');
       }
       if (lbl == "#hide_output") {
         source = "";
@@ -1297,6 +1443,8 @@ function createAudio() {
  * @param {string} [search='./'] - The directory to search for JSON map files.
  * @param {string} [sitemapFile='./sitemap.txt'] - The file path where the sitemap will be saved.
  * @param {string} [pathPrefix=''] - A prefix to add to all URLs in the sitemap (e.g., '/docs').
+ * @param {string|boolean} [domain=''] - Optional domain (or site URL) to prefix all sitemap URLs (e.g., 'https://example.com').
+ *   Backwards compatible: if a boolean is passed here, it will be treated as `verbose` (older signature).
  * @param {boolean} [verbose=false] - If set to true, enables verbose logging for detailed information.
  * @returns {void} Does not return a value; processes and writes to the sitemap file directly.
  * @throws {Error} Logs an error to the console if there is a failure in writing the sitemap file and verbose is true.
@@ -1346,8 +1494,12 @@ function _createSitemap() {
     var search,
       sitemapFile,
       pathPrefix,
+      domain,
       verbose,
+      prefix,
+      d,
       pages,
+      finalPages,
       _args2 = arguments,
       _t;
     return _regenerator().w(function (_context2) {
@@ -1356,16 +1508,26 @@ function _createSitemap() {
           search = _args2.length > 0 && _args2[0] !== undefined ? _args2[0] : './';
           sitemapFile = _args2.length > 1 && _args2[1] !== undefined ? _args2[1] : './sitemap.txt';
           pathPrefix = _args2.length > 2 && _args2[2] !== undefined ? _args2[2] : '';
-          verbose = _args2.length > 3 && _args2[3] !== undefined ? _args2[3] : true;
+          domain = _args2.length > 3 && _args2[3] !== undefined ? _args2[3] : '';
+          verbose = _args2.length > 4 && _args2[4] !== undefined ? _args2[4] : true;
+          // Backwards compatibility: older callers used createSitemap(search, sitemapFile, pathPrefix, verbose)
+          typeof domain === 'boolean' && (verbose = domain, domain = '');
+          prefix = pathPrefix ? String(pathPrefix).trim() : '';
+          prefix = !prefix || prefix === "''" || prefix === '""' ? '' : (prefix = prefix.replace(/\/+$/, ''), prefix && !prefix.startsWith('/') ? '/' + prefix : prefix);
+          d = domain ? String(domain).trim().replace(/\s+/g, '') : '';
+          d = !d || d === "''" || d === '""' ? '' : (d = d.replace(/\/+$/, ''), d && !/^https?:\/\//i.test(d) ? "https://".concat(d) : d);
           verbose && console.log("\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ START createSitemap \n\n");
           _context2.n = 1;
-          return processDirectory(search, '', pathPrefix, verbose);
+          return processDirectory(search, '', prefix, verbose);
         case 1:
           pages = _context2.v;
-          console.log('pages', pages);
+          finalPages = d ? pages.map(function (p) {
+            return !p ? "".concat(d, "/") : /^https?:\/\//i.test(p) ? p : d + (p.startsWith('/') ? p : '/' + p);
+          }) : pages;
+          verbose && console.log('pages', finalPages);
           _context2.p = 2;
           _context2.n = 3;
-          return external_fs_.promises.writeFile(sitemapFile, pages.join('\n') + '\n');
+          return external_fs_.promises.writeFile(sitemapFile, finalPages.join('\n') + '\n');
         case 3:
           verbose && console.log('Sitemap file created successfully:', sitemapFile);
           _context2.n = 5;
@@ -1977,7 +2139,7 @@ function _ipynb_publish() {
  * @memberof module:Ipynb2web:cli
  */
 function help() {
-  console.log("Usage: ipynb2web <COMMAND> <SAVETO> <FROM/or/SitemapName> [PathPrefix]\n    \nCommands:\n  sitemap      Create a sitemap.\n  audio        Create audio assets.\n  help         Display this help message.\n\nFor sitemap command:\n  PathPrefix   Optional prefix to add to all URLs (e.g., '/docs')\n               Example: ipynb2web sitemap ./ ./sitemap.txt /docs\n\nFor processing notebooks (non-sitemap, non-audio commands):\n  AssetsDir    Optional directory path for saving static assets separately\n               instead of inlining them. When provided, images and other \n               assets will be saved as separate files in this directory.\n               Example: ipynb2web notebooks ./output ./input '' ./assets\n               \nExamples:\n  ipynb2web help\n  ipynb2web sitemap ./ ./sitemap.txt /docs\n  ipynb2web audio ./input ./output\n  ipynb2web notebooks ./output ./input\n  ipynb2web notebooks ./output ./input '' ./static-assets\n");
+  console.log("Usage: ipynb2web <COMMAND> <SAVETO> <FROM/or/SitemapName> [PathPrefix] [Domain]\n    \nCommands:\n  sitemap      Create a sitemap.\n  audio        Create audio assets.\n  help         Display this help message.\n\nFor sitemap command:\n  PathPrefix   Optional prefix to add to all URLs (e.g., '/docs')\n               Example: ipynb2web sitemap ./ ./sitemap.txt /docs\n\n  Domain       Optional domain to prefix all sitemap URLs (e.g., 'https://example.com')\n               Example: ipynb2web sitemap ./ ./sitemap.txt /docs example.com\n\nFor processing notebooks (non-sitemap, non-audio commands):\n  AssetsDir    Optional directory path for saving static assets separately\n               instead of inlining them. When provided, images and other \n               assets will be saved as separate files in this directory.\n               Example: ipynb2web notebooks ./output ./input '' ./assets\n               \nExamples:\n  ipynb2web help\n  ipynb2web sitemap ./ ./sitemap.txt /docs\n  ipynb2web sitemap ./ ./sitemap.txt /docs example.com\n  ipynb2web audio ./input ./output\n  ipynb2web notebooks ./output ./input\n  ipynb2web notebooks ./output ./input '' ./static-assets\n");
 }
 
 /**
@@ -1989,6 +2151,7 @@ function help() {
  * - args[2]: 'FROM' - This directory path, used as an output directory for processing files (Whenever args[0] is NOT 'sitemap').
  * - args[2]: 'sitemapFile' - The file path for saving the sitemap (ONLY when args[0] is 'sitemap').
  * - args[3]: 'pathPrefix' - Optional prefix to add to all URLs in the sitemap (ONLY when args[0] is 'sitemap').
+ * - args[4]: 'domain' - Optional domain to prefix all URLs in the sitemap (ONLY when args[0] is 'sitemap').
  * - args[4]: 'assetsDir' - Optional directory path for saving static assets separately instead of inlining them (NOT applicable for 'sitemap' and 'audio' commands).
  * @memberof module:Ipynb2web:cli
  */
@@ -1998,6 +2161,7 @@ function cli(args) {
   var FROM = args[2] || false;
   var sitemapFile = args[2] || false;
   var pathPrefix = args[3] || '';
+  var domain = args[4] || '';
   var assetsDir = args[4] || null;
   console.log('CLI RECEIVED ARGS:'); //, { directory, SAVETO, FROM, sitemapFile, assetsDir });
 
@@ -2008,7 +2172,21 @@ function cli(args) {
    * Otherwise, call cli_nbs2html.
    */
   if (directory === 'sitemap') {
-    createSitemap(SAVETO || './', sitemapFile || './sitemap.txt', pathPrefix);
+    // New signature:
+    //   ipynb2web sitemap <searchDir> <sitemapFile> [pathPrefix] [domain]
+    // Legacy signature (kept for compatibility with older usage):
+    //   ipynb2web sitemap '' <sitemapFile> <searchDir> <pathPrefix> [domain]
+    var searchDir = SAVETO || './';
+    var sitemapOutFile = sitemapFile || './sitemap.txt';
+    var sitemapPathPrefix = pathPrefix || '';
+    var sitemapDomain = domain || '';
+    if ((SAVETO === '' || SAVETO === false) && typeof pathPrefix === 'string' && pathPrefix.trim().startsWith('.') && args[4]) {
+      // Your legacy call style puts searchDir in args[3] and pathPrefix in args[4]
+      searchDir = args[3] || './';
+      sitemapPathPrefix = args[4] || '';
+      sitemapDomain = args[5] || '';
+    }
+    createSitemap(searchDir, sitemapOutFile, sitemapPathPrefix, sitemapDomain);
   } else if (directory === 'audio') {
     createAudio(FROM, SAVETO);
   } else {
@@ -2023,7 +2201,7 @@ function cli(args) {
 if (require.main === module) {  }
 */
 
-if ("file:///home/carlos/Documents/GitHub/ipynb2web/src/cli.js".includes('ipynb2web')) {
+if ("file:///home/carlos/Documents/GitHub/pages/ipynb2web/src/cli.js".includes('ipynb2web')) {
   var args = process.argv.slice(2);
   if (args[0] === 'help' || args.length === 0) {
     help();

@@ -43,6 +43,11 @@ ipynb2web <COMMAND> <SAVETO> <FROM/or/SitemapName>
    ipynb2web sitemap ./ ./sitemap.txt /docs
    ```
 
+   With optional path prefix + domain:
+   ```bash
+   ipynb2web sitemap ./ ./sitemap.txt /docs example.com
+   ```
+
 3. **Create Audio Assets**:
    This command generates audio versions of documents, provided that the `.ipynb` files include the necessary frontmatter. It requires the `OPENAI_API_KEY` to be stored in your `.env` file.
 
