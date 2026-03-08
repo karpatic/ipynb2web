@@ -263,7 +263,7 @@ Functions exposed from <a href="module-Ipynb2web_browser.html">browser</a> and <
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="convert.mjs.html">convert.mjs</a>, <a href="convert.mjs.html#line233">line 233</a>
+        <a href="convert.mjs.html">convert.mjs</a>, <a href="convert.mjs.html#line252">line 252</a>
     </li></ul></dd>
     
 
@@ -321,7 +321,7 @@ Functions exposed from <a href="module-Ipynb2web_browser.html">browser</a> and <
     
 
     
-    <h4 class="name" id=".nb2json"><span class="type-signature">(async, static) </span>nb2json<span class="signature">(ipynbPath, verbose<span class="signature-attributes">opt</span>, options<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Object}</span></h4>
+    <h4 class="name" id=".nb2json"><span class="type-signature">(async, static) </span>nb2json<span class="signature">(ipynbPath, verbose<span class="signature-attributes">opt</span>, extractAssets<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Object}</span></h4>
     
 
     
@@ -443,74 +443,15 @@ Functions exposed from <a href="module-Ipynb2web_browser.html">browser</a> and <
 
         <tr>
             
-                <td class="name"><code>options</code></td>
+                <td class="name"><code>extractAssets</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">Object</span>
+<span class="param-type">Array.&lt;string></span>
+|
 
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    {}
-                
-                </td>
-            
-
-            <td class="description last"><p>Configuration options for conversion.</p>
-                <h6>Properties</h6>
-                
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-        <th>Attributes</th>
-        
-
-        
-        <th>Default</th>
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>inlineAssets</code></td>
-            
-
-            <td class="type">
-            
-                
 <span class="param-type">boolean</span>
 
 
@@ -532,58 +473,12 @@ Functions exposed from <a href="module-Ipynb2web_browser.html">browser</a> and <
             
                 <td class="default">
                 
-                    true
+                    false
                 
                 </td>
             
 
-            <td class="description last"><p>If true, assets are inlined (browser mode). If false, assets are saved separately (CLI mode).</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>assetsDir</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    './assets'
-                
-                </td>
-            
-
-            <td class="description last"><p>Directory to save separate asset files when inlineAssets is false.</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-            </td>
+            <td class="description last"><p>Array of asset types to extract (e.g., ['png', 'js', 'txt', 'html']) or boolean for backward compatibility.</p></td>
         </tr>
 
     
@@ -624,7 +519,7 @@ Functions exposed from <a href="module-Ipynb2web_browser.html">browser</a> and <
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="convert.mjs.html">convert.mjs</a>, <a href="convert.mjs.html#line43">line 43</a>
+        <a href="convert.mjs.html">convert.mjs</a>, <a href="convert.mjs.html#line44">line 44</a>
     </li></ul></dd>
     
 
@@ -682,7 +577,7 @@ Functions exposed from <a href="module-Ipynb2web_browser.html">browser</a> and <
     
 
     
-    <h4 class="name" id=".processOutput"><span class="type-signature">(static) </span>processOutput<span class="signature">(source, flags, verbose<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {string}</span></h4>
+    <h4 class="name" id=".processOutput"><span class="type-signature">(static) </span>processOutput<span class="signature">(source, flags, verbose<span class="signature-attributes">opt</span>, extractAssets<span class="signature-attributes">opt</span>, notebookName<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {string}</span></h4>
     
 
     
@@ -837,6 +732,87 @@ Strip Flags from output, make details, hide all.</p>
         </tr>
 
     
+
+        <tr>
+            
+                <td class="name"><code>extractAssets</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array.&lt;string></span>
+|
+
+<span class="param-type">boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    false
+                
+                </td>
+            
+
+            <td class="description last"><p>Array of asset types to extract (e.g., ['png', 'js', 'txt', 'html']) or boolean for backward compatibility.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>notebookName</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    null
+                
+                </td>
+            
+
+            <td class="description last"><p>The name of the notebook for asset naming.</p></td>
+        </tr>
+
+    
     </tbody>
 </table>
 
@@ -874,7 +850,7 @@ Strip Flags from output, make details, hide all.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="convert.mjs.html">convert.mjs</a>, <a href="convert.mjs.html#line282">line 282</a>
+        <a href="convert.mjs.html">convert.mjs</a>, <a href="convert.mjs.html#line301">line 301</a>
     </li></ul></dd>
     
 
@@ -1159,7 +1135,7 @@ Strip Flags from text, make details, hide all. Append to pyCode</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="convert.mjs.html">convert.mjs</a>, <a href="convert.mjs.html#line262">line 262</a>
+        <a href="convert.mjs.html">convert.mjs</a>, <a href="convert.mjs.html#line281">line 281</a>
     </li></ul></dd>
     
 
@@ -1217,7 +1193,7 @@ Strip Flags from text, make details, hide all. Append to pyCode</p>
     
 
     
-    <h4 class="name" id="~cleanCell"><span class="type-signature">(inner) </span>cleanCell<span class="signature">(cell, meta, verbose<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {string}</span></h4>
+    <h4 class="name" id="~cleanCell"><span class="type-signature">(inner) </span>cleanCell<span class="signature">(cell, meta, verbose<span class="signature-attributes">opt</span>, extractAssets<span class="signature-attributes">opt</span>, notebookName<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {string}</span></h4>
     
 
     
@@ -1372,6 +1348,87 @@ Returns text or passes cell to 'code cell' processor</p>
         </tr>
 
     
+
+        <tr>
+            
+                <td class="name"><code>extractAssets</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array.&lt;string></span>
+|
+
+<span class="param-type">boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    false
+                
+                </td>
+            
+
+            <td class="description last"><p>Array of asset types to extract (e.g., ['png', 'js', 'txt', 'html']) or boolean for backward compatibility.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>notebookName</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    null
+                
+                </td>
+            
+
+            <td class="description last"><p>The name of the notebook for asset naming.</p></td>
+        </tr>
+
+    
     </tbody>
 </table>
 
@@ -1409,7 +1466,7 @@ Returns text or passes cell to 'code cell' processor</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="convert.mjs.html">convert.mjs</a>, <a href="convert.mjs.html#line140">line 140</a>
+        <a href="convert.mjs.html">convert.mjs</a>, <a href="convert.mjs.html#line156">line 156</a>
     </li></ul></dd>
     
 
@@ -1467,7 +1524,7 @@ Returns text or passes cell to 'code cell' processor</p>
     
 
     
-    <h4 class="name" id="~convertNb"><span class="type-signature">(inner) </span>convertNb<span class="signature">(cells, meta, verbose<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Array.&lt;string>}</span></h4>
+    <h4 class="name" id="~convertNb"><span class="type-signature">(inner) </span>convertNb<span class="signature">(cells, meta, verbose<span class="signature-attributes">opt</span>, extractAssets<span class="signature-attributes">opt</span>, notebookName<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Array.&lt;string>}</span></h4>
     
 
     
@@ -1621,6 +1678,87 @@ Returns text or passes cell to 'code cell' processor</p>
         </tr>
 
     
+
+        <tr>
+            
+                <td class="name"><code>extractAssets</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array.&lt;string></span>
+|
+
+<span class="param-type">boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    false
+                
+                </td>
+            
+
+            <td class="description last"><p>Array of asset types to extract (e.g., ['png', 'js', 'txt', 'html']) or boolean for backward compatibility.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>notebookName</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    null
+                
+                </td>
+            
+
+            <td class="description last"><p>The name of the notebook for asset naming.</p></td>
+        </tr>
+
+    
     </tbody>
 </table>
 
@@ -1658,7 +1796,7 @@ Returns text or passes cell to 'code cell' processor</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="convert.mjs.html">convert.mjs</a>, <a href="convert.mjs.html#line124">line 124</a>
+        <a href="convert.mjs.html">convert.mjs</a>, <a href="convert.mjs.html#line138">line 138</a>
     </li></ul></dd>
     
 
@@ -1826,7 +1964,7 @@ Get markdown and check EACH LINE for yaml. Special characters must have a space 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="convert.mjs.html">convert.mjs</a>, <a href="convert.mjs.html#line97">line 97</a>
+        <a href="convert.mjs.html">convert.mjs</a>, <a href="convert.mjs.html#line109">line 109</a>
     </li></ul></dd>
     
 
@@ -1884,7 +2022,7 @@ Get markdown and check EACH LINE for yaml. Special characters must have a space 
     
 
     
-    <h4 class="name" id="~processCode"><span class="type-signature">(inner) </span>processCode<span class="signature">(cell, meta, verbose<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Array.&lt;string>}</span></h4>
+    <h4 class="name" id="~processCode"><span class="type-signature">(inner) </span>processCode<span class="signature">(cell, meta, verbose<span class="signature-attributes">opt</span>, extractAssets<span class="signature-attributes">opt</span>, notebookName<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Array.&lt;string>}</span></h4>
     
 
     
@@ -2039,6 +2177,87 @@ Get markdown and check EACH LINE for yaml. Special characters must have a space 
         </tr>
 
     
+
+        <tr>
+            
+                <td class="name"><code>extractAssets</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array.&lt;string></span>
+|
+
+<span class="param-type">boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    false
+                
+                </td>
+            
+
+            <td class="description last"><p>Array of asset types to extract (e.g., ['png', 'js', 'txt', 'html']) or boolean for backward compatibility.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>notebookName</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    null
+                
+                </td>
+            
+
+            <td class="description last"><p>The name of the notebook for asset naming.</p></td>
+        </tr>
+
+    
     </tbody>
 </table>
 
@@ -2076,7 +2295,7 @@ Get markdown and check EACH LINE for yaml. Special characters must have a space 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="convert.mjs.html">convert.mjs</a>, <a href="convert.mjs.html#line200">line 200</a>
+        <a href="convert.mjs.html">convert.mjs</a>, <a href="convert.mjs.html#line219">line 219</a>
     </li></ul></dd>
     
 
@@ -2235,7 +2454,7 @@ Get markdown and check EACH LINE for yaml. Special characters must have a space 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="convert.mjs.html">convert.mjs</a>, <a href="convert.mjs.html#line158">line 158</a>
+        <a href="convert.mjs.html">convert.mjs</a>, <a href="convert.mjs.html#line174">line 174</a>
     </li></ul></dd>
     
 
@@ -2309,7 +2528,7 @@ Get markdown and check EACH LINE for yaml. Special characters must have a space 
 <br class="clear">
 
 <footer>
-    Documentation by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sun Sep 21 2025 19:47:33 GMT-0400 (Eastern Daylight Time)
+    Documentation by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sat Mar 07 2026 22:15:52 GMT-0500 (Eastern Standard Time)
 </footer>
 
 <script> prettyPrint(); </script>

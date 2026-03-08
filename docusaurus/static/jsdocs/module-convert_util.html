@@ -152,7 +152,7 @@
     
 
     
-    <h4 class="name" id=".convertNotes"><span class="type-signature">(static) </span>convertNotes<span class="signature">(str)</span><span class="type-signature"> &rarr; {string}</span></h4>
+    <h4 class="name" id=".collapseHeaders"><span class="type-signature">(static) </span>collapseHeaders<span class="signature">(content, headers, open)</span><span class="type-signature"> &rarr; {string}</span></h4>
     
 
     
@@ -160,7 +160,9 @@
 
 
 <div class="description">
-    <p>Converts special note syntax in a string to HTML elements for displaying notes.</p>
+    <p>Wraps specified header levels and their content in collapsible details elements.<br>
+Processes headers from highest level (h2) to lowest (h6) to maintain hierarchy.<br>
+A header's content includes all content until the next header of equal or higher significance.</p>
 </div>
 
 
@@ -196,7 +198,7 @@
 
         <tr>
             
-                <td class="name"><code>str</code></td>
+                <td class="name"><code>content</code></td>
             
 
             <td class="type">
@@ -212,7 +214,53 @@
 
             
 
-            <td class="description last"><p>The string containing note syntax to be converted.</p></td>
+            <td class="description last"><p>The HTML content containing headers to be collapsed.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>headers</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Comma-separated list of header levels to collapse (e.g., &quot;h2,h3&quot;).</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>open</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Determines if the details should be open by default.</p></td>
         </tr>
 
     
@@ -253,7 +301,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="convert_util.mjs.html">convert_util.mjs</a>, <a href="convert_util.mjs.html#line47">line 47</a>
+        <a href="convert_util.mjs.html">convert_util.mjs</a>, <a href="convert_util.mjs.html#line70">line 70</a>
     </li></ul></dd>
     
 
@@ -282,7 +330,7 @@
 
         
 <div class="param-desc">
-    <p>The string with note syntax converted to HTML elements.</p>
+    <p>The HTML content with specified headers wrapped in details elements.</p>
 </div>
 
 
@@ -294,6 +342,200 @@
     <dd>
         
 <span class="param-type">string</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id=".convertNotes"><span class="type-signature">(static) </span>convertNotes<span class="signature">(str, startCount)</span><span class="type-signature"> &rarr; {Object}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    <p>Converts special note syntax in a string to HTML elements for displaying notes.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>str</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>The string containing note syntax to be converted.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>startCount</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+                <td class="default">
+                
+                    0
+                
+                </td>
+            
+
+            <td class="description last"><p>The starting count for footnotes.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="convert_util.mjs.html">convert_util.mjs</a>, <a href="convert_util.mjs.html#line50">line 50</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Object with content and updated count.</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
 
 
     </dd>
@@ -646,7 +888,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="convert_util.mjs.html">convert_util.mjs</a>, <a href="convert_util.mjs.html#line162">line 162</a>
+        <a href="convert_util.mjs.html">convert_util.mjs</a>, <a href="convert_util.mjs.html#line276">line 276</a>
     </li></ul></dd>
     
 
@@ -805,7 +1047,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="convert_util.mjs.html">convert_util.mjs</a>, <a href="convert_util.mjs.html#line29">line 29</a>
+        <a href="convert_util.mjs.html">convert_util.mjs</a>, <a href="convert_util.mjs.html#line31">line 31</a>
     </li></ul></dd>
     
 
@@ -879,7 +1121,7 @@
 <br class="clear">
 
 <footer>
-    Documentation by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sun Sep 21 2025 19:47:33 GMT-0400 (Eastern Daylight Time)
+    Documentation by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sat Mar 07 2026 22:15:52 GMT-0500 (Eastern Standard Time)
 </footer>
 
 <script> prettyPrint(); </script>

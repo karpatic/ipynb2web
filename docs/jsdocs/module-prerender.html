@@ -154,7 +154,7 @@
     
 
     
-    <h4 class="name" id=".cli_nbs2html"><span class="type-signature">(async, static) </span>cli_nbs2html<span class="signature">(FROM<span class="signature-attributes">opt</span>, directory, SAVETO<span class="signature-attributes">opt</span>, verbose<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {void}</span></h4>
+    <h4 class="name" id=".cli_nbs2html"><span class="type-signature">(async, static) </span>cli_nbs2html<span class="signature">(FROM<span class="signature-attributes">opt</span>, directory, SAVETO<span class="signature-attributes">opt</span>, verbose<span class="signature-attributes">opt</span>, assetsDir<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {void}</span></h4>
     
 
     
@@ -351,6 +351,45 @@
         </tr>
 
     
+
+        <tr>
+            
+                <td class="name"><code>assetsDir</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    null
+                
+                </td>
+            
+
+            <td class="description last"><p>Optional directory path for saving static assets separately instead of inlining them.</p></td>
+        </tr>
+
+    
     </tbody>
 </table>
 
@@ -388,7 +427,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="prerender.mjs.html">prerender.mjs</a>, <a href="prerender.mjs.html#line122">line 122</a>
+        <a href="prerender.mjs.html">prerender.mjs</a>, <a href="prerender.mjs.html#line158">line 158</a>
     </li></ul></dd>
     
 
@@ -635,7 +674,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="prerender.mjs.html">prerender.mjs</a>, <a href="prerender.mjs.html#line26">line 26</a>
+        <a href="prerender.mjs.html">prerender.mjs</a>, <a href="prerender.mjs.html#line49">line 49</a>
     </li></ul></dd>
     
 
@@ -671,7 +710,7 @@
     
 
     
-    <h4 class="name" id=".createSitemap"><span class="type-signature">(async, static) </span>createSitemap<span class="signature">(search<span class="signature-attributes">opt</span>, sitemapFile<span class="signature-attributes">opt</span>, pathPrefix<span class="signature-attributes">opt</span>, verbose<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {void}</span></h4>
+    <h4 class="name" id=".createSitemap"><span class="type-signature">(async, static) </span>createSitemap<span class="signature">(search<span class="signature-attributes">opt</span>, sitemapFile<span class="signature-attributes">opt</span>, pathPrefix<span class="signature-attributes">opt</span>, domain<span class="signature-attributes">opt</span>, verbose<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {void}</span></h4>
     
 
     
@@ -836,6 +875,49 @@
 
         <tr>
             
+                <td class="name"><code>domain</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+|
+
+<span class="param-type">boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    ''
+                
+                </td>
+            
+
+            <td class="description last"><p>Optional domain (or site URL) to prefix all sitemap URLs (e.g., 'https://example.com').<br>
+Backwards compatible: if a boolean is passed here, it will be treated as <code>verbose</code> (older signature).</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
                 <td class="name"><code>verbose</code></td>
             
 
@@ -909,7 +991,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="prerender.mjs.html">prerender.mjs</a>, <a href="prerender.mjs.html#line44">line 44</a>
+        <a href="prerender.mjs.html">prerender.mjs</a>, <a href="prerender.mjs.html#line69">line 69</a>
     </li></ul></dd>
     
 
@@ -996,7 +1078,7 @@
     
 
     
-    <h4 class="name" id=".generate_sectionmap"><span class="type-signature">(async, static) </span>generate_sectionmap<span class="signature">(pages, FROM, directory, SAVETO, verbose<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {void}</span></h4>
+    <h4 class="name" id=".generate_sectionmap"><span class="type-signature">(async, static) </span>generate_sectionmap<span class="signature">(pages, FROM, directory, SAVETO, verbose<span class="signature-attributes">opt</span>, assetsDir<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {void}</span></h4>
     
 
     
@@ -1225,6 +1307,45 @@
         </tr>
 
     
+
+        <tr>
+            
+                <td class="name"><code>assetsDir</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    null
+                
+                </td>
+            
+
+            <td class="description last"><p>Optional directory path for saving static assets separately instead of inlining them.</p></td>
+        </tr>
+
+    
     </tbody>
 </table>
 
@@ -1262,7 +1383,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="prerender.mjs.html">prerender.mjs</a>, <a href="prerender.mjs.html#line156">line 156</a>
+        <a href="prerender.mjs.html">prerender.mjs</a>, <a href="prerender.mjs.html#line193">line 193</a>
     </li></ul></dd>
     
 
@@ -1349,7 +1470,7 @@
     
 
     
-    <h4 class="name" id=".ipynb_publish"><span class="type-signature">(async, static) </span>ipynb_publish<span class="signature">(fullFilePath, saveDir, type<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Object}</span></h4>
+    <h4 class="name" id=".ipynb_publish"><span class="type-signature">(async, static) </span>ipynb_publish<span class="signature">(fullFilePath, saveDir, type<span class="signature-attributes">opt</span>, assetsDir<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Object}</span></h4>
     
 
     
@@ -1504,6 +1625,45 @@ Optionally, extracts and saves Python code from the notebook.</p>
         </tr>
 
     
+
+        <tr>
+            
+                <td class="name"><code>assetsDir</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    null
+                
+                </td>
+            
+
+            <td class="description last"><p>Optional directory path for saving static assets separately instead of inlining them.</p></td>
+        </tr>
+
+    
     </tbody>
 </table>
 
@@ -1541,7 +1701,7 @@ Optionally, extracts and saves Python code from the notebook.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="prerender.mjs.html">prerender.mjs</a>, <a href="prerender.mjs.html#line244">line 244</a>
+        <a href="prerender.mjs.html">prerender.mjs</a>, <a href="prerender.mjs.html#line296">line 296</a>
     </li></ul></dd>
     
 
@@ -1862,7 +2022,7 @@ Optionally, extracts and saves Python code from the notebook.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="prerender.mjs.html">prerender.mjs</a>, <a href="prerender.mjs.html#line68">line 68</a>
+        <a href="prerender.mjs.html">prerender.mjs</a>, <a href="prerender.mjs.html#line103">line 103</a>
     </li></ul></dd>
     
 
@@ -1946,6 +2106,165 @@ Optionally, extracts and saves Python code from the notebook.</p>
 
 
         
+            
+
+    
+
+    
+    <h4 class="name" id="~getExtensionFromType"><span class="type-signature">(inner) </span>getExtensionFromType<span class="signature">(mimeType)</span><span class="type-signature"> &rarr; {string}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    <p>Helper function to get file extension from MIME type</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>mimeType</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>The MIME type (e.g., 'text/html', 'image/png')</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="prerender.mjs.html">prerender.mjs</a>, <a href="prerender.mjs.html#line23">line 23</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>The file extension (e.g., 'html', 'png')</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">string</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
     
 
     
@@ -1967,7 +2286,7 @@ Optionally, extracts and saves Python code from the notebook.</p>
 <br class="clear">
 
 <footer>
-    Documentation by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sun Sep 21 2025 19:16:15 GMT-0400 (Eastern Daylight Time)
+    Documentation by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sat Mar 07 2026 22:15:52 GMT-0500 (Eastern Standard Time)
 </footer>
 
 <script> prettyPrint(); </script>

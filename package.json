@@ -60,8 +60,11 @@
     "builddocs": "jsdoc -c jsdoc.conf.json",
     "watchdocs": "nodemon --watch src --watch template --ext js,mjs,cjs,tmpl,css --exec \"npm run builddocs\"",
     "watchdocu": "cd docusaurus; npm run start",
-    "builddocu": "rm ./docs/* -r; rm docusaurus/docs/overview/getting-started.md; cp README.md docusaurus/docs/overview/getting-started.md; cd docusaurus; npm run build; cp -r build/* ../docs/; rm -r build/*;  cp CNAME ../docs/",
-    "release": "npm version patch && npm publish"
+    "builddocu": "rm -rf ./docs/*; cd docusaurus; npm run build; cp -r build/* ../docs/; rm -rf build/*; cp CNAME ../docs/",
+    "release": "npm version patch && npm publish",
+    "publish:github": "./scripts/publish-github-package.sh",
+    "publish:all": "npm publish --access public && npm run publish:github",
+    "sync:readme-doc": "cp README.md docusaurus/docs/overview/getting-started.md"
   },
   "devDependencies": {
     "@babel/core": "^7.23.7",

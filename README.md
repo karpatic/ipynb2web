@@ -7,6 +7,14 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![NPM](https://nodei.co/npm/ipynb.png)](https://nodei.co/npm/ipynb2web/)
 
+
+## Distribution
+
+- npm: https://www.npmjs.com/package/ipynb2web
+- GitHub Packages mirror: https://github.com/karpatic/ipynb2web/pkgs/npm/ipynb2web
+- Docs site: https://ipynb2web.com/
+- API docs: https://ipynb2web.com/jsdocs/module-Ipynb2web_browser.html
+
 ## About
 
 Ipynb2web is designed to convert Interactive Python Notebooks (.ipynb) into clean, web-ready, static assets that are template-compatible. This standalone tool uses `marked` as it's only dependency and offers unique functionalities not found in other tools like Pandoc, Sphinx, Nbdev, Quarto, etc.

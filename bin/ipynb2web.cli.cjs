@@ -2201,7 +2201,7 @@ function cli(args) {
 if (require.main === module) {  }
 */
 
-if ("file:///home/carlos/Documents/GitHub/pages/ipynb2web/src/cli.js".includes('ipynb2web')) {
+if ("file:///home/carlos/.openclaw/workspace/tmp/ipynb2web-refresh/src/cli.js".includes('ipynb2web')) {
   var args = process.argv.slice(2);
   if (args[0] === 'help' || args.length === 0) {
     help();
