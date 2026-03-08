@@ -79,9 +79,10 @@ async function createSitemap(search='./', sitemapFile = './sitemap.txt', pathPre
   verbose && console.log(`\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ START createSitemap \n\n`);
   const pages = await processDirectory(search, '', prefix, verbose);
   const finalPages = d ? pages.map(p => (!p ? `${d}/` : (/^https?:\/\//i.test(p) ? p : d + (p.startsWith('/') ? p : '/' + p)))) : pages;
-  verbose && console.log('pages', finalPages);
+  const uniquePages = Array.from(new Set(finalPages));
+  verbose && console.log('pages', uniquePages);
   try {  
-    await fs.promises.writeFile(sitemapFile, finalPages.join('\n') + '\n');
+    await fs.promises.writeFile(sitemapFile, uniquePages.join('\n') + '\n');
     verbose && console.log('Sitemap file created successfully:', sitemapFile);
   } catch (err) {
     verbose && console.error(`Error creating or truncating sitemap file: ${sitemapFile}`, err);
@@ -123,11 +124,34 @@ async function processDirectory(directory, subdir = '', pathPrefix = '', verbose
     const filePath = path.join(directory, file);
     const jsonData = JSON.parse(await fs.promises.readFile(filePath, 'utf-8'));
 
+    const section = file.split('_')[0].split('.')[0];
+
     jsonData.forEach(obj => {
-      if (obj.filename) {
-        const url = `/${file.split('_')[0].split('.')[0]}/${subdir ? subdir + '/' : ''}${obj.filename}`;
-        pages.push(pathPrefix ? pathPrefix + url : url);
+      if (!obj.filename) return;
+
+      const filename = String(obj.filename).replace(/^\/+/, '').replace(/\/+$/, '');
+      const isIndexSection = section === 'index';
+      const isSectionLanding = filename === section;
+      const isRootLanding = isIndexSection && filename === 'index';
+
+      // URL rules:
+      // - index_map + index      -> /
+      // - index_map + webdev     -> /webdev
+      // - blog_map + blog        -> /blog
+      // - blog_map + post        -> /blog/post
+      let routePath = '';
+      if (isRootLanding) {
+        routePath = '/';
+      } else if (isIndexSection) {
+        routePath = `/${filename}`;
+      } else if (isSectionLanding) {
+        routePath = `/${section}`;
+      } else {
+        routePath = `/${section}/${filename}`;
       }
+
+      const normalized = routePath === '/' ? '/' : routePath.replace(/\/+/g, '/');
+      pages.push(pathPrefix ? pathPrefix + normalized : normalized);
     });
   }));
 
