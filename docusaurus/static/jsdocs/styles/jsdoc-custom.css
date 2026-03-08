@@ -1,20 +1,203 @@
-h4 {
-    color: blue;
-    font-weight: 900;
-    font-size: 2rem;
+/*
+  ipynb2web API Docs Theme
+  Purpose: polish JSDoc pages for readability and a cleaner, modern look.
+*/
+
+:root {
+  --api-bg: #f8fafc;
+  --api-surface: #ffffff;
+  --api-border: #e2e8f0;
+  --api-text: #0f172a;
+  --api-muted: #475569;
+  --api-link: #2563eb;
+  --api-accent: #7c3aed;
+  --api-code-bg: #0b1220;
+  --api-code-text: #d1fae5;
 }
 
-/* Reset styles for specific elements within the h4 */
+html {
+  background: var(--api-bg);
+  font-size: 15px;
+}
+
+body {
+  background: var(--api-bg);
+  color: var(--api-text);
+  line-height: 1.6;
+}
+
+a,
+a:visited,
+a:active {
+  color: var(--api-link);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+#main {
+  width: 72%;
+}
+
+nav {
+  width: 28%;
+  border-left: 1px solid var(--api-border);
+  padding-left: 18px;
+  position: sticky;
+  top: 20px;
+  max-height: calc(100vh - 30px);
+  overflow: auto;
+}
+
+nav h2,
+nav h3 {
+  color: var(--api-text);
+}
+
+nav ul a,
+nav ul a:visited,
+nav ul a:active {
+  color: var(--api-muted);
+}
+
+.page-title {
+  margin: 14px 24px 16px;
+  font-size: clamp(2rem, 4vw, 2.7rem);
+  letter-spacing: -0.02em;
+  color: var(--api-text);
+}
+
+section {
+  margin: 0 20px 16px 0;
+  border: 1px solid var(--api-border);
+  border-radius: 14px;
+  background: var(--api-surface);
+  box-shadow: 0 6px 24px rgba(2, 6, 23, 0.04);
+  padding: 16px 20px;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--api-text);
+}
+
+h2,
+h3.subsection-title {
+  margin-top: 6px;
+  margin-bottom: 12px;
+}
+
+/* Function / member headings */
+h4 {
+  color: var(--api-link);
+  font-weight: 700;
+  font-size: 1.22rem;
+  margin-bottom: 8px;
+}
+
 h4 .type-signature,
 h4 .signature,
 h4 .signature-attributes {
-    color: initial;
-    font-weight: initial;
-    font-size: initial;
+  color: var(--api-muted);
+  font-weight: 500;
+  font-size: 0.92em;
 }
 
-  
+.type-signature {
+  color: var(--api-accent);
+  font-size: 0.78rem;
+}
 
-.type-signature{
-    font-size:.75rem;
+.signature-attributes {
+  color: #64748b;
+}
+
+.class-description,
+.description,
+p {
+  color: var(--api-text);
+}
+
+.ancestors,
+.attribs,
+.ancestors a,
+.attribs a {
+  color: #64748b !important;
+}
+
+.name,
+.signature,
+pre,
+code,
+.prettyprint {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+pre.prettyprint,
+.prettyprint,
+code {
+  background: var(--api-code-bg);
+  color: var(--api-code-text);
+  border: 1px solid #1e293b;
+  border-radius: 10px;
+}
+
+pre.prettyprint,
+.prettyprint {
+  padding: 14px;
+  overflow: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+}
+
+thead tr {
+  background: #f1f5f9;
+}
+
+th,
+td {
+  border: 1px solid var(--api-border);
+  padding: 8px 10px;
+}
+
+.details {
+  border-left: 3px solid #cbd5e1;
+  margin-top: 12px;
+  padding: 6px 0;
+}
+
+footer {
+  color: #64748b;
+  margin: 18px 0;
+}
+
+@media (max-width: 1100px) {
+  #main,
+  nav {
+    float: none;
+    width: 100%;
+  }
+
+  nav {
+    position: static;
+    border-left: 0;
+    border-top: 1px solid var(--api-border);
+    margin-top: 12px;
+    padding: 14px 0 0;
+    max-height: none;
+  }
+
+  section {
+    margin-right: 0;
+  }
 }
