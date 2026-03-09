@@ -28,59 +28,61 @@ function HomepageFeatures() {
   );
 }
 
-
 const FeatureList = [
   {
-    title: 'Made for the web',
-    img: './img/ipynb2web.png',
+    title: 'Made for the Web',
+    img: '/img/ipynb2web.png',
     description: (
       <>
-        Convert your .ipynb docs into web-templatable json assets with the use of a single <a href='https://ipynb2web.com/jsdocs/module-convert.html#.nb2json'>command</a>.
+        Convert your .ipynb docs into web-templatable JSON assets with a single{' '}
+        <a href="https://ipynb2web.com/jsdocs/module-convert.html#.nb2json">command</a>.
       </>
     ),
   },
   {
     title: 'Minimally Opinionated',
-    img: './img/ipynb2web.png',
+    img: '/img/features/minimally-opinionated.svg',
     description: (
       <>
-        Ipynb2web's BYO-Template approach means no more fighting a design choice Build your own design or integrate into existing tools.
+        Ipynb2web’s BYO-template approach means less fighting defaults and more building your design—or integrating with existing tools.
       </>
     ),
   },
   {
     title: 'Focus on What Matters',
-    img: './img/ipynb2web.png',
+    img: '/img/features/focus-matters.svg',
     description: (
       <>
-        Built to handle gritty details other notebook conversion tools leave out. Auto remove system logs, warnings, error messages, and more.
+        Built to handle the gritty details other notebook conversion tools leave out. Automatically remove system logs, warnings, error messages, and more.
       </>
     ),
   },
   {
-    title: 'For all environments',
-    img: './img/ipynb2web.png',
+    title: 'For All Environments',
+    img: '/img/features/all-environments.svg',
     description: (
       <>
-        Render assets on the <a href="https://ipynb2web.com/jsdocs/module-node.html">server</a> or in the <a href="https://ipynb2web.com/jsdocs/module-browser.html">browser</a>; Using Modules, Vanilla JS, and even your <a href="https://ipynb2web.com/jsdocs/module-cli.html">terminal</a>.
-      </>
-    ),
-  },
-  {
-    title: 'Powerful Markup',
-    img: './img/ipynb2web.png',
-    description: (
-      <>
-        Choose what to show, what to hide, and how it should appear: Footnotes, Breadcrumbs, Collapsible Content, etc.
+        Render assets on the <a href="https://ipynb2web.com/jsdocs/module-node.html">server</a> or in the{' '}
+        <a href="https://ipynb2web.com/jsdocs/module-browser.html">browser</a>, using Modules, Vanilla JS, and even your{' '}
+        <a href="https://ipynb2web.com/jsdocs/module-cli.html">terminal</a>.
       </>
     ),
   },
   {
     title: 'Powerful Markup',
-    img: './img/ipynb2web.png',
+    img: '/img/features/powerful-markup.svg',
     description: (
       <>
-        Server side implementation can traverse directories, creating python modules, table of contents, sitemaps, cover-photos, and audio transcriptions.
+        Choose what to show, what to hide, and how it should appear: footnotes, breadcrumbs, collapsible content, and more.
+      </>
+    ),
+  },
+  {
+    title: 'Built-in Automation',
+    img: '/img/features/built-in-automation.svg',
+    description: (
+      <>
+        On the server side, traverse directories and generate Python modules, tables of contents, sitemaps, cover photos, and audio transcriptions.
       </>
     ),
   },
@@ -89,9 +91,7 @@ const FeatureList = [
 export default function Home() {
   const { siteConfig } = useDocusaurusContext();
   return (
-    <Layout
-      title={`Hello from ${siteConfig.title}`}
-      description="Description will go into a meta tag in <head />">
+    <Layout title={`Hello from ${siteConfig.title}`} description="Description will go into a meta tag in <head />">
       <header className={clsx('hero hero--primary', styles.heroBanner)}>
         <div className="container">
           <Heading as="h1" className="hero__title">
@@ -99,9 +99,7 @@ export default function Home() {
           </Heading>
           <p className="hero__subtitle">{siteConfig.tagline}</p>
           <div className={styles.buttons}>
-            <Link
-              className="button button--secondary button--lg"
-              to="/docs/overview/getting-started">
+            <Link className="button button--secondary button--lg" to="/docs/overview/getting-started">
               5min ⏱️ Tutorial
             </Link>
           </div>

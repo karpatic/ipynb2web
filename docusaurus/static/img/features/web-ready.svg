@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-labelledby="title desc">
+  <title id="title">Made for the Web</title>
+  <desc id="desc">Notebook and globe icon</desc>
+  <rect width="200" height="200" rx="24" fill="#f5f8ff"/>
+  <circle cx="135" cy="74" r="42" fill="#e5eeff" stroke="#2f6feb" stroke-width="4"/>
+  <path d="M93 74h84M135 32c-10 10-16 25-16 42s6 32 16 42M135 32c10 10 16 25 16 42s-6 32-16 42" stroke="#2f6feb" stroke-width="3" fill="none"/>
+  <rect x="28" y="82" width="88" height="90" rx="8" fill="#ffffff" stroke="#2f6feb" stroke-width="4"/>
+  <path d="M44 104h56M44 120h42M44 136h50" stroke="#2f6feb" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="100" cy="160" r="6" fill="#2f6feb"/>
+</svg>
