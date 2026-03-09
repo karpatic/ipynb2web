@@ -14,6 +14,7 @@
 - GitHub Packages mirror: https://github.com/karpatic/ipynb2web/pkgs/npm/ipynb2web
 - Docs site: https://ipynb2web.com/
 - API docs: https://ipynb2web.com/jsdocs/module-Ipynb2web_browser.html
+- Try it out (browser test page): https://ipynb2web.com/test/index.html
 
 ## About
 

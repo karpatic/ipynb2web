@@ -1,38 +1,211 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/ipynb2web@1.0.24/dist/ipynb2web.browser.umd.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ipynb2web • Try it out</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ipynb2web@1.0.35/dist/ipynb2web.browser.umd.js"></script>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --panel: #111827;
+      --panel-2: #1f2937;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --accent: #60a5fa;
+      --accent-2: #34d399;
+      --border: #374151;
+      --error: #fca5a5;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, sans-serif;
+      color: var(--text);
+      background: radial-gradient(circle at top, #111b31, var(--bg));
+      min-height: 100vh;
+      padding: 2rem 1rem 3rem;
+    }
+
+    .container {
+      width: min(1000px, 100%);
+      margin: 0 auto;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(17, 24, 39, 0.95), rgba(17, 24, 39, 0.88));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.25rem;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+    }
+
+    h1 {
+      margin: 0 0 0.35rem;
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+    }
+
+    p { margin: 0.4rem 0; }
+
+    .muted { color: var(--muted); }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.6rem;
+      margin-top: 1rem;
+    }
+
+    input {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: #0a0f1d;
+      color: var(--text);
+      border-radius: 10px;
+      padding: 0.72rem 0.85rem;
+      font-size: 0.95rem;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-top: 0.7rem;
+    }
+
+    button {
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 0.62rem 0.9rem;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    button.primary {
+      background: linear-gradient(180deg, #3b82f6, #2563eb);
+      border-color: #2563eb;
+    }
+
+    button:hover { filter: brightness(1.08); }
+
+    .status {
+      margin-top: 0.85rem;
+      font-size: 0.92rem;
+      color: var(--muted);
+      min-height: 1.3rem;
+    }
+
+    .status.ok { color: var(--accent-2); }
+    .status.err { color: var(--error); }
+
+    pre {
+      margin-top: 1rem;
+      background: #030712;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem;
+      max-height: 55vh;
+      overflow: auto;
+      line-height: 1.45;
+    }
+
+    .meta {
+      margin-top: 0.9rem;
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+
+    .meta a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .meta a:hover { text-decoration: underline; }
+  </style>
 </head>
 <body>
-    <h1>ipynb2web</h1>
-    <p>Convert Jupyter Notebooks to HTML</p>
-    <p>Enter a URL to a .ipynb file to test it out:</p>
-    <input type="text" id="urlInput" placeholder="Enter .ipynb URL">
-    <button onclick="convertNotebook()">Convert</button>
-    <br><br>
-    Sample Link: <small>https://api.charleskarpati.com/vanillapivottable/index.ipynb</small>
-    <br><br>
-    <pre id="jsonOutput"></pre>
+  <main class="container">
+    <section class="card">
+      <h1>ipynb2web • Try it out</h1>
+      <p class="muted">Paste any public <code>.ipynb</code> URL (or use the built-in sample) and convert it to JSON output in your browser.</p>
 
-    <script> 
-        function convertNotebook(url = false) { 
-            url = url || document.getElementById('urlInput').value;
-            if (!url) {
-                alert('Please enter a URL');
-                return;
-            }
+      <div class="row">
+        <input type="text" id="urlInput" placeholder="https://example.com/notebook.ipynb" />
+        <button class="primary" id="convertBtn">Convert</button>
+      </div>
 
-            ipynb2web.nb2json(url)
-                .then(result => {
-                    document.getElementById('jsonOutput').textContent = JSON.stringify(result, null, 2);
-                })
-                .catch(error => {
-                    console.error(error);
-                    alert('Error converting notebook');
-                });
-        }
-        convertNotebook('https://api.charleskarpati.com/vanillapivottable/index.ipynb');
-    </script>
+      <div class="actions">
+        <button id="loadSampleBtn">Use local sample notebook</button>
+        <button id="copySampleBtn">Copy sample URL</button>
+      </div>
+
+      <div id="status" class="status"></div>
+      <pre id="jsonOutput" aria-live="polite">Run a conversion to see output here.</pre>
+
+      <p class="meta">
+        Sample notebook: <a id="sampleLink" href="#"></a>
+      </p>
+    </section>
+  </main>
+
+  <script>
+    const urlInput = document.getElementById('urlInput');
+    const statusEl = document.getElementById('status');
+    const outputEl = document.getElementById('jsonOutput');
+    const sampleNotebookUrl = new URL('./sample-notebook.ipynb', window.location.href).href;
+
+    const sampleLink = document.getElementById('sampleLink');
+    sampleLink.href = sampleNotebookUrl;
+    sampleLink.textContent = sampleNotebookUrl;
+
+    function setStatus(message, type = '') {
+      statusEl.textContent = message;
+      statusEl.className = `status ${type}`.trim();
+    }
+
+    async function convertNotebook(url = '') {
+      const target = (url || urlInput.value || '').trim();
+      if (!target) {
+        setStatus('Please enter a notebook URL.', 'err');
+        return;
+      }
+
+      setStatus('Converting…', '');
+      outputEl.textContent = 'Loading…';
+
+      try {
+        const resolvedUrl = new URL(target, window.location.href).href;
+        const result = await ipynb2web.nb2json(resolvedUrl);
+        outputEl.textContent = JSON.stringify(result, null, 2);
+        setStatus(`Success. Converted ${resolvedUrl}`, 'ok');
+      } catch (error) {
+        console.error(error);
+        outputEl.textContent = String(error?.stack || error?.message || error);
+        setStatus('Conversion failed. Confirm the URL is public and points to a valid .ipynb file.', 'err');
+      }
+    }
+
+    document.getElementById('convertBtn').addEventListener('click', () => convertNotebook());
+    document.getElementById('loadSampleBtn').addEventListener('click', () => {
+      urlInput.value = sampleNotebookUrl;
+      convertNotebook(sampleNotebookUrl);
+    });
+    document.getElementById('copySampleBtn').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(sampleNotebookUrl);
+        setStatus('Sample URL copied to clipboard.', 'ok');
+      } catch {
+        setStatus('Could not copy automatically. You can copy it from the link below.', 'err');
+      }
+    });
+
+    urlInput.value = sampleNotebookUrl;
+    convertNotebook(sampleNotebookUrl);
+  </script>
 </body>
 </html>
