@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-labelledby="title desc">
+  <title id="title">Built-in Automation</title>
+  <desc id="desc">Workflow automation icon</desc>
+  <rect width="200" height="200" rx="24" fill="#f5fbff"/>
+  <path d="M38 62h68l10 14h46v86H38z" fill="#fff" stroke="#0284c7" stroke-width="4"/>
+  <circle cx="74" cy="116" r="20" fill="#dff4ff" stroke="#0284c7" stroke-width="4"/>
+  <path d="M74 102v8M74 122v8M60 116h8M80 116h8M64 106l6 6M84 126l6 6M64 126l6-6M84 106l6-6" stroke="#0284c7" stroke-width="3" stroke-linecap="round"/>
+  <path d="M114 108h34M114 124h34M114 140h24" stroke="#0284c7" stroke-width="4" stroke-linecap="round"/>
+  <path d="M150 54l12 10-12 10" stroke="#0284c7" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

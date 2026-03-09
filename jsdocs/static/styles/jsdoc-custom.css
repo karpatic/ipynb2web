@@ -13,6 +13,9 @@
   --api-accent: #7c3aed;
   --api-code-bg: #0b1220;
   --api-code-text: #d1fae5;
+  --api-code-border: #1e293b;
+  --api-code-inline-bg: #111827;
+  --api-code-inline-text: #e2e8f0;
 }
 
 html {
@@ -144,8 +147,20 @@ pre.prettyprint,
 code {
   background: var(--api-code-bg);
   color: var(--api-code-text);
-  border: 1px solid #1e293b;
+  border: 1px solid var(--api-code-border);
   border-radius: 10px;
+}
+
+/* Inline code chips */
+p code,
+td code,
+li code,
+.description code {
+  background: var(--api-code-inline-bg);
+  color: var(--api-code-inline-text);
+  border: 1px solid var(--api-code-border);
+  border-radius: 8px;
+  padding: 0.08rem 0.35rem;
 }
 
 pre.prettyprint,
@@ -153,6 +168,42 @@ pre.prettyprint,
   padding: 14px;
   overflow: auto;
 }
+
+/* Critical readability overrides for JSDoc defaults */
+.params .name,
+.props .name,
+.name code,
+.source code,
+.prettyprint.source code,
+.prettyprint code {
+  color: var(--api-code-text) !important;
+}
+
+.source code,
+.prettyprint.source code,
+.prettyprint code {
+  background: var(--api-code-bg) !important;
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  line-height: 1.5;
+}
+
+/* Prettify token palette on dark background */
+.prettyprint .pln { color: #e2e8f0; }
+.prettyprint .str,
+.prettyprint .atv { color: #86efac; }
+.prettyprint .kwd,
+.prettyprint .tag { color: #c4b5fd; font-weight: 600; }
+.prettyprint .com { color: #94a3b8; font-style: italic; }
+.prettyprint .typ,
+.prettyprint .atn,
+.prettyprint .dec { color: #93c5fd; }
+.prettyprint .lit { color: #fca5a5; }
+.prettyprint .pun,
+.prettyprint .opn,
+.prettyprint .clo { color: #cbd5e1; }
+.prettyprint .fun { color: #f9a8d4; }
 
 table {
   width: 100%;
@@ -168,6 +219,10 @@ th,
 td {
   border: 1px solid var(--api-border);
   padding: 8px 10px;
+}
+
+tbody tr:nth-child(even) {
+  background: #f8fafc;
 }
 
 .details {

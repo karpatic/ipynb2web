@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-labelledby="title desc">
+  <title id="title">Minimally Opinionated</title>
+  <desc id="desc">Stacked cards template icon</desc>
+  <rect width="200" height="200" rx="24" fill="#f8f7ff"/>
+  <rect x="34" y="46" width="108" height="108" rx="10" fill="#e9e5ff"/>
+  <rect x="48" y="60" width="108" height="108" rx="10" fill="#d9d1ff"/>
+  <rect x="62" y="74" width="108" height="108" rx="10" fill="#fff" stroke="#6b4eff" stroke-width="4"/>
+  <path d="M78 102h76M78 120h48M78 138h60" stroke="#6b4eff" stroke-width="4" stroke-linecap="round"/>
+  <path d="M140 150l12 12 20-20" stroke="#6b4eff" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

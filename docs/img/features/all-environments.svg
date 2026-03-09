@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-labelledby="title desc">
+  <title id="title">For All Environments</title>
+  <desc id="desc">Server, browser, and terminal icon</desc>
+  <rect width="200" height="200" rx="24" fill="#f7f9fc"/>
+  <rect x="18" y="44" width="72" height="112" rx="10" fill="#fff" stroke="#2563eb" stroke-width="4"/>
+  <path d="M34 68h40M34 84h40M34 100h40M34 116h40" stroke="#2563eb" stroke-width="4" stroke-linecap="round"/>
+  <rect x="102" y="44" width="80" height="52" rx="8" fill="#e7efff" stroke="#2563eb" stroke-width="4"/>
+  <circle cx="116" cy="58" r="4" fill="#2563eb"/>
+  <path d="M110 78h36" stroke="#2563eb" stroke-width="4" stroke-linecap="round"/>
+  <rect x="102" y="106" width="80" height="50" rx="8" fill="#111827"/>
+  <path d="M116 126l8 6-8 6" stroke="#93c5fd" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M132 138h24" stroke="#93c5fd" stroke-width="4" stroke-linecap="round"/>
+</svg>

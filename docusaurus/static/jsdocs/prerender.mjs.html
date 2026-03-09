@@ -108,9 +108,10 @@ async function createSitemap(search='./', sitemapFile = './sitemap.txt', pathPre
   verbose &amp;&amp; console.log(`\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ START createSitemap \n\n`);
   const pages = await processDirectory(search, '', prefix, verbose);
   const finalPages = d ? pages.map(p => (!p ? `${d}/` : (/^https?:\/\//i.test(p) ? p : d + (p.startsWith('/') ? p : '/' + p)))) : pages;
-  verbose &amp;&amp; console.log('pages', finalPages);
+  const uniquePages = Array.from(new Set(finalPages));
+  verbose &amp;&amp; console.log('pages', uniquePages);
   try {  
-    await fs.promises.writeFile(sitemapFile, finalPages.join('\n') + '\n');
+    await fs.promises.writeFile(sitemapFile, uniquePages.join('\n') + '\n');
     verbose &amp;&amp; console.log('Sitemap file created successfully:', sitemapFile);
   } catch (err) {
     verbose &amp;&amp; console.error(`Error creating or truncating sitemap file: ${sitemapFile}`, err);
@@ -152,11 +153,34 @@ async function processDirectory(directory, subdir = '', pathPrefix = '', verbose
     const filePath = path.join(directory, file);
     const jsonData = JSON.parse(await fs.promises.readFile(filePath, 'utf-8'));
 
+    const section = file.split('_')[0].split('.')[0];
+
     jsonData.forEach(obj => {
-      if (obj.filename) {
-        const url = `/${file.split('_')[0].split('.')[0]}/${subdir ? subdir + '/' : ''}${obj.filename}`;
-        pages.push(pathPrefix ? pathPrefix + url : url);
+      if (!obj.filename) return;
+
+      const filename = String(obj.filename).replace(/^\/+/, '').replace(/\/+$/, '');
+      const isIndexSection = section === 'index';
+      const isSectionLanding = filename === section;
+      const isRootLanding = isIndexSection &amp;&amp; filename === 'index';
+
+      // URL rules:
+      // - index_map + index      -> /
+      // - index_map + webdev     -> /webdev
+      // - blog_map + blog        -> /blog
+      // - blog_map + post        -> /blog/post
+      let routePath = '';
+      if (isRootLanding) {
+        routePath = '/';
+      } else if (isIndexSection) {
+        routePath = `/${filename}`;
+      } else if (isSectionLanding) {
+        routePath = `/${section}`;
+      } else {
+        routePath = `/${section}/${filename}`;
       }
+
+      const normalized = routePath === '/' ? '/' : routePath.replace(/\/+/g, '/');
+      pages.push(pathPrefix ? pathPrefix + normalized : normalized);
     });
   }));
 
@@ -425,7 +449,7 @@ export { createAudio, createSitemap, cli_nbs2html }</code></pre>
 <br class="clear">
 
 <footer>
-    Documentation by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sat Mar 07 2026 22:15:52 GMT-0500 (Eastern Standard Time)
+    Documentation by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Mon Mar 09 2026 00:03:35 GMT-0400 (Eastern Daylight Time)
 </footer>
 
 <script> prettyPrint(); </script>
