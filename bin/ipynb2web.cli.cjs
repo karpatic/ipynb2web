@@ -432,6 +432,7 @@ function _nb2json() {
           nb = _context.v;
           // console.log('nb', nb);
           meta = get_metadata(nb.cells[0]);
+          meta.prettify = meta.prettify === true || meta.prettify === "true" ? true : meta.prettify === false || meta.prettify === "false" ? false : undefined;
           meta.filename = ipynbPath.split("/")[ipynbPath.split("/").length - 1].toLowerCase().replaceAll(" ", "_");
           verbose && console.log('- get_metadata', meta, '\n');
 
@@ -441,7 +442,7 @@ function _nb2json() {
             pyCode: pyCode
           });
           meta.pyCode = pyCode;
-          (meta.prettify || prettify) && (content += "\n  <script src=\"https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js\"></script>\n  <link rel=\"stylesheet\" href=\"https://cdn.rawgit.com/google/code-prettify/master/styles/desert.css\"/>\n  ");
+          (meta.prettify === true || meta.prettify === undefined && prettify) && (content += "\n  <script src=\"https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js\"></script>\n  <link rel=\"stylesheet\" href=\"https://cdn.rawgit.com/google/code-prettify/master/styles/desert.css\"/>\n  ");
 
           // verbose && console.log('- - content Ran ~~~~~~~~~~~', content, '~~~~~~~~~~~\n');
           resp = replaceEmojis(content);
@@ -524,7 +525,7 @@ function cleanCell(cell, meta) {
   var notebookName = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : null;
   var x;
   if (cell["cell_type"] == "markdown") {
-    x = processMarkdown(cell["source"].join(" "));
+    x = processMarkdown(cell["source"].join(" "), meta);
     // verbose && console.log('- - - Parsing Markdown', x);
   } else {
     // verbose && console.log('- - Parsing Code');//, cell ,'\n'); 
@@ -537,9 +538,10 @@ function cleanCell(cell, meta) {
  * Processes markdown content, converting it to HTML, handling special syntax, and applying transformations.
  *
  * @param {string} x - The markdown content to be processed.
+ * @param {Object} meta - Metadata associated with the notebook.
  * @returns {string} The processed HTML content.
  */
-function processMarkdown(txt) {
+function processMarkdown(txt, meta) {
   // Does not process markdown wrapped in html
   var x = (0,external_marked_namespaceObject.marked)(txt);
 
@@ -551,7 +553,12 @@ function processMarkdown(txt) {
 
   // replace code blocks with pre.prettyprint
   x = replaceAndLog(x, /<pre><code>([\s\S]*?)<\/code><\/pre>/g, function (match, content) {
-    prettify = true;
+    if (meta.prettify === false) {
+      return match;
+    }
+    if (meta.prettify === undefined) {
+      prettify = true;
+    }
     return "<pre class='prettyprint'>".concat(content, "</pre>");
   });
 
@@ -671,7 +678,7 @@ function processSource(source, flags, meta) {
   } finally {
     _iterator3.f();
   }
-  if (meta.prettify) {
+  if (meta.prettify === true) {
     source = "<pre class='prettyprint'>".concat(source, "</pre>");
   }
   var flagg = flags && !!flags.includes('#collapse_input_open');
@@ -1500,6 +1507,7 @@ function _createSitemap() {
       d,
       pages,
       finalPages,
+      uniquePages,
       _args2 = arguments,
       _t;
     return _regenerator().w(function (_context2) {
@@ -1524,10 +1532,11 @@ function _createSitemap() {
           finalPages = d ? pages.map(function (p) {
             return !p ? "".concat(d, "/") : /^https?:\/\//i.test(p) ? p : d + (p.startsWith('/') ? p : '/' + p);
           }) : pages;
-          verbose && console.log('pages', finalPages);
+          uniquePages = Array.from(new Set(finalPages));
+          verbose && console.log('pages', uniquePages);
           _context2.p = 2;
           _context2.n = 3;
-          return external_fs_.promises.writeFile(sitemapFile, finalPages.join('\n') + '\n');
+          return external_fs_.promises.writeFile(sitemapFile, uniquePages.join('\n') + '\n');
         case 3:
           verbose && console.log('Sitemap file created successfully:', sitemapFile);
           _context2.n = 5;
@@ -1614,7 +1623,7 @@ function _processDirectory() {
             return file.includes('_map.json');
           }).map(/*#__PURE__*/function () {
             var _ref = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee3(file) {
-              var filePath, jsonData, _t2;
+              var filePath, jsonData, section, _t2;
               return _regenerator().w(function (_context3) {
                 while (1) switch (_context3.n) {
                   case 0:
@@ -1624,11 +1633,31 @@ function _processDirectory() {
                     return external_fs_.promises.readFile(filePath, 'utf-8');
                   case 1:
                     jsonData = _t2.parse.call(_t2, _context3.v);
+                    section = file.split('_')[0].split('.')[0];
                     jsonData.forEach(function (obj) {
-                      if (obj.filename) {
-                        var url = "/".concat(file.split('_')[0].split('.')[0], "/").concat(subdir ? subdir + '/' : '').concat(obj.filename);
-                        pages.push(pathPrefix ? pathPrefix + url : url);
+                      if (!obj.filename) return;
+                      var filename = String(obj.filename).replace(/^\/+/, '').replace(/\/+$/, '');
+                      var isIndexSection = section === 'index';
+                      var isSectionLanding = filename === section;
+                      var isRootLanding = isIndexSection && filename === 'index';
+
+                      // URL rules:
+                      // - index_map + index      -> /
+                      // - index_map + webdev     -> /webdev
+                      // - blog_map + blog        -> /blog
+                      // - blog_map + post        -> /blog/post
+                      var routePath = '';
+                      if (isRootLanding) {
+                        routePath = '/';
+                      } else if (isIndexSection) {
+                        routePath = "/".concat(filename);
+                      } else if (isSectionLanding) {
+                        routePath = "/".concat(section);
+                      } else {
+                        routePath = "/".concat(section, "/").concat(filename);
                       }
+                      var normalized = routePath === '/' ? '/' : routePath.replace(/\/+/g, '/');
+                      pages.push(pathPrefix ? pathPrefix + normalized : normalized);
                     });
                   case 2:
                     return _context3.a(2);
@@ -2201,7 +2230,7 @@ function cli(args) {
 if (require.main === module) {  }
 */
 
-if ("file:///home/carlos/.openclaw/workspace/tmp/ipynb2web-refresh/src/cli.js".includes('ipynb2web')) {
+if ("file:///home/carlos/Documents/GitHub/pages/ipynb2web/src/cli.js".includes('ipynb2web')) {
   var args = process.argv.slice(2);
   if (args[0] === 'help' || args.length === 0) {
     help();

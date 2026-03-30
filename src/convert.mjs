@@ -60,6 +60,12 @@ async function nb2json(ipynbPath, verbose = false, extractAssets = false) {
   // console.log('nb', nb);
 
   const meta = get_metadata(nb.cells[0]);
+  meta.prettify =
+    meta.prettify === true || meta.prettify === "true"
+      ? true
+      : meta.prettify === false || meta.prettify === "false"
+        ? false
+        : undefined;
   meta.filename = ipynbPath.split("/")[ipynbPath.split("/").length - 1].toLowerCase().replaceAll(" ", "_");
 
   verbose && console.log('- get_metadata', meta, '\n');
@@ -69,7 +75,7 @@ async function nb2json(ipynbPath, verbose = false, extractAssets = false) {
   verbose && pyCode.length && console.log({ pyCode });
 
   meta.pyCode = pyCode;
-  (meta.prettify || prettify) &&
+  (meta.prettify === true || (meta.prettify === undefined && prettify)) &&
     (content += `
   <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
   <link rel="stylesheet" href="https://cdn.rawgit.com/google/code-prettify/master/styles/desert.css"/>
@@ -156,7 +162,7 @@ function convertNb(cells, meta, verbose = false, extractAssets = false, notebook
 function cleanCell(cell, meta, verbose = false, extractAssets = false, notebookName = null) { 
   let x;
   if (cell["cell_type"] == "markdown") { 
-    x = processMarkdown(cell["source"].join(" "))
+    x = processMarkdown(cell["source"].join(" "), meta)
     // verbose && console.log('- - - Parsing Markdown', x);
   } else {  
     // verbose && console.log('- - Parsing Code');//, cell ,'\n'); 
@@ -169,9 +175,10 @@ function cleanCell(cell, meta, verbose = false, extractAssets = false, notebookN
  * Processes markdown content, converting it to HTML, handling special syntax, and applying transformations.
  *
  * @param {string} x - The markdown content to be processed.
+ * @param {Object} meta - Metadata associated with the notebook.
  * @returns {string} The processed HTML content.
  */
-function processMarkdown(txt) {
+function processMarkdown(txt, meta) {
 
   // Does not process markdown wrapped in html
   let x = marked(txt); 
@@ -183,7 +190,15 @@ function processMarkdown(txt) {
   // x = x.replace(/\n/g, '');
 
   // replace code blocks with pre.prettyprint
-  x = replaceAndLog(x, /<pre><code>([\s\S]*?)<\/code><\/pre>/g, (match, content) => { prettify = true; return `<pre class='prettyprint'>${content}</pre>`; });
+  x = replaceAndLog(x, /<pre><code>([\s\S]*?)<\/code><\/pre>/g, (match, content) => {
+    if (meta.prettify === false) {
+      return match;
+    }
+    if (meta.prettify === undefined) {
+      prettify = true;
+    }
+    return `<pre class='prettyprint'>${content}</pre>`;
+  });
   
   // Single line code blocks do NOT get prettified
   // x = replaceAndLog(x, /<code>([\s\S]*?)<\/code>/g, (match, content) => { prettify = true; return `<pre class='prettyprint' style='display:inline'>${content}</pre>`; });
@@ -284,7 +299,7 @@ function processSource(source, flags, meta, verbose = false) {
     let skipList = ["#hide", "#hide_input", "%%javascript", "%%html", "%%capture"]
     if (skipList.includes(lbl)) { return ""; }
   }
-  if (meta.prettify) { source = `<pre class='prettyprint'>${source}</pre>`; }
+  if (meta.prettify === true) { source = `<pre class='prettyprint'>${source}</pre>`; }
   let flagg = flags && !!flags.includes('#collapse_input_open')
   if (flagg) {
     verbose && console.log(flags)

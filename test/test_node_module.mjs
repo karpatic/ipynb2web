@@ -13,7 +13,7 @@ const sitemapFile = './sitemap.txt';
 
 async function testConvert() {
     console.log('Testing convert...');
-    let test = await ipynb2web.nb2json("https://raw.githubusercontent.com/karpatic/karpatic/refs/heads/main/src/ipynb/labs/01_nb_2_html_tests.ipynb");
+    let test = await ipynb2web.nb2json("https://raw.githubusercontent.com/karpatic/ipynb2web/main/test/test.ipynb");
     console.log({ test });
     console.log('convert test completed.\n');
 }

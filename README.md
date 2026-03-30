@@ -38,6 +38,8 @@ Complete with [API documentation](https://ipynb2web.com/jsdocs/module-Ipynb2web_
 
 ## Development Notes
 
+`package.json` is the source of truth for package metadata and release wiring. It defines the package `name` and `version`, the published entry points (`main`, `browser`, `module`, `exports`, `bin`), the files included in the package, and the scripts used to build and release it.
+
 ### Compiling 
 1. Running `Build` will link/relink the repo to your global npm registry. do not forget to `Publish` to NPM.
 2. The node module does not get minified but served directly from source. `BuildESM` is not used for prod. 
@@ -95,12 +97,12 @@ https://docutils.sourceforge.io/docs/ref/rst/directives.html
 
 https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html
 
-Pandoc - Supports divs :::, spans [text]{.class}, footnotes ^[inline]
+Pandoc - Supports divs `:::`, spans `[text]{.class}`, footnotes `^[inline]`
 
 https://quarto.org/docs/authoring/markdown-basics.html
 
-Quarto - {{< callout-note >}}, {{< include >}}
+Quarto - `{{< callout-note >}}`, `{{< include >}}`
 
-docusaurus - :::info, :::warning blocks
+docusaurus - `:::info`, `:::warning` blocks
 
 https://jupyterbook.org/en/stable/reference/cheatsheet.html
