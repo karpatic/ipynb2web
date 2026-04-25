@@ -40,6 +40,10 @@ Complete with [API documentation](https://ipynb2web.com/jsdocs/module-Ipynb2web_
 
 `package.json` is the source of truth for package metadata and release wiring. It defines the package `name` and `version`, the published entry points (`main`, `browser`, `module`, `exports`, `bin`), the files included in the package, and the scripts used to build and release it.
 
+`.github/workflows/npm-publish.yml` is the release publish path. It publishes `ipynb2web` to npm with trusted publishing, then repacks the same payload into a temporary `.github-package/` workspace, rewrites the package name to `@karpatic/ipynb2web`, writes a scoped `.npmrc` for `https://npm.pkg.github.com`, and publishes the mirror with `NODE_AUTH_TOKEN=${{ github.token }}`.
+
+GitHub releases do not reliably fan out into a second workflow run when the upstream release creation itself used `GITHUB_TOKEN`. If a tagged release does not automatically run the publish job, manually dispatch `npm-publish.yml` against the release tag.
+
 ### Compiling 
 1. Running `Build` will link/relink the repo to your global npm registry. do not forget to `Publish` to NPM.
 2. The node module does not get minified but served directly from source. `BuildESM` is not used for prod. 

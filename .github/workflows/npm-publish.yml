@@ -54,7 +54,33 @@ jobs:
         if: steps.npm_exists.outputs.exists != 'true'
         run: npm publish --provenance --access public
 
-      - name: Publish mirror to GitHub Packages
-        run: npm run publish:github
+      - name: Prepare GitHub Packages workspace
         env:
-          GITHUB_NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_OWNER: ${{ github.repository_owner }}
+        run: |
+          rm -rf .github-package
+          mkdir -p .github-package
+          PACK_JSON=$(npm pack --json --pack-destination .github-package)
+          TARBALL=$(node -e 'const d=JSON.parse(process.argv[1]); console.log(d[0].filename)' "$PACK_JSON")
+          tar -xzf ".github-package/${TARBALL}" -C .github-package
+          node - <<'NODE' ".github-package/package/package.json" "$GITHUB_OWNER"
+          const fs = require('fs');
+          const [,, filePath, owner] = process.argv;
+          const pkg = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+          pkg.name = `@${owner}/${pkg.name}`;
+          pkg.publishConfig = {
+            ...(pkg.publishConfig || {}),
+            registry: 'https://npm.pkg.github.com'
+          };
+          fs.writeFileSync(filePath, JSON.stringify(pkg, null, 2) + '\n');
+          NODE
+          cat > .github-package/package/.npmrc <<'EOF'
+          @${GITHUB_OWNER}:registry=https://npm.pkg.github.com
+          //npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
+          EOF
+
+      - name: Publish mirror to GitHub Packages
+        working-directory: .github-package/package
+        run: npm publish --access public --ignore-scripts
+        env:
+          NODE_AUTH_TOKEN: ${{ github.token }}
