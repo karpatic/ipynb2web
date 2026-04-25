@@ -12,6 +12,7 @@
 
 - npm: https://www.npmjs.com/package/ipynb2web
 - GitHub Packages mirror: https://github.com/karpatic/ipynb2web/pkgs/npm/ipynb2web
+- Releases are published from GitHub Actions and mirrored to GitHub Packages.
 - Docs site: https://ipynb2web.com/
 - API docs: https://ipynb2web.com/jsdocs/module-Ipynb2web_browser.html
 - Try it out (browser test page): https://ipynb2web.com/test/index.html
