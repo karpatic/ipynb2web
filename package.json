@@ -24,7 +24,7 @@
   "author": "Charles Karpati",
   "license": "MIT",
   "type": "module",
-  "version": "1.0.41",
+  "version": "1.0.42",
   "main": "dist/ipynb2web.cjs",
   "browser": "dist/ipynb2web.browser.umd.js",
   "module": "./src/node.js",
@@ -36,7 +36,7 @@
       "default": "./dist/ipynb2web.cjs"
     }
   },
-  "repository": "git://github.com/karpatic/ipynb2web.git",
+  "repository": "https://github.com/karpatic/ipynb2web.git",
   "homepage": "https://ipynb2web.com/",
   "bin": {
     "ipynb2web": "./bin/ipynb2web.cli.min.cjs"
