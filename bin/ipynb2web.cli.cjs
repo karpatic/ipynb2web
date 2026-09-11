@@ -10,7 +10,7 @@ module.exports = require("path");
 
 /***/ }),
 
-/***/ 216:
+/***/ 173:
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
 // ESM COMPAT FLAG
@@ -19,25 +19,385 @@ __webpack_require__.r(__webpack_exports__);
 // EXPORTS
 __webpack_require__.d(__webpack_exports__, {
   convertNb: () => (/* binding */ convertNb),
-  get_metadata: () => (/* binding */ get_metadata),
-  nb2json: () => (/* binding */ nb2json)
+  get_metadata: () => (/* reexport */ get_metadata),
+  nb2json: () => (/* binding */ nb2json),
+  renderNotebook: () => (/* binding */ renderNotebook)
 });
 
-;// external "marked"
-const external_marked_namespaceObject = require("marked");
-;// ./src/convert_util.mjs
-function _toConsumableArray(r) { return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableSpread(); }
-function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-function _iterableToArray(r) { if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) return Array.from(r); }
-function _arrayWithoutHoles(r) { if (Array.isArray(r)) return _arrayLikeToArray(r); }
+;// external "yaml"
+const external_yaml_namespaceObject = require("yaml");
+;// ./src/metadata.mjs
 function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t["return"] && (u = t["return"](), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
 function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 function _createForOfIteratorHelper(r, e) { var t = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (!t) { if (Array.isArray(r) || (t = _unsupportedIterableToArray(r)) || e && r && "number" == typeof r.length) { t && (r = t); var _n = 0, F = function F() {}; return { s: F, n: function n() { return _n >= r.length ? { done: !0 } : { done: !1, value: r[_n++] }; }, e: function e(r) { throw r; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var o, a = !0, u = !1; return { s: function s() { t = t.call(r); }, n: function n() { var r = t.next(); return a = r.done, r; }, e: function e(r) { u = !0, o = r; }, f: function f() { try { a || null == t["return"] || t["return"](); } finally { if (u) throw o; } } }; }
+function _toConsumableArray(r) { return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableSpread(); }
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _iterableToArray(r) { if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) return Array.from(r); }
+function _arrayWithoutHoles(r) { if (Array.isArray(r)) return _arrayLikeToArray(r); }
 function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
-/** 
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+
+var _sourceText = function sourceText(value) {
+  return Array.isArray(value) ? value.map(_sourceText).join('') : _typeof(value) === 'object' && value !== null ? JSON.stringify(value) : String(value !== null && value !== void 0 ? value : '');
+};
+
+// Maps are converted explicitly so prototype names remain inert own properties.
+
+function parseYaml(text) {
+  var doc = (0,external_yaml_namespaceObject.parseDocument)(text, {
+    schema: 'core',
+    merge: false,
+    uniqueKeys: true
+  });
+  if (doc.errors.length || doc.warnings.length) {
+    throw new Error([].concat(_toConsumableArray(doc.errors), _toConsumableArray(doc.warnings)).map(function (e) {
+      return e.message;
+    }).join('\n'));
+  }
+  var _normalize = function normalize(value) {
+    var depth = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+    if (depth > 100) throw new Error('YAML nesting exceeds 100 levels');
+    if (value instanceof Map) {
+      var result = Object.create(null);
+      var _iterator = _createForOfIteratorHelper(value),
+        _step;
+      try {
+        for (_iterator.s(); !(_step = _iterator.n()).done;) {
+          var _step$value = _slicedToArray(_step.value, 2),
+            key = _step$value[0],
+            item = _step$value[1];
+          if (typeof key !== 'string') throw new Error('Metadata keys must be strings');
+          result[key] = _normalize(item, depth + 1);
+        }
+      } catch (err) {
+        _iterator.e(err);
+      } finally {
+        _iterator.f();
+      }
+      return result;
+    }
+    if (Array.isArray(value)) return value.map(function (item) {
+      return _normalize(item, depth + 1);
+    });
+    if (typeof value === 'number' && !Number.isFinite(value)) throw new Error('Metadata numbers must be finite');
+    return value;
+  };
+  return _normalize(doc.toJS({
+    mapAsMap: true,
+    maxAliasCount: 0
+  }));
+}
+function readMetadata(cell) {
+  var _cell$cell_type, _lines$;
+  var empty = {
+    meta: Object.create(null),
+    consumed: false,
+    remainder: ''
+  };
+  if (!cell || !['markdown', 'raw'].includes((_cell$cell_type = cell.cell_type) !== null && _cell$cell_type !== void 0 ? _cell$cell_type : 'markdown')) return empty;
+  var text = _sourceText(cell.source).replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n');
+  var lines = text.split('\n');
+  if (((_lines$ = lines[0]) === null || _lines$ === void 0 ? void 0 : _lines$.trim()) === '---') {
+    var end = lines.findIndex(function (line, i) {
+      return i > 0 && /^(---|\.\.\.)\s*$/.test(line);
+    });
+    try {
+      var _parseYaml;
+      if (end < 0) throw new Error('Missing closing --- delimiter');
+      var _meta = (_parseYaml = parseYaml(lines.slice(1, end).join('\n'))) !== null && _parseYaml !== void 0 ? _parseYaml : Object.create(null);
+      if (_typeof(_meta) !== 'object' || Array.isArray(_meta)) throw new Error('Frontmatter must be a mapping');
+      return {
+        meta: _meta,
+        consumed: true,
+        remainder: lines.slice(end + 1).join('\n')
+      };
+    } catch (error) {
+      throw new Error("Invalid notebook YAML frontmatter (cell 1): ".concat(error.message));
+    }
+  }
+  // A heading alone is content. Legacy metadata needs at least one list field,
+  // and every nonblank line must belong to the heading/summary/field grammar.
+  var nonblank = lines.filter(function (line) {
+    return line.trim();
+  });
+  if (!nonblank.some(function (line) {
+    return /^-\s+[^:]+:\s*/.test(line);
+  }) || !nonblank.every(function (line) {
+    return /^(#{1,6}\s+|>\s?|[-]\s+[^:]+:\s*)/.test(line);
+  })) return empty;
+  var meta = Object.create(null);
+  var _iterator2 = _createForOfIteratorHelper(nonblank),
+    _step2;
+  try {
+    for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
+      var line = _step2.value;
+      if (line.startsWith('#')) meta.title = line.replace(/^#+\s+/, '');else if (line.startsWith('>')) meta.summary = [meta.summary, line.replace(/^>\s?/, '')].filter(Boolean).join('\n');else {
+        var _line$match = line.match(/^-\s+([^:]+):\s*(.*)$/),
+          _line$match2 = _slicedToArray(_line$match, 3),
+          key = _line$match2[1],
+          value = _line$match2[2];
+        try {
+          meta[key.trim()] = parseYaml(value);
+        } catch (_unused) {
+          meta[key.trim()] = value;
+        } // Legacy prose was never explicit YAML.
+      }
+    }
+  } catch (err) {
+    _iterator2.e(err);
+  } finally {
+    _iterator2.f();
+  }
+  return {
+    meta: meta,
+    consumed: true,
+    remainder: ''
+  };
+}
+function get_metadata(cell) {
+  return readMetadata(cell).meta;
+}
+;// external "markdown-it"
+const external_markdown_it_namespaceObject = require("markdown-it");
+;// external "markdown-it-footnote"
+const external_markdown_it_footnote_namespaceObject = require("markdown-it-footnote");
+;// ./src/markdown.mjs
+function markdown_slicedToArray(r, e) { return markdown_arrayWithHoles(r) || markdown_iterableToArrayLimit(r, e) || markdown_unsupportedIterableToArray(r, e) || markdown_nonIterableRest(); }
+function markdown_nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function markdown_iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t["return"] && (u = t["return"](), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
+function markdown_arrayWithHoles(r) { if (Array.isArray(r)) return r; }
+function markdown_createForOfIteratorHelper(r, e) { var t = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (!t) { if (Array.isArray(r) || (t = markdown_unsupportedIterableToArray(r)) || e && r && "number" == typeof r.length) { t && (r = t); var _n = 0, F = function F() {}; return { s: F, n: function n() { return _n >= r.length ? { done: !0 } : { done: !1, value: r[_n++] }; }, e: function e(r) { throw r; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var o, a = !0, u = !1; return { s: function s() { t = t.call(r); }, n: function n() { var r = t.next(); return a = r.done, r; }, e: function e(r) { u = !0, o = r; }, f: function f() { try { a || null == t["return"] || t["return"](); } finally { if (u) throw o; } } }; }
+function markdown_toConsumableArray(r) { return markdown_arrayWithoutHoles(r) || markdown_iterableToArray(r) || markdown_unsupportedIterableToArray(r) || markdown_nonIterableSpread(); }
+function markdown_nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function markdown_unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return markdown_arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? markdown_arrayLikeToArray(r, a) : void 0; } }
+function markdown_iterableToArray(r) { if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) return Array.from(r); }
+function markdown_arrayWithoutHoles(r) { if (Array.isArray(r)) return markdown_arrayLikeToArray(r); }
+function markdown_arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
+
+
+var escapeHtml = function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, function (c) {
+    return {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[c];
+  });
+};
+
+// Parse the shared Pandoc attribute list before HTML rendering, including quotes.
+function attributes(text) {
+  var match = /^\{((?:[^}"']|"[^"]*"|'[^']*')*)\}/.exec(text);
+  if (!match) return null;
+  var attrs = new Map();
+  var rest = match[1].trim();
+  while (rest) {
+    var _ref, _ref2, _item$;
+    var item = /^(?:([.#])([^\s{}"'=]+)|([A-Za-z_:][\w:.-]*)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s{}]+)))?)(?:\s+|$)/.exec(rest);
+    if (!item) return null;
+    var key = item[1] === '.' ? 'class' : item[1] === '#' ? 'id' : item[3];
+    var value = item[1] ? item[2] : (_ref = (_ref2 = (_item$ = item[4]) !== null && _item$ !== void 0 ? _item$ : item[5]) !== null && _ref2 !== void 0 ? _ref2 : item[6]) !== null && _ref !== void 0 ? _ref : '';
+    attrs.set(key, key === 'class' && attrs.has(key) ? "".concat(attrs.get(key), " ").concat(value) : value);
+    rest = rest.slice(item[0].length);
+  }
+  return {
+    length: match[0].length,
+    attrs: markdown_toConsumableArray(attrs)
+  };
+}
+function setAttrs(token, parsed, trusted, diagnose) {
+  var _iterator = markdown_createForOfIteratorHelper(parsed.attrs),
+    _step;
+  try {
+    for (_iterator.s(); !(_step = _iterator.n()).done;) {
+      var _step$value = markdown_slicedToArray(_step.value, 2),
+        key = _step$value[0],
+        value = _step$value[1];
+      // HTML/URL/style attributes can activate content. Host data/ARIA and ordinary
+      // presentation attributes are inert here; host behavior remains host policy.
+      if (!trusted && !/^(?:id|class|title|lang|dir|role|tabindex|hidden|width|height|data-[\w.-]+|aria-[\w.-]+)$/i.test(key)) {
+        diagnose('unsafe-attribute', "Attribute ".concat(key, " requires trusted rendering"));
+        continue;
+      }
+      token.attrSet(key, value);
+    }
+  } catch (err) {
+    _iterator.e(err);
+  } finally {
+    _iterator.f();
+  }
+}
+function extensions(md, _ref3) {
+  var trusted = _ref3.trusted,
+    diagnose = _ref3.diagnose;
+  // Tokenize HTML in both modes so literal block boundaries stay intact;
+  // untrusted rendering escapes those tokens instead of inserting raw HTML.
+  if (!trusted) {
+    md.renderer.rules.html_block = function (tokens, index) {
+      return "<pre>".concat(escapeHtml(tokens[index].content), "</pre>\n");
+    };
+    md.renderer.rules.html_inline = function (tokens, index) {
+      return escapeHtml(tokens[index].content);
+    };
+  }
+  md.inline.ruler.before('html_inline', 'literal_html', function (state, silent) {
+    var match = /^<(code|pre|script|style|textarea)(?:\s[^>]*|)>[\s\S]*?<\/\1\s*>/i.exec(state.src.slice(state.pos));
+    if (!match) return false;
+    if (!silent) {
+      var token = state.push(trusted ? 'html_inline' : 'text', '', 0);
+      token.content = match[0];
+    }
+    state.pos += match[0].length;
+    return true;
+  });
+  // Retain attributes on inline notes and allow the same form on references.
+  var renderNote = md.renderer.rules.footnote_ref;
+  md.renderer.rules.footnote_ref = function (tokens, index, opts, env, self) {
+    var note = renderNote(tokens, index, opts, env, self);
+    return tokens[index].attrs ? "<span".concat(self.renderAttrs(tokens[index]), ">").concat(note, "</span>") : note;
+  };
+  md.inline.ruler.before('text', 'note_attributes', function (state, silent) {
+    var previous = state.tokens[state.tokens.length - 1];
+    if (state.pending || (previous === null || previous === void 0 ? void 0 : previous.type) !== 'footnote_ref') return false;
+    var parsed = attributes(state.src.slice(state.pos));
+    if (!parsed) return false;
+    if (!silent) setAttrs(previous, parsed, trusted, diagnose);
+    state.pos += parsed.length;
+    return true;
+  });
+  md.inline.ruler.before('link', 'attributed_span', function (state, silent) {
+    if (state.src[state.pos] !== '[') return false;
+    var start = state.pos;
+    var end = md.helpers.parseLinkLabel(state, start, false);
+    if (end < 0) return false;
+    var parsed = attributes(state.src.slice(end + 1));
+    if (!parsed) return false;
+    if (!silent) {
+      var open = state.push('span_open', 'span', 1);
+      setAttrs(open, parsed, trusted, diagnose);
+      var oldMax = state.posMax;
+      state.pos = start + 1;
+      state.posMax = end;
+      md.inline.tokenize(state);
+      state.posMax = oldMax;
+      state.push('span_close', 'span', -1);
+    }
+    state.pos = end + 1 + parsed.length;
+    return true;
+  });
+  md.block.ruler.before('fence', 'fenced_div', function (state, start, end, silent) {
+    var _attributes;
+    var lineText = function lineText(line) {
+      return state.src.slice(state.bMarks[line] + state.tShift[line], state.eMarks[line]);
+    };
+    if (state.sCount[start] - state.blkIndent >= 4) return false;
+    var opening = /^(:{3,})\s*(.+?)\s*$/.exec(lineText(start));
+    if (!opening) return false;
+    var info = opening[2];
+    var parsed = (_attributes = attributes(info)) !== null && _attributes !== void 0 ? _attributes : /^[\w-]+$/.test(info) ? {
+      attrs: [['class', info]],
+      length: info.length
+    } : null;
+    if (!parsed || parsed.length !== info.length) return false;
+    if (silent) return true;
+
+    // Let the block parser find the close: fenced code, raw HTML, lists and
+    // nested divs consume their own lines, so literal colons cannot close a div.
+    var oldParent = state.parentType;
+    var oldLineMax = state.lineMax;
+    var oldClose = state.env.ipynbDivClose;
+    state.parentType = 'ipynb_div';
+    state.env.ipynbDivClose = {
+      indent: state.blkIndent,
+      end: null
+    };
+    var close = state.env.ipynbDivClose;
+    var token = state.push('div_open', 'div', 1);
+    token.block = true;
+    setAttrs(token, parsed, trusted, diagnose);
+    state.md.block.tokenize(state, start + 1, end);
+    state.parentType = oldParent;
+    state.lineMax = oldLineMax;
+    state.env.ipynbDivClose = oldClose;
+    var closing = state.push('div_close', 'div', -1);
+    closing.block = true;
+    state.line = close.end === null ? state.line : close.end + 1;
+    if (close.end === null) diagnose('unclosed-div', "Fenced div at Markdown line ".concat(start + 1, " has no closing fence"));
+    return true;
+  }, {
+    alt: ['paragraph', 'reference', 'blockquote', 'list']
+  });
+  md.block.ruler.before('fenced_div', 'div_close_marker', function (state, start, end, silent) {
+    var close = state.env.ipynbDivClose;
+    if (!close || !silent && state.parentType !== 'ipynb_div' || state.sCount[start] !== close.indent) return false;
+    var line = state.src.slice(state.bMarks[start] + state.tShift[start], state.eMarks[start]);
+    if (!/^:{3,}\s*$/.test(line)) return false;
+    if (silent) return true;
+    close.end = start;
+    state.line = end; // End this recursive block tokenization only.
+    return true;
+  }, {
+    alt: ['paragraph', 'reference', 'blockquote', 'list']
+  });
+}
+function markdown_createMarkdown(options, diagnose, image) {
+  var md = new external_markdown_it_namespaceObject({
+    html: true,
+    linkify: false,
+    typographer: false
+  });
+  md.use(external_markdown_it_footnote_namespaceObject).use(extensions, {
+    trusted: options.trusted === true,
+    diagnose: diagnose
+  });
+  var renderImage = md.renderer.rules.image;
+  md.renderer.rules.image = function (tokens, index, opts, env, self) {
+    var token = tokens[index];
+    var src = token.attrGet('src');
+    if (src !== null && src !== void 0 && src.startsWith('attachment:')) {
+      var _env$attachments;
+      var name = src.slice(11);
+      try {
+        name = decodeURIComponent(name);
+      } catch (_unused) {/* Report as missing below. */}
+      var bundle = Object.hasOwn((_env$attachments = env.attachments) !== null && _env$attachments !== void 0 ? _env$attachments : {}, name) ? env.attachments[name] : null;
+      var url = image(bundle);
+      if (!url) {
+        diagnose('missing-attachment', "Missing or unsupported attachment: ".concat(name));
+        return "<span class=\"ipynb-diagnostic\">[Attachment: ".concat(escapeHtml(name), "]</span>");
+      }
+      token.attrSet('src', url);
+    }
+    return renderImage(tokens, index, opts, env, self);
+  };
+  if (options.externalLinks === 'new-tab') {
+    md.renderer.rules.link_open = function (tokens, index, opts, env, self) {
+      var _tokens$index$attrGet;
+      if (/^https?:\/\//i.test((_tokens$index$attrGet = tokens[index].attrGet('href')) !== null && _tokens$index$attrGet !== void 0 ? _tokens$index$attrGet : '')) {
+        tokens[index].attrSet('target', '_blank');
+        tokens[index].attrSet('rel', 'noopener noreferrer');
+      }
+      return self.renderToken(tokens, index, opts);
+    };
+  }
+  return md;
+}
+;// ./src/convert_util.mjs
+function convert_util_slicedToArray(r, e) { return convert_util_arrayWithHoles(r) || convert_util_iterableToArrayLimit(r, e) || convert_util_unsupportedIterableToArray(r, e) || convert_util_nonIterableRest(); }
+function convert_util_nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function convert_util_iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t["return"] && (u = t["return"](), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
+function convert_util_arrayWithHoles(r) { if (Array.isArray(r)) return r; }
+function convert_util_createForOfIteratorHelper(r, e) { var t = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (!t) { if (Array.isArray(r) || (t = convert_util_unsupportedIterableToArray(r)) || e && r && "number" == typeof r.length) { t && (r = t); var _n = 0, F = function F() {}; return { s: F, n: function n() { return _n >= r.length ? { done: !0 } : { done: !1, value: r[_n++] }; }, e: function e(r) { throw r; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var o, a = !0, u = !1; return { s: function s() { t = t.call(r); }, n: function n() { var r = t.next(); return a = r.done, r; }, e: function e(r) { u = !0, o = r; }, f: function f() { try { a || null == t["return"] || t["return"](); } finally { if (u) throw o; } } }; }
+function convert_util_unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return convert_util_arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? convert_util_arrayLikeToArray(r, a) : void 0; } }
+function convert_util_arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
+
+
+/**
  *  @fileOverview Utility functions used by the [convert](module-convert.html).
  *  @module convert_util
  *  @exports {Object} - An object containing utility functions.
@@ -46,7 +406,7 @@ function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length)
 
 /**
  * Creates an HTML details element with the given content. Called by [processOutput](module-convert.html#.processOutput) and [processSource](module-convert.html#.processSource).
- * 
+ *
  * @param {string} content - The HTML content to be placed inside the details tag.
  * @param {boolean} open - Determines if the details should be open by default.
  * @returns {string} An HTML string representing a details element.
@@ -56,7 +416,7 @@ function makeDetails(content, open) {
   var cellType = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 'input';
   var normalizedType = cellType === 'output' ? 'output' : 'input';
   var classes = "ipynb  ipynb-".concat(normalizedType);
-  return "<details class='".concat(classes, "' data-cell-type='").concat(normalizedType, "' ").concat(open ? 'open' : '', "> <summary></summary> ").concat(content, "</details>");
+  return "<details class='".concat(classes, "' data-cell-type='").concat(normalizedType, "' ").concat(open ? 'open' : '', "> <summary>").concat(normalizedType === 'input' ? 'Code' : 'Output', "</summary> ").concat(content, "</details>");
 }
 
 /**
@@ -67,7 +427,7 @@ function makeDetails(content, open) {
  * @memberof module:convert_util
  */
 function replaceEmojis(text) {
-  // Dec => Code => https://apps.timwhitlock.info/unicode/inspect/hex/1F633 
+  // Dec => Code => https://apps.timwhitlock.info/unicode/inspect/hex/1F633
   text = text.replaceAll("🙂", "&#1F642");
   text = text.replaceAll("😳", "&#128563");
   text = text.replaceAll("\u2003", "&#8195");
@@ -75,26 +435,6 @@ function replaceEmojis(text) {
   text = text.replaceAll("🧡", "&#129505");
   text = text.replaceAll("💖", "&#128150");
   return text;
-}
-
-/**
- * Converts special note syntax in a string to HTML elements for displaying notes.
- *
- * @param {string} str - The string containing note syntax to be converted.
- * @param {number} startCount - The starting count for footnotes.
- * @returns {Object} Object with content and updated count.
- * @memberof module:convert_util
- */
-function convertNotes(str) {
-  var startCount = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
-  // console.log("Converting notes", str);
-  str = createElement(str); // :::{#id .class} ... :::
-  var result = createInlineFootnotes(str, startCount); // inline notes ^[This is an inline note.]
-  str = createSpans(result.content); // [This text is smallcaps]{.smallcaps #id}
-  return {
-    content: str,
-    count: result.count
-  };
 }
 
 /**
@@ -124,7 +464,7 @@ function collapseHeaders(content, headers, open) {
   // console.log('Header levels to collapse:', headerLevels);
 
   // Process from highest level (h2) to lowest (h6) to maintain hierarchy
-  var _iterator = _createForOfIteratorHelper(headerLevels),
+  var _iterator = convert_util_createForOfIteratorHelper(headerLevels),
     _step;
   try {
     for (_iterator.s(); !(_step = _iterator.n()).done;) {
@@ -136,7 +476,7 @@ function collapseHeaders(content, headers, open) {
       var match = void 0;
       while ((match = regex.exec(content)) !== null) {
         var _match = match,
-          _match2 = _slicedToArray(_match, 4),
+          _match2 = convert_util_slicedToArray(_match, 4),
           fullMatch = _match2[0],
           tag = _match2[1],
           attrs = _match2[2],
@@ -172,138 +512,6 @@ function collapseHeaders(content, headers, open) {
   return content;
 }
 
-//  
-// Markdown content may be prefaced with :::{#id .class} 
-// Removes 'pre' and 'code' blocks while processing and then reinserts at end.
-// check six layers deep. do this by first by creating an array of substrings that are wrapped by an opening and closing 
-// ':::' * 6,  then within the resulting arrays, create sub arrays for ':::' * 5, and so on and so on, then handle each 
-// one at ':::' * 1 and merge all the results back to the final form.
-function createElement(str) {
-  // 1. Shield existing <pre>/<code> blocks
-  var codeBlocks = [];
-  str = str.replace(/<pre[\s\S]*?<\/pre>|<code[\s\S]*?<\/code>/g, function (m) {
-    return "__CODE_".concat(codeBlocks.push(m) - 1, "__");
-  });
-
-  // helper to build the element
-  var buildElement = function buildElement(attrs, content) {
-    return "<div".concat(buildAttrs(attrs), ">").concat(content.trim(), "</div>");
-  };
-
-  // helper to build id/class string
-  var buildAttrs = function buildAttrs(attrs) {
-    var idMatch = attrs.match(/#([A-Za-z0-9_-]+)/);
-    var classMatches = _toConsumableArray(attrs.matchAll(/\.([A-Za-z0-9_-]+)/g)).map(function (m) {
-      return m[1];
-    });
-    return "".concat(idMatch ? " id=\"".concat(idMatch[1], "\"") : '').concat(classMatches.length ? " class=\"".concat(classMatches.join(' '), "\"") : '');
-  };
-
-  // 2. process :::...::: blocks from 6 colons down to 1
-  for (var level = 6; level > 0; level--) {
-    var colons = ':'.repeat(level);
-    var regex = new RegExp("".concat(colons, "\\s*{\\s*([^}]*)}\\s*([\\s\\S]*?)\\s*").concat(colons), 'g');
-    str = str.replace(regex, function (_, attrs, content) {
-      return buildElement(attrs, content.trim());
-    });
-  }
-
-  // 3. restore code blocks
-  return str.replace(/__CODE_(\d+)__/g, function (_, i) {
-    return codeBlocks[i];
-  });
-}
-
-// Example: [This text is smallcaps]{.smallcaps #id} 
-function createSpans(str) {
-  // 1. Shield existing <pre>/<code> blocks
-  var codeBlocks = [];
-  str = str.replace(/<pre[\s\S]*?<\/pre>|<code[\s\S]*?<\/code>/g, function (m) {
-    return "__CODE_".concat(codeBlocks.push(m) - 1, "__");
-  });
-
-  // helper to build id/class string
-  var buildAttrs = function buildAttrs(attrs) {
-    var idMatch = attrs.match(/#([A-Za-z0-9_-]+)/);
-    var classMatches = _toConsumableArray(attrs.matchAll(/\.([A-Za-z0-9_-]+)/g)).map(function (m) {
-      return m[1];
-    });
-    return "".concat(idMatch ? " id=\"".concat(idMatch[1], "\"") : '').concat(classMatches.length ? " class=\"".concat(classMatches.join(' '), "\"") : '');
-  };
-
-  // 2. replace [text]{attrs} with <span ...>text</span>
-  str = str.replace(/\[([^\]]*?)\]\s*\{\s*([^}]*)\}/g, function (_, text, attrs) {
-    return "<span".concat(buildAttrs(attrs), ">").concat(text, "</span>");
-  });
-
-  // 3. restore code blocks
-  return str.replace(/__CODE_(\d+)__/g, function (_, i) {
-    return codeBlocks[i];
-  });
-}
-
-// test string: 
-// "Here is an inline note.^[Inlines notes are easier to write, since you don't have to pick an identifier and move down to type the note.]{.tip}"
-function createInlineFootnotes(str) {
-  var startCount = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
-  // 1. Shield existing <pre>/<code> blocks and inline code
-  var codeBlocks = [];
-  str = str.replace(/<pre[\s\S]*?<\/pre>|<code[\s\S]*?<\/code>|`[^`]+`/g, function (m) {
-    return "__CODE_".concat(codeBlocks.push(m) - 1, "__");
-  });
-  var count = startCount;
-  var parseAttrs = function parseAttrs(attrs) {
-    var cleaned = attrs === null || attrs === void 0 ? void 0 : attrs.trim();
-    if (!cleaned) {
-      return {
-        id: null,
-        classes: []
-      };
-    }
-    var idMatch = cleaned.match(/#([A-Za-z0-9_-]+)/);
-    var classMatches = _toConsumableArray(cleaned.matchAll(/\.([A-Za-z0-9_-]+)/g)).map(function (m) {
-      return m[1];
-    });
-    return {
-      id: idMatch ? idMatch[1] : null,
-      classes: classMatches
-    };
-  };
-  var buildAttrString = function buildAttrString() {
-    var attrs = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-    var baseClasses = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
-    var mergedClasses = _toConsumableArray(new Set([].concat(_toConsumableArray(baseClasses || []), _toConsumableArray(attrs.classes || [])))).filter(Boolean);
-    var idStr = attrs.id ? " id=\"".concat(attrs.id, "\"") : '';
-    var classStr = mergedClasses.length ? " class=\"".concat(mergedClasses.join(' '), "\"") : '';
-    return "".concat(idStr).concat(classStr);
-  };
-
-  // Replace inline notes with optional {.class #id} attributes
-  str = str.replace(/\^\[([\s\S]+?)\](?:\s*\{\s*([^}]*)\})?/g, function (_, text, attrs) {
-    // console.log("Inline note:", text, "attrs:", attrs);
-    count++;
-    var label = "<label tabindex=\"0\" for=\"note".concat(count, "\" class=\"notelbl\">[").concat(count, "]</label>");
-    var parsedAttrs = parseAttrs(attrs);
-    var wrapperAttrs = buildAttrString(parsedAttrs, ['note']);
-    var inlineNoteAttrs = buildAttrString({
-      classes: parsedAttrs.classes
-    }, ['inline-note']);
-
-    // Return the trigger with its associated aside as siblings
-    // Apply custom attributes to the outer wrapper span
-    return "<span".concat(wrapperAttrs, ">\n      <input type=\"checkbox\" id=\"note").concat(count, "\" class=\"notebox\">\n      ").concat(label, "\n      <span").concat(inlineNoteAttrs, ">\n        ").concat(label, "\n        ").concat(text, "\n      </span>\n    </span>");
-  });
-
-  // 4. Restore code blocks
-  str = str.replace(/__CODE_(\d+)__/g, function (_, i) {
-    return codeBlocks[i];
-  });
-  return {
-    content: str,
-    count: count
-  };
-}
-
 /**
  * Replaces occurrences of a pattern in a string and optionally logs the replacement.
  *
@@ -321,635 +529,404 @@ function replaceAndLog(text, input, output) {
 }
 ;
 
+// Compatibility utility: accepts Markdown source, not rendered HTML.
+function convertNotes(source) {
+  var _content$match;
+  var startCount = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+  var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+  var md = createMarkdown(options, function () {}, function () {
+    return null;
+  });
+  var content = md.render(source, {
+    docId: "notes-".concat(startCount)
+  });
+  var count = startCount + ((_content$match = content.match(/class="footnote-item"/g)) !== null && _content$match !== void 0 ? _content$match : []).length;
+  return {
+    content: content,
+    count: count
+  };
+}
+
 ;// ./src/convert.mjs
 function _regenerator() { /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE */ var e, t, r = "function" == typeof Symbol ? Symbol : {}, n = r.iterator || "@@iterator", o = r.toStringTag || "@@toStringTag"; function i(r, n, o, i) { var c = n && n.prototype instanceof Generator ? n : Generator, u = Object.create(c.prototype); return _regeneratorDefine2(u, "_invoke", function (r, n, o) { var i, c, u, f = 0, p = o || [], y = !1, G = { p: 0, n: 0, v: e, a: d, f: d.bind(e, 4), d: function d(t, r) { return i = t, c = 0, u = e, G.n = r, a; } }; function d(r, n) { for (c = r, u = n, t = 0; !y && f && !o && t < p.length; t++) { var o, i = p[t], d = G.p, l = i[2]; r > 3 ? (o = l === n) && (u = i[(c = i[4]) ? 5 : (c = 3, 3)], i[4] = i[5] = e) : i[0] <= d && ((o = r < 2 && d < i[1]) ? (c = 0, G.v = n, G.n = i[1]) : d < l && (o = r < 3 || i[0] > n || n > l) && (i[4] = r, i[5] = n, G.n = l, c = 0)); } if (o || r > 1) return a; throw y = !0, n; } return function (o, p, l) { if (f > 1) throw TypeError("Generator is already running"); for (y && 1 === p && d(p, l), c = p, u = l; (t = c < 2 ? e : u) || !y;) { i || (c ? c < 3 ? (c > 1 && (G.n = -1), d(c, u)) : G.n = u : G.v = u); try { if (f = 2, i) { if (c || (o = "next"), t = i[o]) { if (!(t = t.call(i, u))) throw TypeError("iterator result is not an object"); if (!t.done) return t; u = t.value, c < 2 && (c = 0); } else 1 === c && (t = i["return"]) && t.call(i), c < 2 && (u = TypeError("The iterator does not provide a '" + o + "' method"), c = 1); i = e; } else if ((t = (y = G.n < 0) ? u : r.call(n, G)) !== a) break; } catch (t) { i = e, c = 1, u = t; } finally { f = 1; } } return { value: t, done: y }; }; }(r, o, i), !0), u; } var a = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} t = Object.getPrototypeOf; var c = [][n] ? t(t([][n]())) : (_regeneratorDefine2(t = {}, n, function () { return this; }), t), u = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(c); function f(e) { return Object.setPrototypeOf ? Object.setPrototypeOf(e, GeneratorFunctionPrototype) : (e.__proto__ = GeneratorFunctionPrototype, _regeneratorDefine2(e, o, "GeneratorFunction")), e.prototype = Object.create(u), e; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, _regeneratorDefine2(u, "constructor", GeneratorFunctionPrototype), _regeneratorDefine2(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = "GeneratorFunction", _regeneratorDefine2(GeneratorFunctionPrototype, o, "GeneratorFunction"), _regeneratorDefine2(u), _regeneratorDefine2(u, o, "Generator"), _regeneratorDefine2(u, n, function () { return this; }), _regeneratorDefine2(u, "toString", function () { return "[object Generator]"; }), (_regenerator = function _regenerator() { return { w: i, m: f }; })(); }
 function _regeneratorDefine2(e, r, n, t) { var i = Object.defineProperty; try { i({}, "", {}); } catch (e) { i = 0; } _regeneratorDefine2 = function _regeneratorDefine(e, r, n, t) { function o(r, n) { _regeneratorDefine2(e, r, function (e) { return this._invoke(r, n, e); }); } r ? i ? i(e, r, { value: n, enumerable: !t, configurable: !t, writable: !t }) : e[r] = n : (o("next", 0), o("throw", 1), o("return", 2)); }, _regeneratorDefine2(e, r, n, t); }
-function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+function asyncGeneratorStep(n, t, e, r, o, a, c) { try { var i = n[a](c), u = i.value; } catch (n) { return void e(n); } i.done ? t(u) : Promise.resolve(u).then(r, o); }
+function _asyncToGenerator(n) { return function () { var t = this, e = arguments; return new Promise(function (r, o) { var a = n.apply(t, e); function _next(n) { asyncGeneratorStep(a, r, o, _next, _throw, "next", n); } function _throw(n) { asyncGeneratorStep(a, r, o, _next, _throw, "throw", n); } _next(void 0); }); }; }
+function convert_slicedToArray(r, e) { return convert_arrayWithHoles(r) || convert_iterableToArrayLimit(r, e) || convert_unsupportedIterableToArray(r, e) || convert_nonIterableRest(); }
+function convert_nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function convert_iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t["return"] && (u = t["return"](), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
+function convert_arrayWithHoles(r) { if (Array.isArray(r)) return r; }
+function convert_typeof(o) { "@babel/helpers - typeof"; return convert_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, convert_typeof(o); }
+function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
+function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == convert_typeof(i) ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != convert_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != convert_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 function convert_createForOfIteratorHelper(r, e) { var t = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (!t) { if (Array.isArray(r) || (t = convert_unsupportedIterableToArray(r)) || e && r && "number" == typeof r.length) { t && (r = t); var _n = 0, F = function F() {}; return { s: F, n: function n() { return _n >= r.length ? { done: !0 } : { done: !1, value: r[_n++] }; }, e: function e(r) { throw r; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var o, a = !0, u = !1; return { s: function s() { t = t.call(r); }, n: function n() { var r = t.next(); return a = r.done, r; }, e: function e(r) { u = !0, o = r; }, f: function f() { try { a || null == t["return"] || t["return"](); } finally { if (u) throw o; } } }; }
 function convert_unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return convert_arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? convert_arrayLikeToArray(r, a) : void 0; } }
 function convert_arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
-function asyncGeneratorStep(n, t, e, r, o, a, c) { try { var i = n[a](c), u = i.value; } catch (n) { return void e(n); } i.done ? t(u) : Promise.resolve(u).then(r, o); }
-function _asyncToGenerator(n) { return function () { var t = this, e = arguments; return new Promise(function (r, o) { var a = n.apply(t, e); function _next(n) { asyncGeneratorStep(a, r, o, _next, _throw, "next", n); } function _throw(n) { asyncGeneratorStep(a, r, o, _next, _throw, "throw", n); } _next(void 0); }); }; }
-/** 
- *  @fileOverview Houses the core [nb2json](module-convert.html#.nb2json) function and accompanying utils. 
- * Functions exposed from [browser](module-Ipynb2web_browser.html) and [node](module-Ipynb2web_node.html).
- * 
- *  Where processing happens
- * - -1 - Calling nb2json - yaml filename returned gets formatted
- * - 0 - nb2json - meta.filename is fixed up right before returning too
- * - 0 - nb2json - meta.prettify inserts script
- * - 0 - nb2json - replaceEmojies
- * - 0 - nb2json - convertNotes
- * - 1 - get_metadata - yaml is parsed, title, summary, keyValues set
- * 
- *  @module convert
- *  @exports {Object} - An object containing utility functions.
- *  @author Charles Karpati
- */
-
-
-
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// fname = ./src/ipynb/route/filename (wihout the .ipynb extension, when server calling it)
-// fname = /route/filename when from client
-// meta.filename = fname UNDERCASED WITH SPACES REPLACED WITH UNDERSCORES.
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-var prettify = false;
-var pyCode = [];
-var assetsToWrite = [];
-var imageIndex = 0;
-var footnoteCount = 0;
-
 /**
- * Converts a Jupyter Notebook (.ipynb) file to a JSON object containing metadata and content as two distinct entries.
- * 
- * @async
- * @param {string} ipynbPath - The path to the Jupyter Notebook file.
- * @param {boolean} [verbose=false] - If set to true, enables verbose logging for detailed information.
- * @param {string[]|boolean} [extractAssets=false] - Array of asset types to extract (e.g., ['png', 'js', 'txt', 'html']) or boolean for backward compatibility.
- * @returns {Object} An object with metadata and processed content of the notebook.
- * @memberof module:convert
+ * Browser/build notebook rendering; never executes cells.
+ * @module convert
  */
-function nb2json(_x) {
-  return _nb2json.apply(this, arguments);
-}
-/**
- * Extracts metadata from the first cell of a Jupyter Notebook, interpreting it as YAML.
- * Get markdown and check EACH LINE for yaml. Special characters must have a space after them.
- * 
- * The Lines: 
- * ```
- * # Title
- * > summary
- * - key1: value1"
- * ```
- * Will return: 
- * ```
- * { title: "Title", summary: "summary", key1: "value1" }
- * ```
- *
- * @param {Object[]} data - An array of cells from a Jupyter Notebook.
- * @returns {Object} An object containing extracted metadata like title, summary, and key-values.
- */
-function _nb2json() {
-  _nb2json = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee(ipynbPath) {
-    var verbose,
-      extractAssets,
-      url,
-      ipynb,
-      nb,
-      meta,
-      content,
-      resp,
-      _args = arguments;
-    return _regenerator().w(function (_context) {
-      while (1) switch (_context.n) {
-        case 0:
-          verbose = _args.length > 1 && _args[1] !== undefined ? _args[1] : false;
-          extractAssets = _args.length > 2 && _args[2] !== undefined ? _args[2] : false;
-          pyCode = [];
-          prettify = false;
-          assetsToWrite = [];
-          imageIndex = 0;
-          footnoteCount = 0;
-          url = ipynbPath;
-          if (typeof process !== "undefined" && !ipynbPath.startsWith("http")) {
-            url = "http://localhost:8085/".concat(ipynbPath, ".ipynb");
-          }
-          _context.n = 1;
-          return fetch(url, {
-            headers: {
-              "Content-Type": "application/json; charset=utf-8"
-            }
-          });
-        case 1:
-          ipynb = _context.v;
-          _context.n = 2;
-          return ipynb.json();
-        case 2:
-          nb = _context.v;
-          // console.log('nb', nb);
-          meta = get_metadata(nb.cells[0]);
-          meta.prettify = meta.prettify === true || meta.prettify === "true" ? true : meta.prettify === false || meta.prettify === "false" ? false : undefined;
-          meta.filename = ipynbPath.split("/")[ipynbPath.split("/").length - 1].toLowerCase().replaceAll(" ", "_");
-          verbose && console.log('- get_metadata', meta, '\n');
 
-          // Convert file 
-          content = convertNb(nb.cells.slice(1), meta, verbose, extractAssets, meta.filename).flat().join(" ");
-          verbose && pyCode.length && console.log({
-            pyCode: pyCode
-          });
-          meta.pyCode = pyCode;
-          (meta.prettify === true || meta.prettify === undefined && prettify) && (content += "\n  <script src=\"https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js\"></script>\n  <link rel=\"stylesheet\" href=\"https://cdn.rawgit.com/google/code-prettify/master/styles/desert.css\"/>\n  ");
 
-          // verbose && console.log('- - content Ran ~~~~~~~~~~~', content, '~~~~~~~~~~~\n');
-          resp = replaceEmojis(content);
-          verbose && console.log('- - replaceEmojis Ran', '\n');
-          resp = collapseHeaders(resp, meta.collapse, false);
-          verbose && console.log('- - collapseHeaders Ran', '\n');
-          resp = collapseHeaders(resp, meta.collapsable, true);
-          verbose && console.log('- - collapsableHeaders Ran', '\n');
-          return _context.a(2, {
-            meta: meta,
-            content: resp,
-            assets: assetsToWrite
-          });
-      }
-    }, _callee);
-  }));
-  return _nb2json.apply(this, arguments);
-}
-function get_metadata(data) {
-  var returnThis = {};
-  var _iterator = convert_createForOfIteratorHelper(data.source),
+
+var imageTypes = ['image/svg+xml', 'image/png', 'image/jpeg', 'image/webp', 'image/gif'];
+var mimeOrder = ['text/html', 'application/javascript'].concat(imageTypes, ['text/plain', 'application/json']);
+var legacy = {
+  '#hide': {
+    include: false
+  },
+  '#hide_input': {
+    echo: false
+  },
+  '#hide_output': {
+    output: false
+  },
+  '#collapse_input': {
+    'code-fold': true
+  },
+  '#collapse_input_open': {
+    'code-fold': 'show'
+  },
+  '#collapse_output': {
+    'output-fold': true
+  },
+  '#collapse_output_open': {
+    'output-fold': 'show'
+  },
+  '#export': {
+    "export": true
+  }
+};
+function codeOptions(source, diagnose) {
+  var lines = source.split('\n');
+  var old = {},
+    conventional = {};
+  var count = 0;
+  var _iterator = convert_createForOfIteratorHelper(lines),
     _step;
   try {
     for (_iterator.s(); !(_step = _iterator.n()).done;) {
       var line = _step.value;
-      if (line.startsWith("#")) {
-        returnThis.title = line.replaceAll("\n", "").replaceAll("# ", "", 2);
-      } else if (line.startsWith(">")) {
-        returnThis.summary = line.replaceAll("\n", "").replaceAll("> ", "", 1);
-      } else if (line.startsWith("-")) {
-        var key = line.slice(line.indexOf("- ") + 2, line.indexOf(": "));
-        var val = line.slice(line.indexOf(": ") + 2).replaceAll("\n", "").trim();
-        returnThis[key] = val;
+      var trimmed = line.trim();
+      if (trimmed.startsWith('#|')) {
+        try {
+          var value = parseYaml(trimmed.slice(2).trim().replace(/^([\w-]+):(?=\S)/, '$1: '));
+          if (!value || convert_typeof(value) !== 'object' || Array.isArray(value)) throw new Error('Expected key: value');
+          for (var _i = 0, _Object$entries = Object.entries(value); _i < _Object$entries.length; _i++) {
+            var _Object$entries$_i = convert_slicedToArray(_Object$entries[_i], 2),
+              key = _Object$entries$_i[0],
+              item = _Object$entries$_i[1];
+            if (!['echo', 'output', 'include', 'code-fold', 'output-fold'].includes(key)) {
+              diagnose('unsupported-option', "Rendering does not handle #| ".concat(key));
+            } else if (typeof item !== 'boolean' && !(['code-fold', 'output-fold'].includes(key) && item === 'show')) {
+              diagnose('invalid-option', "Invalid value for #| ".concat(key));
+            } else conventional[key] = item;
+          }
+        } catch (error) {
+          diagnose('invalid-option', error.message);
+        }
+      } else {
+        var flags = trimmed.split(/\s+/);
+        if (!flags.length || !flags.every(function (flag) {
+          return Object.hasOwn(legacy, flag);
+        })) break;
+        var _iterator2 = convert_createForOfIteratorHelper(flags),
+          _step2;
+        try {
+          for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
+            var flag = _step2.value;
+            Object.assign(old, legacy[flag]);
+          }
+        } catch (err) {
+          _iterator2.e(err);
+        } finally {
+          _iterator2.f();
+        }
       }
+      count++;
     }
   } catch (err) {
     _iterator.e(err);
   } finally {
     _iterator.f();
   }
-  return returnThis;
+  return {
+    options: _objectSpread(_objectSpread({}, old), conventional),
+    source: lines.slice(count).join('\n')
+  };
 }
-
-/**
- * Processes each cell of a Jupyter Notebook and returns an array of converted content.
- *
- * @param {Object[]} cells - An array of cells from a Jupyter Notebook.
- * @param {Object} meta - Metadata associated with the notebook.
- * @param {boolean} [verbose=false] - If set to true, enables verbose logging for detailed information.
- * @param {string[]|boolean} [extractAssets=false] - Array of asset types to extract (e.g., ['png', 'js', 'txt', 'html']) or boolean for backward compatibility.
- * @param {string} [notebookName=null] - The name of the notebook for asset naming.
- * @returns {string[]} An array of strings representing the processed content of each cell.
- */
-function convertNb(cells, meta) {
-  var verbose = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
-  var extractAssets = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
-  var notebookName = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : null;
-  verbose && console.group('- convertNb Running');
-  var returnThis = cells.map(function (c) {
-    return cleanCell(c, meta, verbose, extractAssets, notebookName);
-  });
-  verbose && console.groupEnd();
-  return returnThis;
-}
-
-/**
- * Processes an individual cell from a Jupyter Notebook, handling either markdown or code cells.
- * Returns text or passes cell to 'code cell' processor
- *
- * @param {Object} cell - A cell from a Jupyter Notebook.
- * @param {Object} meta - Metadata associated with the notebook.
- * @param {boolean} [verbose=false] - If set to true, enables verbose logging for detailed information.
- * @param {string[]|boolean} [extractAssets=false] - Array of asset types to extract (e.g., ['png', 'js', 'txt', 'html']) or boolean for backward compatibility.
- * @param {string} [notebookName=null] - The name of the notebook for asset naming.
- * @returns {string} The processed content of the cell.
- */
-function cleanCell(cell, meta) {
-  var verbose = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
-  var extractAssets = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
-  var notebookName = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : null;
-  var x;
-  if (cell["cell_type"] == "markdown") {
-    x = processMarkdown(cell["source"].join(" "), meta);
-    // verbose && console.log('- - - Parsing Markdown', x);
-  } else {
-    // verbose && console.log('- - Parsing Code');//, cell ,'\n'); 
-    x = processCode(cell, meta, verbose, extractAssets, notebookName);
-  }
-  return x;
-}
-
-/**
- * Processes markdown content, converting it to HTML, handling special syntax, and applying transformations.
- *
- * @param {string} x - The markdown content to be processed.
- * @param {Object} meta - Metadata associated with the notebook.
- * @returns {string} The processed HTML content.
- */
-function processMarkdown(txt, meta) {
-  // Does not process markdown wrapped in html
-  var x = (0,external_marked_namespaceObject.marked)(txt);
-
-  // Two spaces at lines end transform into line breaks 
-  x = x.replace(/\s{2,}<\/p>/g, "</p><br>");
-
-  // Remove newline chars even though they dont get rendered. 
-  // x = x.replace(/\n/g, '');
-
-  // replace code blocks with pre.prettyprint
-  x = replaceAndLog(x, /<pre><code>([\s\S]*?)<\/code><\/pre>/g, function (match, content) {
-    if (meta.prettify === false) {
-      return match;
-    }
-    if (meta.prettify === undefined) {
-      prettify = true;
-    }
-    return "<pre class='prettyprint'>".concat(content, "</pre>");
-  });
-
-  // Single line code blocks do NOT get prettified
-  // x = replaceAndLog(x, /<code>([\s\S]*?)<\/code>/g, (match, content) => { prettify = true; return `<pre class='prettyprint' style='display:inline'>${content}</pre>`; });
-
-  // Open links in new tab
-  x = replaceAndLog(x, /<a\s+(?:[^>]*?\s+)?href="(.*?)"/g, function (match, href) {
-    if (!href.startsWith("./")) {
-      match += ' target="_blank" rel="nosopener noreferrer nofollow"';
-    }
-    return match;
-  });
-
-  // create spans, inline footnotes ( Here is an inline note.^[Inlines notes are] ) , create elements ( :::{#id .class} )
-  var result = convertNotes(x, footnoteCount);
-  x = result.content;
-  footnoteCount = result.count;
-  return x;
-}
-
-/**
- * Processes a code cell from a Jupyter Notebook, applying various transformations based on flags and output type.
- * 
- * Calls [getFlags](module-convert.html#.getFlags), [processSource](module-convert.html#.processSource), [processOutput](module-convert.html#.processOutput)
- *
- * @param {Object} cell - A code cell from a Jupyter Notebook.
- * @param {Object} meta - Metadata associated with the notebook.
- * @param {boolean} [verbose=false] - If set to true, enables verbose logging for detailed information.
- * @param {string[]|boolean} [extractAssets=false] - Array of asset types to extract (e.g., ['png', 'js', 'txt', 'html']) or boolean for backward compatibility.
- * @param {string} [notebookName=null] - The name of the notebook for asset naming.
- * @returns {string[]} An array of strings representing the processed content of the code cell.
- */
-function processCode(cell, meta) {
-  var verbose = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
-  var extractAssets = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
-  var notebookName = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : null;
-  // verbose && console.log('- - - processCode Running');
-  var x = [];
-  var flags = [];
-  // source
-  // verbose && console.group('ProcessCode');
-  if (cell["source"].length) {
-    var source = cell["source"];
-    flags = getFlags(source[0]);
-    // verbose && console.log('Input: ', {'Raw': cell['source'], 'Flags': flags } ) 
-    if (flags.length > 0) {
-      source = source.slice(1);
-    }
-    source = processSource(source.join(" "), flags, meta);
-    x.push(source);
-  }
-  // output
-  if (cell["outputs"].length) {
-    // verbose && console.log(flags, cell['outputs']) 
-    var _iterator2 = convert_createForOfIteratorHelper(cell["outputs"]),
-      _step2;
-    try {
-      for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-        var o = _step2.value;
-        x.push(processOutput(o, flags, verbose, extractAssets, notebookName));
-      }
-      // clear_output();
-    } catch (err) {
-      _iterator2.e(err);
-    } finally {
-      _iterator2.f();
-    }
-  }
-  // verbose && console.groupEnd();
-  return x;
-}
-
-/**
- * Detects special flags in the source code of a notebook cell and handles them accordingly.
- *
- * @memberof module:convert
- * @param {string} source - The source code of a notebook cell.
- * @returns {string[]} An array of detected flags in the cell's source code.
- */
-function getFlags(source) {
-  var input_aug = ["#collapse_input_open", "#collapse_input", "#collapse_output_open", "#collapse_output", "#hide_input", "#hide_output", "#hide", "%%capture", "%%javascript", "%%html", "#export"];
-  var sourceFlags = source.split(/\s+/); // Split by whitespace
-  return input_aug.filter(function (x) {
-    return sourceFlags.includes(x);
-  });
-}
-
-/**
- * Processes the source of a code cell, applying transformations based on flags and metadata.
- * Strip Flags from text, make details, hide all. Append to pyCode
- *
- * @memberof module:convert
- * @param {string} source - The source code of a notebook cell.
- * @param {string[]} flags - An array of flags affecting the processing.
- * @param {Object} meta - Metadata associated with the notebook.
- * @param {boolean} [verbose=false] - If set to true, enables verbose logging for detailed information.
- * @returns {string} The processed source code.
- */
-function processSource(source, flags, meta) {
+function context() {
+  var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+  var extractAssets = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+  var notebookName = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 'notebook';
   var verbose = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
-  if ('#export' == flags[flags.length - 1]) {
-    pyCode.push(source);
-  }
-  var _iterator3 = convert_createForOfIteratorHelper(flags),
-    _step3;
-  try {
-    for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
-      var _lbl = _step3.value;
-      var skipList = ["#hide", "#hide_input", "%%javascript", "%%html", "%%capture"];
-      if (skipList.includes(_lbl)) {
-        return "";
+  var result = {
+    assets: [],
+    diagnostics: [],
+    pyCode: []
+  };
+  var index = 0;
+  var cellIndex = 0;
+  var trusted = options.trusted === true;
+  var diagnose = function diagnose(code, message) {
+    var diagnostic = {
+      code: code,
+      cell: cellIndex + 1,
+      message: message
+    };
+    result.diagnostics.push(diagnostic);
+    if (verbose) console.warn('ipynb2web:', diagnostic);
+  };
+  var shouldExtract = function shouldExtract(type) {
+    return extractAssets === true || Array.isArray(extractAssets) && extractAssets.some(function (item) {
+      var name = String(item).toLowerCase();
+      return [type, type.split('/')[1], {
+        'image/svg+xml': 'svg',
+        'image/jpeg': 'jpg',
+        'application/javascript': 'js',
+        'text/plain': 'txt'
+      }[type]].includes(name);
+    });
+  };
+  var asset = function asset(type, data, encoding) {
+    var _imageSvgXml$image;
+    var extension = (_imageSvgXml$image = {
+      'image/svg+xml': 'svg',
+      'image/jpeg': 'jpg',
+      'text/html': 'html',
+      'application/javascript': 'js'
+    }[type]) !== null && _imageSvgXml$image !== void 0 ? _imageSvgXml$image : type.split('/')[1];
+    var prefix = (typeof notebookName === 'string' ? notebookName : 'notebook').replace(/[^a-zA-Z0-9_-]/g, '_') || 'notebook';
+    var name = "".concat(prefix, "-asset-").concat(++index, ".").concat(extension);
+    result.assets.push({
+      placeholderName: name,
+      data: data,
+      encoding: encoding,
+      type: type,
+      notebookPrefix: "".concat(prefix, "-")
+    });
+    return "ASSET_PLACEHOLDER_".concat(name);
+  };
+  var image = function image(bundle) {
+    if (!bundle || convert_typeof(bundle) !== 'object') return null;
+    var _iterator3 = convert_createForOfIteratorHelper(imageTypes),
+      _step3;
+    try {
+      for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
+        var type = _step3.value;
+        if (!Object.hasOwn(bundle, type)) continue;
+        var data = _sourceText(bundle[type]);
+        if (!data.trim()) {
+          diagnose('invalid-image', "Empty ".concat(type, " output"));
+          continue;
+        }
+        var svg = type === 'image/svg+xml';
+        if (svg ? !/<svg[\s>]/i.test(data) : !/^[\da-z+/=\s]+$/i.test(data)) {
+          diagnose('invalid-image', "Invalid ".concat(type, " output"));
+          continue;
+        }
+        // SVG is an image resource, never active inline DOM, in the default mode.
+        if (shouldExtract(type)) return asset(type, data, svg ? 'utf8' : 'base64');
+        return svg ? "data:".concat(type, ",").concat(encodeURIComponent(data)) : "data:".concat(type, ";base64,").concat(data.replace(/\s/g, ''));
       }
+    } catch (err) {
+      _iterator3.e(err);
+    } finally {
+      _iterator3.f();
     }
-  } catch (err) {
-    _iterator3.e(err);
-  } finally {
-    _iterator3.f();
-  }
-  if (meta.prettify === true) {
-    source = "<pre class='prettyprint'>".concat(source, "</pre>");
-  }
-  var flagg = flags && !!flags.includes('#collapse_input_open');
-  if (flagg) {
-    verbose && console.log(flags);
-    var _iterator4 = convert_createForOfIteratorHelper(flags),
+    return null;
+  };
+  var md = markdown_createMarkdown(options, diagnose, image);
+  var pre = function pre(text) {
+    return "<pre><code>".concat(escapeHtml(text), "</code></pre>");
+  };
+  var missing = function missing(message) {
+    diagnose('unsupported-output', message);
+    return "<pre class=\"ipynb-diagnostic\">".concat(escapeHtml(message), "</pre>");
+  };
+  var output = function output(saved) {
+    if (!saved || convert_typeof(saved) !== 'object') return missing('Missing saved output');
+    if (saved.output_type === 'stream') {
+      if (saved.name === 'stderr') diagnose('stderr', _sourceText(saved.text));
+      return pre(_sourceText(saved.text));
+    }
+    if (saved.output_type === 'error') {
+      var _saved$traceback, _saved$ename, _saved$evalue;
+      var message = _sourceText(((_saved$traceback = saved.traceback) === null || _saved$traceback === void 0 ? void 0 : _saved$traceback.join('\n')) || "".concat((_saved$ename = saved.ename) !== null && _saved$ename !== void 0 ? _saved$ename : 'Error', ": ").concat((_saved$evalue = saved.evalue) !== null && _saved$evalue !== void 0 ? _saved$evalue : ''));
+      diagnose('saved-error', message);
+      return pre(message);
+    }
+    var bundle = saved.data;
+    if (!bundle || convert_typeof(bundle) !== 'object') return missing('Saved output has no MIME data');
+    if (!trusted && (Object.hasOwn(bundle, 'text/html') || Object.hasOwn(bundle, 'application/javascript'))) {
+      diagnose('untrusted-output', 'Rich HTML/JavaScript requires the host option trusted: true; using an inert representation');
+    }
+    var _iterator4 = convert_createForOfIteratorHelper(mimeOrder),
       _step4;
     try {
       for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
-        var lbl = _step4.value;
-        source = source.replaceAll(lbl + "\r\n", "");
-        source = source.replaceAll(lbl + "\n", ""); // Strip the Flag  
-        if (lbl == "#collapse_input_open") source = makeDetails(source, true, 'input');else if (lbl == "#collapse_input") source = makeDetails(source, false, 'input');
+        var type = _step4.value;
+        if (!Object.hasOwn(bundle, type) || bundle[type] == null) continue;
+        var data = _sourceText(bundle[type]);
+        if (type === 'text/html' || type === 'application/javascript') {
+          if (!trusted || !data.trim()) continue;
+          if (type === 'text/html') {
+            return shouldExtract(type) ? "<iframe src=\"".concat(asset(type, data, 'utf8'), "\" title=\"Notebook output\"></iframe>") : data;
+          }
+          // A data URL avoids closing-script sequences corrupting the HTML wrapper.
+          var url = shouldExtract(type) ? asset(type, data, 'utf8') : "data:text/javascript,".concat(encodeURIComponent(data));
+          return "<script src=\"".concat(escapeHtml(url), "\"></script>");
+        }
+        if (type.startsWith('image/')) {
+          var _url = image(_defineProperty({}, type, bundle[type]));
+          if (_url) return "<img src=\"".concat(escapeHtml(_url), "\" alt=\"Notebook output\">");
+          continue;
+        }
+        if (type === 'application/json') return pre(JSON.stringify(bundle[type], null, 2));
+        return pre(data);
       }
     } catch (err) {
       _iterator4.e(err);
     } finally {
       _iterator4.f();
     }
-    return source;
-  }
+    if (!trusted) {
+      var _bundle$textHtml;
+      var rich = (_bundle$textHtml = bundle['text/html']) !== null && _bundle$textHtml !== void 0 ? _bundle$textHtml : bundle['application/javascript'];
+      if (rich != null) return pre(_sourceText(rich));
+    }
+    return missing("Unsupported saved output MIME types: ".concat(Object.keys(bundle).join(', ') || '(none)'));
+  };
+  var render = function render(cell, index) {
+    var _cell$outputs, _cell$outputs2;
+    cellIndex = index;
+    var text = _sourceText(cell === null || cell === void 0 ? void 0 : cell.source);
+    if ((cell === null || cell === void 0 ? void 0 : cell.cell_type) === 'markdown') return md.render(text, {
+      attachments: cell.attachments,
+      docId: "cell-".concat(index + 1)
+    });
+    if ((cell === null || cell === void 0 ? void 0 : cell.cell_type) === 'raw') return pre(text);
+    if ((cell === null || cell === void 0 ? void 0 : cell.cell_type) !== 'code') return missing("Unsupported cell type: ".concat(cell === null || cell === void 0 ? void 0 : cell.cell_type));
+    var parsed = codeOptions(text, diagnose);
+    var flags = parsed.options;
+    if (flags["export"]) result.pyCode.push(parsed.source);
+    if (flags.include === false) return '';
+    if (/^\s*%%?\w/.test(parsed.source) && !((_cell$outputs = cell.outputs) !== null && _cell$outputs !== void 0 && _cell$outputs.length)) {
+      diagnose('unexecuted-magic', 'IPython magic has no saved output; the renderer does not execute it');
+    }
+    var input = flags.echo === false || !parsed.source ? '' : pre(parsed.source);
+    if (input && flags['code-fold']) input = makeDetails(input, flags['code-fold'] === 'show', 'input');
+    var saved = (_cell$outputs2 = cell.outputs) !== null && _cell$outputs2 !== void 0 ? _cell$outputs2 : [];
+    var outputs = flags.output === false ? '' : Array.isArray(saved) ? saved.map(output).join('\n') : missing('Expected a saved outputs array');
+    if (outputs && flags['output-fold']) outputs = makeDetails(outputs, flags['output-fold'] === 'show', 'output');
+    return input + outputs;
+  };
+  return _objectSpread(_objectSpread({}, result), {}, {
+    render: render
+  });
 }
 
-/**
- * Processes the output of a code cell, applying transformations based on flags and output type.
- * Strip Flags from output, make details, hide all.
- *
- * @function processOutput
- * @memberof module:convert
- * @param {Object} source - The output of a code cell.
- * @param {string[]} flags - An array of flags affecting the processing.
- * @param {boolean} [verbose=false] - If set to true, enables verbose logging for detailed information.
- * @param {string[]|boolean} [extractAssets=false] - Array of asset types to extract (e.g., ['png', 'js', 'txt', 'html']) or boolean for backward compatibility.
- * @param {string} [notebookName=null] - The name of the notebook for asset naming.
- * @returns {string} The processed output content.
+/** Render a parsed notebook, without I/O or execution. Options are host-owned,
+ * never read from notebook metadata. Returns { meta, content, assets, diagnostics }.
  */
-function processOutput(source, flags) {
+function renderNotebook(notebook) {
+  var _options$filename;
+  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  if (!notebook || !Array.isArray(notebook.cells)) throw new Error('Invalid notebook: expected cells array');
+  var _readMetadata = readMetadata(notebook.cells[0]),
+    meta = _readMetadata.meta,
+    consumed = _readMetadata.consumed,
+    remainder = _readMetadata.remainder;
+  if (!Object.hasOwn(meta, 'filename')) meta.filename = (_options$filename = options.filename) !== null && _options$filename !== void 0 ? _options$filename : 'notebook';
+  var ctx = context(options, options.extractAssets, meta.filename, options.verbose);
+  var content = notebook.cells.map(function (cell, index) {
+    if (index === 0 && consumed) return remainder ? ctx.render(_objectSpread(_objectSpread({}, cell), {}, {
+      source: remainder
+    }), index) : '';
+    return ctx.render(cell, index);
+  }).join('\n');
+  if (ctx.pyCode.length && !Object.hasOwn(meta, 'pyCode')) meta.pyCode = ctx.pyCode;
+  return {
+    meta: meta,
+    content: content,
+    assets: ctx.assets,
+    diagnostics: ctx.diagnostics
+  };
+}
+
+/** Fetch and render a notebook. Positional verbose/extractAssets arguments remain
+ * supported; the fourth argument holds host options such as { trusted: true }.
+ * Node's historical extensionless localhost:8085 paths remain supported.
+ */
+function nb2json(_x) {
+  return _nb2json.apply(this, arguments);
+}
+
+// Low-level compatibility export. Use renderNotebook to receive assets/diagnostics.
+function _nb2json() {
+  _nb2json = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee(ipynbPath) {
+    var _options$filename2;
+    var verbose,
+      extractAssets,
+      options,
+      _options$verbose,
+      _options$extractAsset,
+      url,
+      response,
+      filename,
+      _args = arguments,
+      _t;
+    return _regenerator().w(function (_context) {
+      while (1) switch (_context.n) {
+        case 0:
+          verbose = _args.length > 1 && _args[1] !== undefined ? _args[1] : false;
+          extractAssets = _args.length > 2 && _args[2] !== undefined ? _args[2] : false;
+          options = _args.length > 3 && _args[3] !== undefined ? _args[3] : {};
+          if (convert_typeof(verbose) === 'object' && verbose !== null) {
+            options = verbose;
+            verbose = (_options$verbose = options.verbose) !== null && _options$verbose !== void 0 ? _options$verbose : false;
+            extractAssets = (_options$extractAsset = options.extractAssets) !== null && _options$extractAsset !== void 0 ? _options$extractAsset : false;
+          }
+          url = String(ipynbPath);
+          if (typeof window === 'undefined' && !/^[a-z][a-z\d+.-]*:/i.test(url)) {
+            url = "http://localhost:8085/".concat(url.replace(/^\//, '')).concat(url.endsWith('.ipynb') ? '' : '.ipynb');
+          }
+          _context.n = 1;
+          return fetch(url);
+        case 1:
+          response = _context.v;
+          if (response.ok) {
+            _context.n = 2;
+            break;
+          }
+          throw new Error("Notebook fetch failed (".concat(response.status, "): ").concat(url));
+        case 2:
+          filename = (_options$filename2 = options.filename) !== null && _options$filename2 !== void 0 ? _options$filename2 : /^(?:data|blob):/i.test(url) ? 'notebook' : String(ipynbPath).split('/').pop().split(/[?#]/)[0].replace(/\.ipynb$/i, '').toLowerCase().replaceAll(' ', '_');
+          _t = renderNotebook;
+          _context.n = 3;
+          return response.json();
+        case 3:
+          return _context.a(2, _t(_context.v, _objectSpread(_objectSpread({}, options), {}, {
+            verbose: verbose,
+            extractAssets: extractAssets,
+            filename: filename
+          })));
+      }
+    }, _callee);
+  }));
+  return _nb2json.apply(this, arguments);
+}
+function convertNb(cells) {
+  var meta = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
   var verbose = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
   var extractAssets = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
   var notebookName = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : null;
-  // console.log('processOutput', source);
-  if (source["output_type"] == "error") {
-    return "";
-  }
-  if (source["output_type"] == "stream") {
-    if (source["name"] == "stderr") {
-      return "";
-    }
-    source["data"] = {
-      "text/html": source["text"]
-    };
-  }
-  var keys = Object.keys(source["data"]);
-
-  // Debug logging to see what's happening
-  if (verbose || extractAssets) {
-    console.log('processOutput debug:', {
-      keys: keys,
-      data: source["data"],
-      hasTextHtml: keys.includes("text/html"),
-      hasTextPlain: keys.includes("text/plain"),
-      hasAppJs: keys.includes("application/javascript"),
-      imageKeys: keys.filter(function (k) {
-        return k.startsWith('image/');
-      })
-    });
-  }
-  var shouldExtract = function shouldExtract(type) {
-    var result = extractAssets === true || Array.isArray(extractAssets) && extractAssets.some(function (t) {
-      return t.toLowerCase() === type || t.toLowerCase() === type.split('/')[1] || type === 'application/javascript' && t.toLowerCase() === 'js' || type === 'text/html' && t.toLowerCase() === 'html';
-    });
-
-    // Debug logging for shouldExtract
-    if ((verbose || extractAssets) && (type === 'text/html' || type === 'application/javascript')) {
-      console.log('shouldExtract debug:', {
-        type: type,
-        extractAssets: extractAssets,
-        result: result,
-        isArray: Array.isArray(extractAssets)
-      });
-    }
-    return result;
-  };
-  if (keys.includes("text/html")) {
-    var data = source["data"]["text/html"];
-    source = Array.isArray(data) ? data.join("") : data;
-
-    // Calculate size in bytes
-    var sizeInBytes = new TextEncoder().encode(source).length;
-    var sizeThreshold = 100 * 1024; // 100KB
-
-    // Only extract if starts with doctype, <html>, or is larger than 100KB
-    var startsWithDoctype = source.toLowerCase().includes('<!doctype');
-    var startsWithHtml = source.toLowerCase().trim().startsWith('<html');
-    var isLargeEnough = sizeInBytes > sizeThreshold;
-    if (shouldExtract('text/html') && typeof process !== "undefined" && (startsWithDoctype || startsWithHtml || isLargeEnough)) {
-      var hash = source.substring(0, 8).replace(/[^a-zA-Z0-9]/g, '');
-      var name = "".concat(notebookName ? "".concat(notebookName, "-") : '', "content-").concat(hash, ".html");
-
-      // Debug: Log what's being extracted as HTML
-      if (verbose || extractAssets) {
-        console.log('Extracting HTML asset:', {
-          name: name,
-          dataLength: source.length,
-          sizeInBytes: sizeInBytes,
-          startsWithDoctype: startsWithDoctype,
-          startsWithHtml: startsWithHtml,
-          isLargeEnough: isLargeEnough,
-          hash: hash
-        });
-      }
-      assetsToWrite.push({
-        placeholderName: name,
-        data: source,
-        encoding: 'utf8',
-        type: 'text/html',
-        notebookPrefix: notebookName ? "".concat(notebookName, "-") : ''
-      });
-      source = "<iframe src=\"ASSET_PLACEHOLDER_".concat(name, "\" width=\"100%\" height=\"400px\"></iframe>");
-    }
-  } else if (keys.includes("application/javascript")) {
-    var _data = source["data"]["application/javascript"];
-
-    // Calculate size in bytes for JS content
-    var jsContent = Array.isArray(_data) ? _data.join("") : _data;
-    var _sizeInBytes = new TextEncoder().encode(jsContent).length;
-    var _sizeThreshold = 100 * 1024; // 100KB
-    var _isLargeEnough = _sizeInBytes > _sizeThreshold;
-    if (shouldExtract('application/javascript') && typeof process !== "undefined" && _isLargeEnough) {
-      var _hash = jsContent.toString().substring(0, 8).replace(/[^a-zA-Z0-9]/g, '');
-      var _name = "".concat(notebookName ? "".concat(notebookName, "-") : '', "script-").concat(_hash, ".js");
-
-      // Debug: Log what's being extracted as JS
-      if (verbose || extractAssets) {
-        console.log('Extracting JS asset:', {
-          name: _name,
-          sizeInBytes: _sizeInBytes,
-          isLargeEnough: _isLargeEnough
-        });
-      }
-      assetsToWrite.push({
-        placeholderName: _name,
-        data: jsContent,
-        encoding: 'utf8',
-        type: 'application/javascript'
-      });
-      source = "<script src=\"ASSET_PLACEHOLDER_".concat(_name, "\"></script>");
-    } else {
-      source = "<script>" + jsContent + "</script>";
-    }
-  } else {
-    // Check for images first, then fall back to text/plain if no image found
-    var imageKey = keys.filter(function (key) {
-      return key.startsWith('image/');
-    })[0];
-    if (imageKey && source["data"][imageKey]) {
-      var _data2 = source["data"][imageKey];
-
-      // Debug logging for image processing
-      if (verbose || extractAssets) {
-        console.log('Image processing debug:', {
-          imageKey: imageKey,
-          dataType: _typeof(_data2),
-          dataLength: _data2 === null || _data2 === void 0 ? void 0 : _data2.length,
-          shouldExtractResult: shouldExtract(imageKey),
-          processEnv: typeof process !== "undefined"
-        });
-      }
-
-      // Additional check to make sure this is actually image data
-      if (typeof _data2 === 'string' && _data2.length > 50) {
-        // Basic sanity check for image data
-        var imageType = imageKey.split('/')[1]; // Extract format (png, jpeg, gif, svg+xml, etc.)
-
-        if (shouldExtract(imageKey) && typeof process !== "undefined") {
-          // Use simple index-based naming instead of complex unique ID
-          imageIndex++;
-
-          // Handle special cases for file extensions
-          var extension = imageType;
-          if (imageType === 'jpeg') extension = 'jpg';
-          if (imageType === 'svg+xml') extension = 'svg';
-          var _name2 = "".concat(notebookName ? "".concat(notebookName, "-") : '', "image-").concat(imageIndex, ".").concat(extension);
-          var encoding = imageType === 'svg+xml' ? 'utf8' : 'base64';
-
-          // Debug: Log what's being extracted as image
-          if (verbose || extractAssets) {
-            console.log('Extracting image asset:', {
-              name: _name2,
-              imageType: imageType,
-              extension: extension,
-              encoding: encoding,
-              dataLength: _data2.length,
-              imageIndex: imageIndex
-            });
-          }
-          assetsToWrite.push({
-            placeholderName: _name2,
-            data: _data2,
-            encoding: encoding,
-            type: imageKey,
-            notebookPrefix: notebookName ? "".concat(notebookName, "-") : ''
-          });
-          source = "<img src=\"ASSET_PLACEHOLDER_".concat(_name2, "\" alt=\"Image Alt Text\">");
-        } else {
-          if (verbose || extractAssets) {
-            console.log('Image not extracted - inline instead:', {
-              shouldExtract: shouldExtract(imageKey),
-              processUndefined: typeof process === "undefined"
-            });
-          }
-          source = "<img src=\"data:".concat(imageKey, ";base64,").concat(_data2, "\" alt=\"Image Alt Text\">");
-        }
-      } else {
-        // If we reach here, there was an image key but no valid image data
-        if (verbose || extractAssets) {
-          console.log('Found image key but invalid data:', {
-            imageKey: imageKey,
-            dataType: _typeof(_data2),
-            dataLength: _data2 === null || _data2 === void 0 ? void 0 : _data2.length
-          });
-        }
-        source = "";
-      }
-    } else if (keys.includes("text/plain")) {
-      var _data3 = source["data"]["text/plain"];
-      // Always keep text/plain inline, don't extract to separate files
-      source = !/<Figure/.test(_data3) ? Array.isArray(_data3) ? _data3.join('') : _data3 : "";
-    } else {
-      // No recognized content type found
-      if (verbose || extractAssets) {
-        console.log('No recognized content type found:', {
-          keys: keys,
-          availableData: Object.keys(source["data"])
-        });
-      }
-      source = "";
-    }
-  }
-  var _iterator5 = convert_createForOfIteratorHelper(flags),
-    _step5;
-  try {
-    for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
-      var lbl = _step5.value;
-      try {
-        source = source.replaceAll(lbl + "\r\n", "");
-        source = source.replaceAll(lbl + "\n", "");
-      } catch (_unused) {
-        verbose && console.log("ERROR: !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!processOutput... ", _typeof(source), source);
-      }
-      if (lbl == "#collapse_output_open") {
-        source = makeDetails(source, true, 'output');
-      }
-      if (lbl == "#collapse_output") {
-        source = makeDetails(source, false, 'output');
-      }
-      if (lbl == "#hide_output") {
-        source = "";
-      }
-      if (lbl == "#hide") {
-        source = "";
-      }
-    }
-  } catch (err) {
-    _iterator5.e(err);
-  } finally {
-    _iterator5.f();
-  }
-  return source;
-  //output_type == 'stream' ==> text
-  //output_type == 'display_data' ==> data{'application/javascript' or 'text/html' or 'execute_result'}
+  var options = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : {};
+  var ctx = context(options, extractAssets, notebookName !== null && notebookName !== void 0 ? notebookName : meta.filename, verbose);
+  return cells.map(ctx.render);
 }
 
 
@@ -1731,6 +1708,7 @@ function _cli_nbs2html() {
   _cli_nbs2html = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee5(FROM, directory, SAVETO) {
     var verbose,
       assetsDir,
+      renderOptions,
       stat,
       pages,
       _args5 = arguments;
@@ -1739,6 +1717,7 @@ function _cli_nbs2html() {
         case 0:
           verbose = _args5.length > 3 && _args5[3] !== undefined ? _args5[3] : false;
           assetsDir = _args5.length > 4 && _args5[4] !== undefined ? _args5[4] : null;
+          renderOptions = _args5.length > 5 && _args5[5] !== undefined ? _args5[5] : {};
           FROM || (FROM = './');
           SAVETO || (SAVETO = './');
           // Search the pathto directory for .ipynb files
@@ -1763,10 +1742,7 @@ function _cli_nbs2html() {
           }).map(function (file) {
             return external_path_.parse(file).name;
           });
-          // filename without extension 
-          generate_sectionmap(pages, FROM, directory, SAVETO, verbose, assetsDir);
-        case 4:
-          return _context5.a(2);
+          return _context5.a(2, generate_sectionmap(pages, FROM, directory, SAVETO, verbose, assetsDir, renderOptions));
       }
     }, _callee5);
   }));
@@ -1792,6 +1768,7 @@ function _generate_sectionmap() {
   _generate_sectionmap = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee6(pages, FROM, directory, SAVETO) {
     var verbose,
       assetsDir,
+      renderOptions,
       server,
       links,
       assetsDirPath,
@@ -1836,6 +1813,7 @@ function _generate_sectionmap() {
         case 0:
           verbose = _args6.length > 4 && _args6[4] !== undefined ? _args6[4] : false;
           assetsDir = _args6.length > 5 && _args6[5] !== undefined ? _args6[5] : null;
+          renderOptions = _args6.length > 6 && _args6[6] !== undefined ? _args6[6] : {};
           verbose && console.log("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ cli_nbs2html: generate_sectionmap: ", pages, directory, verbose = false);
           server = external_http_server_namespaceObject.createServer({
             root: "./",
@@ -1900,7 +1878,7 @@ function _generate_sectionmap() {
             break;
           }
           _context6.n = 14;
-          return ipynb_publish("".concat(FROM).concat(directory), SAVETO, "json", assetsDir);
+          return ipynb_publish("".concat(FROM).concat(directory), SAVETO, "json", assetsDir, renderOptions);
         case 14:
           _yield$ipynb_publish$ = _context6.v.meta;
           csp = _yield$ipynb_publish$.csp;
@@ -1932,7 +1910,7 @@ function _generate_sectionmap() {
             break;
           }
           _context6.n = 18;
-          return ipynb_publish("".concat(FROM).concat(directory, "/").concat(page), "".concat(SAVETO).concat(directory), "json", assetsDir);
+          return ipynb_publish("".concat(FROM).concat(directory, "/").concat(page), "".concat(SAVETO).concat(directory), "json", assetsDir, renderOptions);
         case 18:
           _t7 = _context6.v;
         case 19:
@@ -1988,6 +1966,7 @@ function _ipynb_publish() {
   _ipynb_publish = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee7(fullFilePath, saveDir) {
     var type,
       assetsDir,
+      renderOptions,
       _final,
       _yield$import2,
       nb2json,
@@ -2015,17 +1994,18 @@ function _ipynb_publish() {
         case 0:
           type = _args7.length > 2 && _args7[2] !== undefined ? _args7[2] : "json";
           assetsDir = _args7.length > 3 && _args7[3] !== undefined ? _args7[3] : null;
+          renderOptions = _args7.length > 4 && _args7[4] !== undefined ? _args7[4] : {};
           if (!(type === "json")) {
             _context7.n = 3;
             break;
           }
           _context7.n = 1;
-          return Promise.resolve(/* import() | convert */).then(__webpack_require__.bind(__webpack_require__, 216));
+          return Promise.resolve(/* import() | convert */).then(__webpack_require__.bind(__webpack_require__, 173));
         case 1:
           _yield$import2 = _context7.v;
           nb2json = _yield$import2.nb2json;
           _context7.n = 2;
-          return nb2json(fullFilePath, false, !assetsDir ? false : ["svg", "png", "jpeg", "webp", "gif", "html", "js"]);
+          return nb2json(fullFilePath, false, !assetsDir ? false : ["svg", "png", "jpeg", "webp", "gif", "html", "js"], renderOptions);
         case 2:
           _final = _context7.v;
         case 3:
@@ -2168,7 +2148,7 @@ function _ipynb_publish() {
  * @memberof module:Ipynb2web:cli
  */
 function help() {
-  console.log("Usage: ipynb2web <COMMAND> <SAVETO> <FROM/or/SitemapName> [PathPrefix] [Domain]\n    \nCommands:\n  sitemap      Create a sitemap.\n  audio        Create audio assets.\n  help         Display this help message.\n\nFor sitemap command:\n  PathPrefix   Optional prefix to add to all URLs (e.g., '/docs')\n               Example: ipynb2web sitemap ./ ./sitemap.txt /docs\n\n  Domain       Optional domain to prefix all sitemap URLs (e.g., 'https://example.com')\n               Example: ipynb2web sitemap ./ ./sitemap.txt /docs example.com\n\nFor processing notebooks (non-sitemap, non-audio commands):\n  AssetsDir    Optional directory path for saving static assets separately\n               instead of inlining them. When provided, images and other \n               assets will be saved as separate files in this directory.\n               Example: ipynb2web notebooks ./output ./input '' ./assets\n               \nExamples:\n  ipynb2web help\n  ipynb2web sitemap ./ ./sitemap.txt /docs\n  ipynb2web sitemap ./ ./sitemap.txt /docs example.com\n  ipynb2web audio ./input ./output\n  ipynb2web notebooks ./output ./input\n  ipynb2web notebooks ./output ./input '' ./static-assets\n");
+  console.log("Usage: ipynb2web <COMMAND> <SAVETO> <FROM/or/SitemapName> [PathPrefix] [Domain]\n    \nCommands:\n  sitemap      Create a sitemap.\n  audio        Create audio assets.\n  help         Display this help message.\n\nFor sitemap command:\n  PathPrefix   Optional prefix to add to all URLs (e.g., '/docs')\n               Example: ipynb2web sitemap ./ ./sitemap.txt /docs\n\n  Domain       Optional domain to prefix all sitemap URLs (e.g., 'https://example.com')\n               Example: ipynb2web sitemap ./ ./sitemap.txt /docs example.com\n\nFor processing notebooks (non-sitemap, non-audio commands):\n  --trusted    Preserve active HTML/JS only for host-approved notebooks.\n               Without this flag, rich content uses inert representations.\n  AssetsDir    Optional directory path for saving static assets separately\n               instead of inlining them. When provided, images and other \n               assets will be saved as separate files in this directory.\n               Example: ipynb2web notebooks ./output ./input '' ./assets\n               \nExamples:\n  ipynb2web help\n  ipynb2web sitemap ./ ./sitemap.txt /docs\n  ipynb2web sitemap ./ ./sitemap.txt /docs example.com\n  ipynb2web audio ./input ./output\n  ipynb2web notebooks ./output ./input\n  ipynb2web notebooks ./output ./input '' ./static-assets\n");
 }
 
 /**
@@ -2185,6 +2165,10 @@ function help() {
  * @memberof module:Ipynb2web:cli
  */
 function cli(args) {
+  var trusted = args.includes('--trusted');
+  args = args.filter(function (arg) {
+    return arg !== '--trusted';
+  });
   var directory = args[0] || '';
   var SAVETO = args[1] || false;
   var FROM = args[2] || false;
@@ -2219,7 +2203,9 @@ function cli(args) {
   } else if (directory === 'audio') {
     createAudio(FROM, SAVETO);
   } else {
-    cli_nbs2html(FROM, directory, SAVETO, true, assetsDir);
+    cli_nbs2html(FROM, directory, SAVETO, true, assetsDir, {
+      trusted: trusted
+    });
   }
 }
 
@@ -2230,7 +2216,7 @@ function cli(args) {
 if (require.main === module) {  }
 */
 
-if ("file:///home/carlos/Documents/GitHub/pages/ipynb2web/src/cli.js".includes('ipynb2web')) {
+if ("file:///home/carlos/Documents/GitHub/packages/ipynb2web/src/cli.js".includes('ipynb2web')) {
   var args = process.argv.slice(2);
   if (args[0] === 'help' || args.length === 0) {
     help();

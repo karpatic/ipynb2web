@@ -179,7 +179,7 @@ async function processDirectory(directory, subdir = '', pathPrefix = '', verbose
  * @throws {Error} Logs an error to the console if unable to process the specified directory and verbose is true.
  */
 
-async function cli_nbs2html(FROM, directory, SAVETO, verbose = false, assetsDir = null) {
+async function cli_nbs2html(FROM, directory, SAVETO, verbose = false, assetsDir = null, renderOptions = {}) {
   FROM ||= './';
   SAVETO ||= './';
   // Search the pathto directory for .ipynb files
@@ -193,7 +193,7 @@ async function cli_nbs2html(FROM, directory, SAVETO, verbose = false, assetsDir 
   let pages = (await fs.promises.readdir(`${FROM}${directory}/`))
     .filter((file) => path.extname(file) === ".ipynb")
     .map((file) => path.parse(file).name ); // filename without extension 
-  generate_sectionmap(pages, FROM, directory, SAVETO, verbose, assetsDir);
+  return generate_sectionmap(pages, FROM, directory, SAVETO, verbose, assetsDir, renderOptions);
 }
 
 /**
@@ -214,7 +214,7 @@ async function cli_nbs2html(FROM, directory, SAVETO, verbose = false, assetsDir 
  * @throws {Error} Logs an error to the console if there are issues creating the directory or writing the section map file and verbose is true.
  */
 
-async function generate_sectionmap(pages, FROM, directory, SAVETO, verbose = false, assetsDir = null) {
+async function generate_sectionmap(pages, FROM, directory, SAVETO, verbose = false, assetsDir = null, renderOptions = {}) {
   verbose && console.log(`\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ cli_nbs2html: generate_sectionmap: `, pages, directory, verbose = false)
   const server = httpServer.createServer({
     root: "./",
@@ -267,7 +267,7 @@ async function generate_sectionmap(pages, FROM, directory, SAVETO, verbose = fal
       toc,
       title,
       ...rest
-    } = (await ipynb_publish(`${FROM}${directory}`, SAVETO, "json", assetsDir))
+    } = (await ipynb_publish(`${FROM}${directory}`, SAVETO, "json", assetsDir, renderOptions))
         .meta;
     links.push(rest);
   }
@@ -275,7 +275,7 @@ async function generate_sectionmap(pages, FROM, directory, SAVETO, verbose = fal
   // Call ipynb_publish and save for each page
   for (const page of pages) {
     // Skip files that start with an underscore
-    const r = !page.startsWith("_") && await ipynb_publish(`${FROM}${directory}/${page}`, `${SAVETO}${directory}`, "json", assetsDir);
+    const r = !page.startsWith("_") && await ipynb_publish(`${FROM}${directory}/${page}`, `${SAVETO}${directory}`, "json", assetsDir, renderOptions);
     if (r && !!!r.meta.hide) {
       const {
         csp,
@@ -321,13 +321,14 @@ async function ipynb_publish(
   fullFilePath,
   saveDir,
   type = "json",
-  assetsDir = null
+  assetsDir = null,
+  renderOptions = {}
 ) {
 
   let final;
   if (type === "json") {
     const { nb2json } = await import(/* webpackChunkName: "convert" */ "./convert.mjs");
-    final = await nb2json(fullFilePath, false, !assetsDir ? false : [ "svg", "png", "jpeg", "webp", "gif", "html", "js" ]);
+    final = await nb2json(fullFilePath, false, !assetsDir ? false : [ "svg", "png", "jpeg", "webp", "gif", "html", "js" ], renderOptions);
     // if(final?.meta?.title == 'Meta Quest Notes')  {
     //   console.log('final', final)
     // }

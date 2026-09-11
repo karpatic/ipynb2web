@@ -53,7 +53,7 @@ const FeatureList = [
     img: '/img/features/focus-matters.svg',
     description: (
       <>
-        Built to handle the gritty details other notebook conversion tools leave out. Automatically remove system logs, warnings, error messages, and more.
+        Keep saved outputs visible and inspect diagnostics for missing or unsupported content.
       </>
     ),
   },
@@ -73,16 +73,16 @@ const FeatureList = [
     img: '/img/features/powerful-markup.svg',
     description: (
       <>
-        Choose what to show, what to hide, and how it should appear: footnotes, breadcrumbs, collapsible content, and more.
+        Use fenced divs, attributed spans, footnotes and code folding. Your host supplies CSS and attribute-driven behavior.
       </>
     ),
   },
   {
-    title: 'Built-in Automation',
+    title: 'Saved Notebook Outputs',
     img: '/img/features/built-in-automation.svg',
     description: (
       <>
-        On the server side, traverse directories and generate Python modules, tables of contents, sitemaps, cover photos, and audio transcriptions.
+        Render saved text, images and attachments. Preserve HTML and JavaScript when the host explicitly opts into trusted rendering.
       </>
     ),
   },
@@ -91,7 +91,7 @@ const FeatureList = [
 export default function Home() {
   const { siteConfig } = useDocusaurusContext();
   return (
-    <Layout title={`Hello from ${siteConfig.title}`} description="Description will go into a meta tag in <head />">
+    <Layout title={`Hello from ${siteConfig.title}`} description="An embeddable notebook renderer for browser and build workflows.">
       <header className={clsx('hero hero--primary', styles.heroBanner)}>
         <div className="container">
           <Heading as="h1" className="hero__title">

@@ -1,119 +1,123 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ipynb2web test</title>
-  <link rel="icon" href="/img/favicon.ico" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ipynb2Web · renderer showcase</title>
   <style>
-    body { font-family: system-ui, sans-serif; max-width: 1100px; margin: 24px auto; padding: 0 12px; }
-    .row { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; margin-bottom: 10px; }
-    input, button { padding: 8px 10px; font-size: 14px; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    iframe { width: 100%; min-height: 420px; border: 1px solid #bbb; }
-    pre { background: #111; color: #eee; padding: 10px; overflow: auto; max-height: 420px; font-size: 12px; }
-    .status { margin: 8px 0 12px; color: #444; }
-    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } .row { grid-template-columns: 1fr; } }
+    body { font: 16px/1.5 system-ui, sans-serif; max-width: 1120px; margin: 32px auto; padding: 0 20px; color: #172b35; background: #f7fafb; }
+    h1 { line-height: 1.15; } label, button, input { font: inherit; }
+    button { padding: 8px 14px; cursor: pointer; } input[type=url] { padding: 8px; width: min(620px, 80%); }
+    .controls { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+    .grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px; }
+    iframe { width: 100%; height: 740px; background: white; border: 1px solid #aabfc9; }
+    pre { white-space: pre-wrap; overflow-wrap: anywhere; background: #e8eff2; padding: 16px; max-height: 360px; overflow: auto; }
+    #trustedDemo { border: 1px solid #aabfc9; padding: 16px; background: white; }
+    @media (max-width: 800px) { .grid { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
-  <h1>ipynb2web test</h1>
-  <p>Converts a notebook URL inside an iframe and injects <code>result.content</code> into <code>#content</code>.</p>
-
-  <div class="row">
-    <input id="urlInput" type="text" placeholder="Notebook URL" />
+  <h1>Ipynb2Web renderer showcase</h1>
+  <p>YAML metadata, conventional Markdown attributes, folding and saved outputs.
+    The webpage supplies the styles. No notebook kernel runs here.</p>
+  <label for="urlInput">Notebook URL (must permit this browser to fetch it)</label>
+  <div class="controls">
+    <input id="urlInput" type="url">
     <button id="convertBtn">Convert</button>
     <button id="useSampleBtn">Use sample</button>
+    <label>Or upload <input id="fileInput" type="file" accept=".ipynb,application/json"></label>
   </div>
-
-  <div id="status" class="status"></div>
-
+  <p id="status" role="status">Loading local bundle…</p>
   <div class="grid">
-    <div>
-      <h3>Rendered preview iframe</h3>
-      <iframe id="previewFrame" sandbox="allow-scripts allow-same-origin"></iframe>
-    </div>
-    <div>
-      <h3>HTML/JS used in preview iframe</h3>
-      <pre id="iframeSource">No code yet.</pre>
-    </div>
+    <section>
+      <h2>Isolated preview</h2>
+      <p>This iframe has an empty sandbox: no scripts or same-origin access.</p>
+      <iframe id="previewFrame" title="Notebook preview" sandbox=""></iframe>
+    </section>
+    <section>
+      <h2>Metadata and diagnostics</h2>
+      <pre id="metadata"></pre>
+      <h2>Converted HTML</h2>
+      <pre id="htmlSource"></pre>
+    </section>
   </div>
-
-  <script>
-    const urlInput = document.getElementById('urlInput');
-    const statusEl = document.getElementById('status');
-    const previewFrame = document.getElementById('previewFrame');
-    const iframeSource = document.getElementById('iframeSource');
-    const sampleUrl = new URL('./sample-notebook.ipynb', window.location.href).href;
-
-    // Template: loads libs in iframe, converts URL, injects result.content into #content
-    const iframeTemplate = `<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"><\/script>
-  <script src="https://cdn.jsdelivr.net/npm/ipynb2web@1.0.35/dist/ipynb2web.browser.umd.js"><\/script>
-  <style>
-    body { font-family: system-ui, sans-serif; margin: 0; padding: 14px; }
-    #meta { font-size: 12px; color: #666; margin-bottom: 10px; }
-    #content { line-height: 1.45; }
-  </style>
-</head>
-<body>
-  <div id="meta">Loading…</div>
-  <div id="content"></div>
-  <script>
-    const notebookUrl = __NOTEBOOK_URL__;
-    const meta = document.getElementById('meta');
-    const content = document.getElementById('content');
-
-    ipynb2web.nb2json(notebookUrl)
-      .then((result) => {
-        meta.textContent = 'Loaded: ' + notebookUrl;
-        content.innerHTML = result.content;
-      })
-      .catch((error) => {
-        meta.textContent = 'Failed: ' + notebookUrl;
-        content.innerHTML = '<pre style="color:#b91c1c">' + String(error?.message || error) + '</pre>';
-      });
-  <\/script>
-</body>
-</html>`;
-
-    function setStatus(msg) {
-      statusEl.textContent = msg;
+  <section>
+    <h2>Trusted saved-script lifecycle</h2>
+    <p>This separate demo uses fixed, reviewed content from this page, never your
+      upload. Converting and mounting leave its script inactive. The activation
+      button is an explicit host action; resetting replaces the mount.</p>
+    <div class="controls">
+      <button id="mountBtn">Reset trusted mount</button>
+      <button id="activateBtn">Activate trusted saved script</button>
+    </div>
+    <div id="trustedDemo"></div>
+    <p id="trustedStatus" role="status"></p>
+  </section>
+  <script type="module">
+    // Author: Codex app agent, 2026-09-11. This page owns its mount policy.
+    // The local checkout and the built docs site use the same freshly built bundle.
+    const localCheckout = location.pathname.includes('/docusaurus/static/test/');
+    const bundle = localCheckout ? '../../../dist/ipynb2web.browser.mjs' : '../ipynb2web.browser.mjs';
+    const ipynb2web = (await import(bundle)).default;
+    const get = id => document.getElementById(id);
+    const sampleUrl = new URL('./sample-notebook.ipynb', location.href).href;
+    const previewStyle = `body{font:16px/1.55 system-ui,sans-serif;color:#172b35;padding:20px;margin:0}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#eef3f5;padding:12px}summary{cursor:pointer;font-weight:600}details{border:1px solid #aec4ce;padding:10px;margin:12px 0}.callout-note{border-left:4px solid #227899;padding:8px 18px;background:#eff8fc}.tip{border:1px dashed #227899;padding:12px}.highlight{background:#ffebaa}img{max-width:100%}.ipynb-diagnostic{color:#9c3022}.footnotes{font-size:.9em}`;
+    let generation = 0;
+    function mount(result) {
+      get('metadata').textContent = JSON.stringify({ meta: result.meta, diagnostics: result.diagnostics }, null, 2);
+      get('htmlSource').textContent = result.content;
+      // Uploaded strings only enter this isolated document, never the host DOM.
+      get('previewFrame').srcdoc = '<!doctype html><html><head><meta charset="utf-8"><base href="about:srcdoc"><style>' + previewStyle + '</style></head><body>' + result.content + '</body></html>';
+      get('status').textContent = `Converted · ${result.diagnostics.length} diagnostics · preview scripts disabled`;
     }
-
-    function buildIframeHtml(notebookUrl) {
-      // regex switch: inject URL into template before srcdoc injection
-      return iframeTemplate.replace(/__NOTEBOOK_URL__/g, JSON.stringify(notebookUrl));
-    }
-
-    function render(notebookUrl) {
-      const html = buildIframeHtml(notebookUrl);
-      iframeSource.textContent = html;
-      previewFrame.srcdoc = html;
-      setStatus('Injected iframe page for: ' + notebookUrl);
-    }
-
-    document.getElementById('convertBtn').addEventListener('click', () => {
-      const raw = (urlInput.value || '').trim();
-      if (!raw) {
-        setStatus('Enter a notebook URL first.');
-        return;
+    async function convert(load) {
+      const current = ++generation;
+      get('status').textContent = 'Converting…';
+      try {
+        const result = await load();
+        if (current === generation) mount(result);
+      } catch (error) {
+        if (current === generation) get('status').textContent = 'Conversion failed: ' + error.message;
       }
-      const resolved = new URL(raw, window.location.href).href;
-      render(resolved);
-    });
+    }
+    const fromUrl = () => convert(() => ipynb2web.nb2json(new URL(get('urlInput').value, location.href).href));
+    get('convertBtn').onclick = fromUrl;
+    get('useSampleBtn').onclick = () => { get('urlInput').value = sampleUrl; fromUrl(); };
+    get('fileInput').onchange = () => {
+      const file = get('fileInput').files[0];
+      if (file) convert(async () => ipynb2web.renderNotebook(JSON.parse(await file.text())));
+    };
 
-    document.getElementById('useSampleBtn').addEventListener('click', () => {
-      urlInput.value = sampleUrl;
-      render(sampleUrl);
-    });
-
-    urlInput.value = sampleUrl;
-    render(sampleUrl);
+    // Fixed local sample only. This is an example host lifecycle, not a library API.
+    const trustedNotebook = { cells: [{ cell_type: 'code', source: '#| echo: false\n%%javascript\n// Saved output below', outputs: [
+      { output_type: 'display_data', data: { 'text/html': '<p id="trustedValue">Mounted; script has not run.</p>' } },
+      { output_type: 'display_data', data: { 'application/javascript': 'document.getElementById("trustedValue").textContent = "Saved script activated by host.";' } }
+    ] }] };
+    function resetTrusted() {
+      get('trustedDemo').innerHTML = ipynb2web.renderNotebook(trustedNotebook, { trusted: true }).content;
+      get('trustedStatus').textContent = 'Converted and mounted. Awaiting explicit host activation.';
+      get('activateBtn').disabled = false;
+    }
+    get('mountBtn').onclick = resetTrusted;
+    get('activateBtn').onclick = async () => {
+      get('activateBtn').disabled = true;
+      try {
+        for (const inert of [...get('trustedDemo').querySelectorAll('script')]) {
+          const active = document.createElement('script');
+          active.src = inert.src;
+          active.async = false;
+          await new Promise((resolve, reject) => {
+            active.onload = resolve;
+            active.onerror = () => reject(new Error('Trusted script load failed; inspect host CSP/network policy.'));
+            inert.replaceWith(active);
+          });
+        }
+        get('trustedStatus').textContent = 'Host activation complete.';
+      } catch (error) { get('trustedStatus').textContent = error.message; }
+    };
+    resetTrusted();
+    get('urlInput').value = sampleUrl;
+    fromUrl();
   </script>
 </body>
 </html>

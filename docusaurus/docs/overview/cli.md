@@ -59,3 +59,12 @@ ipynb2web <COMMAND> <SAVETO> <FROM/or/SitemapName>
 
 - Ensure that the paths provided in the commands are accurate and accessible.
 - The `OPENAI_API_KEY` is essential for the `audio` command to function correctly.
+
+### Rendering trust
+
+Directory conversion defaults to inert rendering. Add `--trusted` only for
+notebooks whose HTML/JS the destination host deliberately trusts. This preserves
+saved rich output; it does not execute notebook inputs. The programmatic
+`cli_nbs2html(FROM, directory, SAVETO, verbose, assetsDir, renderOptions)` accepts
+the same host rendering options. Prefer `renderNotebook` for a small build
+integration without the legacy directory/site utilities.

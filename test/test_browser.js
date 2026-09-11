@@ -38,7 +38,6 @@ app.get('/', (req, res) => {
             font-size: 16px;
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="/ipynb2web.browser.umd.js"></script>
 </head>
 <body>

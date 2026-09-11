@@ -2,97 +2,32 @@
 sidebar_position: 1
 ---
 
-# Browser Side
+# Browser integration
 
-This guide provides a user-oriented walkthrough of the browser module of ipynb2web. For detailed API documentation, please refer to the [official API documentation](https://ipynb2web.com/jsdocs/module-Ipynb2web_browser.html).
-
-## Content Delivery Network (CDN)
-
-You can include `ipynb2web` in your project via CDN with either of these URLs:
-
-```plaintext
-https://cdn.jsdelivr.net/npm/ipynb2web@latest
-```
-
-or
-
-```plaintext
-https://unpkg.com/ipynb2web@latest
-```
-
-## Usage
-
-To convert a Jupyter notebook to JSON, use the `nb2json(path)` function.
-
-## Browser Integration (Non-Module)
-
-This method is for simple scripts and does not require ES module support.
+Build the repository with `npm run build`. The ESM and UMD browser bundles include
+all parser dependencies; a separate Marked script is no longer used.
 
 ```html
-<!DOCTYPE html>
-<html>
-  <head>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script>
-      console.log(window.marked);
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/ipynb2web@latest/dist/ipynb2web.browser.umd.js"></script>
-  </head>
-  <body>
-    <script>
-      const url =
-        "https://carlos-a-diez.com/cms/test.ipynb";
-      ipynb2web.nb2json(url);
-      // returns: { meta: { ... }, content: { ... } }
-    </script>
-  </body>
-</html>
+<article id="notebook"></article>
+<script type="module">
+  import ipynb2web from './dist/ipynb2web.browser.mjs';
+  const result = await ipynb2web.nb2json('./notebook.ipynb');
+  document.getElementById('notebook').innerHTML = result.content;
+  console.log(result.meta, result.diagnostics);
+</script>
 ```
 
-## Browser Integration (ESM Module)
+Alternatively load `dist/ipynb2web.browser.umd.js` as a regular script and use
+`window.ipynb2web`. Serve the bundle from a host-chosen location or a deliberately
+pinned published version after it is released. This checkout's changes are not
+necessarily present in any registry version.
 
-For modern browsers that support ES modules, you can use the following approaches.
+`nb2json` fetches and converts. `renderNotebook` accepts already-parsed notebook
+JSON. Both return content without mounting it or executing scripts. See
+[trust and mount lifecycle](getting-started.md#trust-and-mount-lifecycle) before
+using `trusted:true` for saved interactive output.
 
-### Approach One
-
-This approach uses module script tags.
-
-```html
-<!DOCTYPE html>
-<html>
-  <head>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script
-      type="module"
-      src="https://cdn.jsdelivr.net/npm/ipynb2web@latest/dist/ipynb2web.browser.mjs"
-    ></script>
-  </head>
-  <body>
-    <script type="module">
-      ipynb2web.nb2json(url);
-      // returns: { meta: { ... }, content: { ... } }
-    </script>
-  </body>
-</html>
-```
-
-### Approach Two
-
-This approach uses ES module imports.
-
-```html
-<!DOCTYPE html>
-<html>
-  <head> </head>
-  <body>
-    <script type="module">
-      import { marked } from "https://cdn.jsdelivr.net/npm/marked/lib/marked.esm.js";
-      import ipynb2web from 'https://cdn.jsdelivr.net/npm/ipynb2web@latest/dist/ipynb2web.browser.mjs'; // Either works
-      ipynb2web.nb2json(url);
-      // returns: { meta: { ... }, content: { ... } }
-    </script>
-  </body>
-</html>
-```
-
-Ensure to replace the URLs with the appropriate versions and paths as per your project requirements.
+For arbitrary uploads, preview inside an iframe with an empty `sandbox`. Default
+conversion is inert, but preserved attributes may invoke behavior in a host that
+mounts them in its own DOM. The [showcase](/test/index.html) demonstrates isolated
+mounting and reports conversion failures through `textContent`.

@@ -1,65 +1,56 @@
 ---
-sidebar_position: 1
+sidebar_position: 2
 ---
 
-# IPYNB Guide
+# Notebook guide
 
-Leverage ipynb2web's full potential by utilizing specific flags, markup, and YAML metadata in your Jupyter notebooks. This guide outlines how to effectively format your notebook for optimal conversion and presentation.
+Ipynb2Web renders saved `.ipynb` cells into metadata, HTML content and optional
+assets. The [getting started guide](getting-started.md) defines the supported
+syntax, options, MIME order and trust contract.
 
-## YAML Metadata
+Start with a small leading Markdown metadata cell:
 
-Place YAML metadata at the beginning of your notebook to define key information:
+```yaml
+---
+title: My notebook
+keywords: [browser, example]
+published: false
+---
+```
 
-- `# Title`: Set the title of your notebook.
-- `> Summary`: Provide a concise summary or description.
-- Key-Value Pairs:
-  - `author`: Specify the author's name.
-  - `date`: Indicate the creation or modification date.
-  - `tags`: List relevant tags or keywords.
-  - `category`: Categorize the notebook's content.
-  - `prettify`: Enable code prettification by setting this to `true`.
-  - `export`: Mark cells for export with this flag.
+Then add ordinary Markdown content. No metadata cell is required.
 
-## Markdown Enhancements
+```markdown
+::: {.callout-note #note data-kind="example"}
+The host styles this block.
 
-Enhance text cells with special syntax for added functionalities:
+[Some emphasized text]{.highlight title="A short explanation"}
+:::
 
-- **Footnotes**: Use standard Markdown footnote syntax to create references and notes.
-- **Breakouts**: Insert side comments or notes using `(((key::value)))` syntax.
-- **HTML Embedding**: Markdown cells can contain HTML code for complex layouts or custom styling.
+A note.^[Inline footnotes work.] A reference.[^one]
 
-## Source Code Flags
+[^one]: A referenced footnote in the same cell.
+```
 
-Include these tags at the beginning of any code cell for specific behaviors:
+Use code-cell options on consecutive leading lines:
 
-- `#collapse_input_open`: Collapse the code cell but leave it open initially.
-- `#collapse_input`: Collapse the code cell and keep it closed initially.
-- `#collapse_output_open`: Collapse the output cell but leave it open initially.
-- `#collapse_output`: Collapse the output cell and keep it closed initially.
-- `#hide_input`: Completely hide the code cell.
-- `#hide_output`: Completely hide the output cell.
-- `#hide`: Hide both the code and output cells.
-- `%%capture`: Capture the output of the cell without displaying it.
-- `%%javascript`: Execute the cell's content as JavaScript.
-- `%%html`: Render the cell's content as HTML.
-- `#export`: Flag the cell's content for export.
+```python
+#| code-fold: true
+#| output-fold: show
+print("Save this cell's output in your notebook editor")
+```
 
-## Code Cell Processing
+`echo:false`, `output:false` and `include:false` hide input, output or the whole
+cell. `code-fold:true` creates closed details; `show` starts open. `output-fold`
+is the corresponding Ipynb2Web extension. These options control rendering only.
+An IPython magic without saved output is displayed as code and diagnosed, never
+executed by this library.
 
-ipynb2web processes code cells based on the provided flags and content type:
+Divs and spans preserve supported attributes; classes such as `tip`, `warning`,
+`info`, `callout-note` or `panel-tabset` have no built-in styling or behavior.
+Tabs, layouts and callouts are host responsibilities. This is a conventional
+Markdown subset, not a Quarto publication engine.
 
-- **Code Execution**: Normal execution with output rendered based on the cell's content type.
-- **Special Handling**: Cells flagged with `%%javascript` or `%%html` are treated as raw JavaScript or HTML respectively.
-- **Prettification**: If `prettify` is enabled in YAML, code blocks are styled for readability.
-
-## Emoji Conversion
-
-In both Markdown and code cells, emojis are converted to HTML entities for consistent rendering across platforms.
-
-## Note Conversion
-
-Special note syntax in Markdown cells (`(((note::Your note content here)))`) is transformed into interactive HTML breakout elements for a more engaging presentation.
-
-You can use the prefixes `note`, `warning`, `alert`. Three ellipses without prefix or `::` will create a footnote.
-
-By following these guidelines, you can ensure that your Jupyter notebooks are optimally formatted for conversion and display using ipynb2web.
+The [local showcase](/test/index.html) demonstrates nested divs, span attributes,
+footnotes, code folding, SVG attachments, escaped text and saved output diagnostics.
+See the [migration note](migration.md) for legacy syntax and host integration changes.

@@ -34,7 +34,6 @@ Redirecting...
 
 
 
-test{"kind":"package","longname":"package:undefined","files":["/home/carlos/Documents/GitHub/pages/ipynb2web/src/browser.js","/home/carlos/Documents/GitHub/pages/ipynb2web/src/cli.js","/home/carlos/Documents/GitHub/pages/ipynb2web/src/convert.mjs","/home/carlos/Documents/GitHub/pages/ipynb2web/src/convert_util.mjs","/home/carlos/Documents/GitHub/pages/ipynb2web/src/create_audio.mjs","/home/carlos/Documents/GitHub/pages/ipynb2web/src/node.js","/home/carlos/Documents/GitHub/pages/ipynb2web/src/prerender.mjs"],"attribs":"","id":"package:","ancestors":[]} 
 
 
 
@@ -48,93 +47,192 @@ Redirecting...
 
 
     <section>
-        <article><h1>Getting Started</h1>
-<p><a href="https://badge.fury.io/js/ipynb2web"><img src="https://badge.fury.io/js/ipynb2web.svg" alt="npm version"></a><br>
-<a href="http://hits.dwyl.com/karpatic/ipynb2web"><img src="https://hits.dwyl.com/karpatic/ipynb2web.svg?style=flat-square" alt="HitCount"></a><br>
-<img src="https://img.shields.io/github/downloads/karpatic/ipynb2web/total" alt="GitHub Downloads (all assets, all releases)"><br>
-<img src="https://img.shields.io/github/repo-size/karpatic/ipynb2web" alt="GitHub repo size"><br>
-<a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a><br>
-<a href="https://nodei.co/npm/ipynb2web/"><img src="https://nodei.co/npm/ipynb.png" alt="NPM"></a></p>
-<h2>Distribution</h2>
+        <article><h1>Ipynb2Web</h1>
+<p>An embeddable browser/build renderer for saved Jupyter notebooks. It returns<br>
+<code>{ meta, content, assets, diagnostics }</code>; your webpage owns CSS, routing,<br>
+presentation, and attribute-driven behavior.</p>
+<p>The supported authoring subset includes YAML metadata, Markdown, Pandoc-style<br>
+fenced divs and attributed spans, footnotes, and rendering options on code cells.<br>
+It does not execute Python, JavaScript, IPython magics, or <code>.qmd</code> files. Math,<br>
+bibliographies, execution toolchains, and themes are outside its scope. Support<br>
+for these authoring conventions does not imply full Pandoc or Quarto compatibility.</p>
+<h2>Browser</h2>
+<p>Build with <code>npm ci &amp;&amp; npm run build</code>, then serve the repository with<br>
+<code>npx http-server . -p 8097 -c-1</code>. Open<br>
+<a href="http://localhost:8097/docusaurus/static/test/index.html">the local showcase</a>.<br>
+It uses the local browser bundle, not a published package.</p>
+<pre class="prettyprint source lang-html"><code>&lt;article id=&quot;notebook&quot;>&lt;/article>
+&lt;script type=&quot;module&quot;>
+  import ipynb2web from './dist/ipynb2web.browser.mjs';
+  const result = await ipynb2web.nb2json('./notebook.ipynb');
+  document.getElementById('notebook').innerHTML = result.content;
+  console.log(result.meta, result.diagnostics);
+&lt;/script>
+</code></pre>
+<p>The browser bundles include their parsers; no additional script imports are<br>
+needed. The UMD build is <code>dist/ipynb2web.browser.umd.js</code> and exposes<br>
+<code>window.ipynb2web</code>.</p>
+<h2>Build</h2>
+<pre class="prettyprint source lang-js"><code>import { readFile, writeFile } from 'node:fs/promises';
+import ipynb2web from 'ipynb2web';
+
+const notebook = JSON.parse(await readFile('./notebook.ipynb', 'utf8'));
+const result = ipynb2web.renderNotebook(notebook);
+await writeFile('./notebook.json', JSON.stringify(result));
+</code></pre>
+<p><code>renderNotebook(notebook, options)</code> needs no server. <code>nb2json(url, options)</code><br>
+fetches first. The older <code>nb2json(path, verbose, extractAssets, options)</code> signature<br>
+is retained, including extensionless Node paths served at localhost:8085.</p>
+<p>Host options:</p>
 <ul>
-<li>npm: https://www.npmjs.com/package/ipynb2web</li>
-<li>GitHub Packages mirror: https://github.com/karpatic/ipynb2web/pkgs/npm/ipynb2web</li>
-<li>Docs site: https://ipynb2web.com/</li>
-<li>API docs: https://ipynb2web.com/jsdocs/module-Ipynb2web_browser.html</li>
-<li>Try it out (browser test page): https://ipynb2web.com/test/index.html</li>
+<li><code>trusted: true</code>: preserve raw HTML and saved HTML/JavaScript outputs. The default<br>
+escapes raw HTML, filters active authoring attributes, and uses inert saved-output<br>
+representations. A notebook metadata field named <code>trusted</code> cannot enable this.</li>
+<li><code>extractAssets: true</code> or an array such as <code>['png', 'svg', 'html', 'js']</code>: return<br>
+selected assets with <code>placeholderName</code>, <code>data</code>, <code>encoding</code>, and <code>type</code>. Write them<br>
+and replace <code>ASSET_PLACEHOLDER_&lt;name&gt;</code> in content with host-chosen URLs. Inlining<br>
+is the default. Rich asset extraction also requires <code>trusted: true</code>.</li>
+<li><code>externalLinks: 'new-tab'</code>: opt into <code>target=&quot;_blank&quot;</code> with <code>noopener noreferrer</code><br>
+for Markdown HTTP(S) links. Default links have no imposed target or relation.</li>
+<li><code>filename</code>: fallback metadata filename and asset prefix; <code>verbose</code>: log diagnostics.</li>
 </ul>
-<h2>About</h2>
-<p>Ipynb2web is designed to convert Interactive Python Notebooks (.ipynb) into clean, web-ready, static assets that are template-compatible. This standalone tool uses <code>marked</code> as it's only dependency and offers unique functionalities not found in other tools like Pandoc, Sphinx, Nbdev, Quarto, etc.</p>
-<p>Complete with <a href="https://ipynb2web.com/jsdocs/module-Ipynb2web_browser.html">API documentation</a>, this project facilitates seamless integration of .ipynb documents into web formats.</p>
-<h2>Core Features</h2>
-<ol>
-<li>Inclusion of <code>yaml</code> metadata at the top of notebooks for processing instructions in the final json output.</li>
-<li>Use of special <code>#flags</code> to control output formatting for individual notebook cells.</li>
-<li>Option to add minimally opinionated, pre-formatted content through specific <code>markup</code>.</li>
-</ol>
-<h2>Capabilities</h2>
-<ol>
-<li>Converts .ipynb documents into web-templatable json assets with a single command.</li>
-<li>Enables rendering of assets on the server or browser using Modules, Vanilla JS, or terminal commands.</li>
-<li>Supports custom template creation and integration with existing tools.</li>
-<li>Automates handling of intricate details overlooked by other notebook conversion tools, such as removing system logs, warnings, and error messages.</li>
-<li>On the server side, it can traverse directories to create python modules, tables of contents, sitemaps, cover photos, and audio transcriptions.</li>
-</ol>
-<h2>Development Notes</h2>
-<p><code>package.json</code> is the source of truth for package metadata and release wiring. It defines the package <code>name</code> and <code>version</code>, the published entry points (<code>main</code>, <code>browser</code>, <code>module</code>, <code>exports</code>, <code>bin</code>), the files included in the package, and the scripts used to build and release it.</p>
-<h3>Compiling</h3>
-<ol>
-<li>Running <code>Build</code> will link/relink the repo to your global npm registry. do not forget to <code>Publish</code> to NPM.</li>
-<li>The node module does not get minified but served directly from source. <code>BuildESM</code> is not used for prod.</li>
-</ol>
-<h3>JSDocs &amp; Docusaurus</h3>
-<p>This project uses a sophisticated dual-documentation system combining JSDoc for API documentation and Docusaurus for the main documentation site.</p>
-<ol>
-<li>Use <code>watchdocs</code> and <code>watchdocu</code> in dev.</li>
-<li>Running <code>docs</code> will compile Docusaurus and the JSDocs from source code comments</li>
-</ol>
-<h4>JSDoc Workflow</h4>
-<ol>
-<li><strong>Source Scanning</strong>: JSDoc parses all source files in <code>/src/</code> for documentation comments</li>
-<li><strong>Template Processing</strong>: Uses custom templates from <code>/jsdocs/tmpl/</code> to generate HTML</li>
-<li><strong>Static Asset Generation</strong>: Outputs documentation to <code>/docusaurus/static/jsdocs/</code></li>
-<li><strong>Integration</strong>: Generated docs become part of the Docusaurus static site</li>
-</ol>
-<h4>Docusaurus Workflow</h4>
-<ol>
-<li><strong>Content Preparation</strong>: Copies README.md to <code>/docusaurus/docs/overview/getting-started.md</code></li>
-<li><strong>Site Building</strong>: Generates static site from Docusaurus configuration</li>
-<li><strong>Output</strong>: Copies built site to <code>/docs/</code> for GitHub Pages deployment</li>
-<li><strong>CNAME Setup</strong>: Includes custom domain configuration</li>
-</ol>
-<h5>Others</h5>
-<p>https://jupyterbook.org/en/stable/reference/cheatsheet.html<br>
-https://sphinx-design.readthedocs.io/en/latest/<br>
-https://quarto.org/docs/authoring/markdown-basics.html<br>
-https://myst-nb.readthedocs.io/en/latest/<br>
-https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html</p>
-<p>Comparison of syntax extensions in Markdown flavors:<br>
-https://gist.github.com/vimtaai/99f8c89e7d3d02a362117284684baa0f<br>
-https://www.markdownguide.org/extended-syntax/<br>
-https://docutils.sourceforge.io/rst.html</p>
-<p>Markdown and reStructuredText are both markup languages. &quot;Markdown’s extensibility depends on dialects (GitHub Flavored Markdown, CommonMark, etc.). reST has a directive system built in, enabling complex semantic markup, custom roles, and rich extensions without changing core syntax. reST has a broader and stricter syntax with more rules for indentation and directives. It can represent more complex structures like citations, footnotes, and nested constructs but requires more discipline to write. Markdown dominates in general documentation, README files, wikis, and blogs. Editors, renderers, and converters are ubiquitous. reST is tightly integrated with the Python community, especially Sphinx, for technical documentation and API docs generation. reST via Sphinx can produce more complex multi-page sites with indexes, glossaries, and search. Use Markdown for simple, widely compatible docs and quick writing. Use reST for technical documentation that needs heavy cross-referencing, indexing, or Sphinx integration.&quot; - chatgpts</p>
-<p>&quot;[reStructuredText], a markup language... to write documents. This is similar to markdown, though is less-popular and more flexible.&quot; - Jupyterbooks.org</p>
-<p>&quot;Docutils is an open-source text processing system for processing plaintext documentation into useful formats, such as HTML, LaTeX, man-pages, OpenDocument, or XML. It includes reStructuredText, the easy to read, easy to use, what-you-see-is-what-you-get plaintext markup language.&quot; - DocUtils.sourceforge.io</p>
-<p>&quot;Sphinx is an open-source documentation engine that has been popular in the Python community for nearly a decade. Sphinx is based on the Docutils core Python package, which provides a data structure for documents in Python. Sphinx primarily uses...  reStructuredText to write documents.&quot; - jupyterbooks.org</p>
-<p>&quot;Jupyter Book utilizes Sphinx heavily under the hood. In fact, Jupyter Book [but] uses MyST Markdown, which was created to provide the flexibility of rST but for people who wish to write markdown.&quot; - jupyterbook.org</p>
-<p>https://myst-parser.readthedocs.io/en/latest/syntax/admonitions.html<br>
-vs<br>
-https://docutils.sourceforge.io/docs/ref/rst/directives.html</p>
-<p>https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html</p>
-<p>Pandoc - Supports divs :::, spans [text]{.class}, footnotes ^[inline]</p>
-<p>https://quarto.org/docs/authoring/markdown-basics.html</p>
-<p>Quarto - {{&lt; callout-note &gt;}}, {{&lt; include &gt;}}</p>
-<p>docusaurus - :::info, :::warning blocks</p>
-<p>https://jupyterbook.org/en/stable/reference/cheatsheet.html</p></article>
+<h2>Authoring</h2>
+<p>Use a leading Markdown or raw cell with explicit YAML delimiters. Flat metadata<br>
+and inline arrays are enough for most notebooks:</p>
+<pre class="prettyprint source lang-yaml"><code>---
+title: &quot;A notebook: example&quot;
+keywords: [notebooks, browser]
+hide: false
+host:
+  route: /examples/notebook
+---
+</code></pre>
+<p>Nested mappings, lists, quoted strings, booleans and numbers keep their types.<br>
+Metadata is optional. Ordinary first cells are rendered; content after the closing<br>
+YAML delimiter is retained. Invalid explicit YAML throws a cell-specific error.<br>
+Mappings require string keys; custom tags, aliases and nonfinite numbers are<br>
+rejected. Prototype-named keys remain inert own properties, including nested keys.<br>
+Do not merge untrusted metadata into host configuration without validation.</p>
+<p>Legacy cells containing only headings, blockquotes and <code>- key: value</code> fields are<br>
+still recognized when at least one field is present. Values such as <code>[one, two]</code><br>
+and <code>false</code> are normalized; unparseable legacy prose remains a string. A heading<br>
+alone is content. Arbitrary host keys are retained, including <code>toc</code>, <code>audio</code>,<br>
+<code>cover</code>, <code>collapse</code>, <code>collapsable</code>, <code>prettify</code>, and routing metadata; these do not<br>
+select renderer behavior.</p>
+<pre class="prettyprint source lang-markdown"><code>:::: {#example .callout-note data-kind=&quot;aside&quot; title=&quot;Host-styled note&quot;}
+A paragraph with [an **attributed** span]{.smallcaps #term title=&quot;Two words&quot;}.
+
+::: {.tip}
+- Nested blocks keep their structure.
+- The host supplies any callout styling.
+:::
+::::
+
+An inline note.^[This is a note.] A referenced note.[^source]
+
+[^source]: A conventional footnote definition in this Markdown cell.
+</code></pre>
+<p>Div fences use at least three colons and may nest, including equal-length fences.<br>
+Code fences, inline code and raw HTML literal blocks are not rewritten. Attribute<br>
+lists on divs/spans support classes, IDs and quoted/unquoted key-value attributes.<br>
+In default mode supported inert attributes include <code>data-*</code>, <code>aria-*</code>, <code>title</code>,<br>
+<code>lang</code>, <code>dir</code>, <code>role</code>, <code>tabindex</code>, <code>hidden</code>, <code>width</code>, and <code>height</code>; other attributes<br>
+require trusted rendering. Footnotes use conventional linked endnotes, scoped per<br>
+Markdown cell. Definitions and references must be in the same cell. Attributes may also follow<br>
+a note, such as <code>^[note]{.tip title=&quot;Note title&quot;}</code>.</p>
+<h2>Inputs and saved outputs</h2>
+<p>Ordinary code inputs are escaped and visible. Multiple leading option lines work:</p>
+<pre class="prettyprint source lang-python"><code>#| echo: true
+#| code-fold: show
+#| output-fold: true
+print(&quot;Saved output is rendered separately&quot;)
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Rendering</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>echo: false</code></td>
+<td>Hide input</td>
+</tr>
+<tr>
+<td><code>output: false</code></td>
+<td>Hide saved outputs</td>
+</tr>
+<tr>
+<td><code>include: false</code></td>
+<td>Hide the whole cell</td>
+</tr>
+<tr>
+<td><code>code-fold: true</code> / <code>show</code> / <code>false</code></td>
+<td>Closed / initially open / unfolded input</td>
+</tr>
+<tr>
+<td><code>output-fold: true</code> / <code>show</code> / <code>false</code></td>
+<td>Equivalent saved-output folding; Ipynb2Web extension</td>
+</tr>
+</tbody>
+</table>
+<p>Only the contiguous leading option/legacy flag lines are scanned. The first body<br>
+line ends scanning, so flags in strings or later comments are literal code.<br>
+Conventional options override legacy equivalents regardless of their ordering;<br>
+last valid value wins within each syntax. <code>include:false</code> takes precedence over<br>
+both visibility options; hidden content is not folded. Invalid/unsupported options<br>
+produce diagnostics.</p>
+<p>Legacy <code>#hide</code>, <code>#hide_input</code>, <code>#hide_output</code>, <code>#collapse_input</code>,<br>
+<code>#collapse_input_open</code>, <code>#collapse_output</code>, <code>#collapse_output_open</code>, and <code>#export</code><br>
+remain supported. Magics such as <code>%%capture</code>, <code>%%html</code>, and <code>%%javascript</code> remain<br>
+visible source; they are not renderer instructions. With no saved outputs, they<br>
+produce an unexecuted-magic diagnostic. To create interactive output, run the<br>
+notebook in its own toolchain and save its outputs first.</p>
+<p>For MIME alternatives, trusted rendering chooses HTML, then JavaScript, SVG,<br>
+PNG, JPEG, WebP, GIF, plain text, then JSON. Default rendering skips active MIME<br>
+choices, preferring images/plain text/JSON and otherwise displaying rich output<br>
+as escaped text. Empty/invalid images fall back to another representation. SVG<br>
+is a URL-backed image, not injected SVG markup. Attachments use the same image<br>
+handling. Plain text, streams, stderr and saved errors are escaped and visible.<br>
+Missing/unsupported outputs and attachments produce a visible placeholder and<br>
+structured diagnostics with a one-based cell number.</p>
+<h2>Trust and mount lifecycle</h2>
+<p>Conversion returns strings and assets; it does not mount or execute scripts.<br>
+<code>innerHTML</code> insertion does not execute inserted script elements, but trusted HTML<br>
+can contain event handlers, frames and other active content that needs no explicit<br>
+script activation. Use <code>trusted:true</code> only for content the host intentionally<br>
+allows to have its privileges, never because a notebook says it is trusted.</p>
+<p>The default is an inert rendering subset, not a general HTML sanitizer or a host<br>
+security boundary. Preserved IDs/classes/data attributes may trigger your own<br>
+host code. For arbitrary uploads, use an isolated preview: the showcase mounts<br>
+in an iframe with an empty <code>sandbox</code>, without script or same-origin permissions.<br>
+Do not combine <code>allow-scripts</code> and <code>allow-same-origin</code> for untrusted same-origin<br>
+content. Choose URL/network policy, CSP and any further sanitization in the host.</p>
+<p>For trusted interactive outputs the host mounts content, loads any approved<br>
+libraries, then explicitly activates approved scripts or calls its own mount<br>
+hooks. The host must handle load order, failures, CSP, repeated mounts, event<br>
+listeners, timers and cleanup before replacing a page. Extracted HTML in an iframe<br>
+is a separate document and may execute on navigation, subject to the host's sandbox<br>
+and CSP. The renderer does not supply a script scheduler or dependency loader.</p>
+<p>Unicode/emoji are preserved. No highlighter, CSS theme, external CDN script,<br>
+header-folding policy or link <code>nofollow</code> is selected by notebook content. The host<br>
+can style ordinary code elements and implement behavior from preserved attributes.</p>
+<h2>Migration and development</h2>
+<p>See <a href="https://github.com/karpatic/ipynb2web/blob/main/docusaurus/docs/overview/migration.md">migration notes</a>, the<br>
+<a href="https://github.com/karpatic/ipynb2web/blob/main/docusaurus/docs/overview/ipynb.md">notebook guide</a>, and the<br>
+<a href="https://ipynb2web.com/test/index.html">showcase</a>. Older directory, sitemap, audio,<br>
+cover and Python-export utilities remain available; they are separate from the<br>
+core renderer contract.</p>
+<p>The renderer uses <code>markdown-it</code>, its footnote plugin, and <code>yaml</code>. Run <code>npm test</code><br>
+for focused conversion checks, <code>npm run build</code> for package bundles, and<br>
+<code>npm run docs</code> to regenerate API/site documentation. Build does not globally<br>
+link the package or publish a release. Release commands require a separate,<br>
+intentional publishing step; package metadata and <code>.github/workflows</code> retain<br>
+that wiring.</p></article>
     </section>
 
 
-test{"kind":"mainpage","readme":"<h1>Getting Started</h1>\n<p><a href=\"https://badge.fury.io/js/ipynb2web\"><img src=\"https://badge.fury.io/js/ipynb2web.svg\" alt=\"npm version\"></a><br>\n<a href=\"http://hits.dwyl.com/karpatic/ipynb2web\"><img src=\"https://hits.dwyl.com/karpatic/ipynb2web.svg?style=flat-square\" alt=\"HitCount\"></a><br>\n<img src=\"https://img.shields.io/github/downloads/karpatic/ipynb2web/total\" alt=\"GitHub Downloads (all assets, all releases)\"><br>\n<img src=\"https://img.shields.io/github/repo-size/karpatic/ipynb2web\" alt=\"GitHub repo size\"><br>\n<a href=\"https://opensource.org/licenses/MIT\"><img src=\"https://img.shields.io/badge/License-MIT-yellow.svg\" alt=\"License: MIT\"></a><br>\n<a href=\"https://nodei.co/npm/ipynb2web/\"><img src=\"https://nodei.co/npm/ipynb.png\" alt=\"NPM\"></a></p>\n<h2>Distribution</h2>\n<ul>\n<li>npm: https://www.npmjs.com/package/ipynb2web</li>\n<li>GitHub Packages mirror: https://github.com/karpatic/ipynb2web/pkgs/npm/ipynb2web</li>\n<li>Docs site: https://ipynb2web.com/</li>\n<li>API docs: https://ipynb2web.com/jsdocs/module-Ipynb2web_browser.html</li>\n<li>Try it out (browser test page): https://ipynb2web.com/test/index.html</li>\n</ul>\n<h2>About</h2>\n<p>Ipynb2web is designed to convert Interactive Python Notebooks (.ipynb) into clean, web-ready, static assets that are template-compatible. This standalone tool uses <code>marked</code> as it's only dependency and offers unique functionalities not found in other tools like Pandoc, Sphinx, Nbdev, Quarto, etc.</p>\n<p>Complete with <a href=\"https://ipynb2web.com/jsdocs/module-Ipynb2web_browser.html\">API documentation</a>, this project facilitates seamless integration of .ipynb documents into web formats.</p>\n<h2>Core Features</h2>\n<ol>\n<li>Inclusion of <code>yaml</code> metadata at the top of notebooks for processing instructions in the final json output.</li>\n<li>Use of special <code>#flags</code> to control output formatting for individual notebook cells.</li>\n<li>Option to add minimally opinionated, pre-formatted content through specific <code>markup</code>.</li>\n</ol>\n<h2>Capabilities</h2>\n<ol>\n<li>Converts .ipynb documents into web-templatable json assets with a single command.</li>\n<li>Enables rendering of assets on the server or browser using Modules, Vanilla JS, or terminal commands.</li>\n<li>Supports custom template creation and integration with existing tools.</li>\n<li>Automates handling of intricate details overlooked by other notebook conversion tools, such as removing system logs, warnings, and error messages.</li>\n<li>On the server side, it can traverse directories to create python modules, tables of contents, sitemaps, cover photos, and audio transcriptions.</li>\n</ol>\n<h2>Development Notes</h2>\n<p><code>package.json</code> is the source of truth for package metadata and release wiring. It defines the package <code>name</code> and <code>version</code>, the published entry points (<code>main</code>, <code>browser</code>, <code>module</code>, <code>exports</code>, <code>bin</code>), the files included in the package, and the scripts used to build and release it.</p>\n<h3>Compiling</h3>\n<ol>\n<li>Running <code>Build</code> will link/relink the repo to your global npm registry. do not forget to <code>Publish</code> to NPM.</li>\n<li>The node module does not get minified but served directly from source. <code>BuildESM</code> is not used for prod.</li>\n</ol>\n<h3>JSDocs &amp; Docusaurus</h3>\n<p>This project uses a sophisticated dual-documentation system combining JSDoc for API documentation and Docusaurus for the main documentation site.</p>\n<ol>\n<li>Use <code>watchdocs</code> and <code>watchdocu</code> in dev.</li>\n<li>Running <code>docs</code> will compile Docusaurus and the JSDocs from source code comments</li>\n</ol>\n<h4>JSDoc Workflow</h4>\n<ol>\n<li><strong>Source Scanning</strong>: JSDoc parses all source files in <code>/src/</code> for documentation comments</li>\n<li><strong>Template Processing</strong>: Uses custom templates from <code>/jsdocs/tmpl/</code> to generate HTML</li>\n<li><strong>Static Asset Generation</strong>: Outputs documentation to <code>/docusaurus/static/jsdocs/</code></li>\n<li><strong>Integration</strong>: Generated docs become part of the Docusaurus static site</li>\n</ol>\n<h4>Docusaurus Workflow</h4>\n<ol>\n<li><strong>Content Preparation</strong>: Copies README.md to <code>/docusaurus/docs/overview/getting-started.md</code></li>\n<li><strong>Site Building</strong>: Generates static site from Docusaurus configuration</li>\n<li><strong>Output</strong>: Copies built site to <code>/docs/</code> for GitHub Pages deployment</li>\n<li><strong>CNAME Setup</strong>: Includes custom domain configuration</li>\n</ol>\n<h5>Others</h5>\n<p>https://jupyterbook.org/en/stable/reference/cheatsheet.html<br>\nhttps://sphinx-design.readthedocs.io/en/latest/<br>\nhttps://quarto.org/docs/authoring/markdown-basics.html<br>\nhttps://myst-nb.readthedocs.io/en/latest/<br>\nhttps://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html</p>\n<p>Comparison of syntax extensions in Markdown flavors:<br>\nhttps://gist.github.com/vimtaai/99f8c89e7d3d02a362117284684baa0f<br>\nhttps://www.markdownguide.org/extended-syntax/<br>\nhttps://docutils.sourceforge.io/rst.html</p>\n<p>Markdown and reStructuredText are both markup languages. &quot;Markdown’s extensibility depends on dialects (GitHub Flavored Markdown, CommonMark, etc.). reST has a directive system built in, enabling complex semantic markup, custom roles, and rich extensions without changing core syntax. reST has a broader and stricter syntax with more rules for indentation and directives. It can represent more complex structures like citations, footnotes, and nested constructs but requires more discipline to write. Markdown dominates in general documentation, README files, wikis, and blogs. Editors, renderers, and converters are ubiquitous. reST is tightly integrated with the Python community, especially Sphinx, for technical documentation and API docs generation. reST via Sphinx can produce more complex multi-page sites with indexes, glossaries, and search. Use Markdown for simple, widely compatible docs and quick writing. Use reST for technical documentation that needs heavy cross-referencing, indexing, or Sphinx integration.&quot; - chatgpts</p>\n<p>&quot;[reStructuredText], a markup language... to write documents. This is similar to markdown, though is less-popular and more flexible.&quot; - Jupyterbooks.org</p>\n<p>&quot;Docutils is an open-source text processing system for processing plaintext documentation into useful formats, such as HTML, LaTeX, man-pages, OpenDocument, or XML. It includes reStructuredText, the easy to read, easy to use, what-you-see-is-what-you-get plaintext markup language.&quot; - DocUtils.sourceforge.io</p>\n<p>&quot;Sphinx is an open-source documentation engine that has been popular in the Python community for nearly a decade. Sphinx is based on the Docutils core Python package, which provides a data structure for documents in Python. Sphinx primarily uses...  reStructuredText to write documents.&quot; - jupyterbooks.org</p>\n<p>&quot;Jupyter Book utilizes Sphinx heavily under the hood. In fact, Jupyter Book [but] uses MyST Markdown, which was created to provide the flexibility of rST but for people who wish to write markdown.&quot; - jupyterbook.org</p>\n<p>https://myst-parser.readthedocs.io/en/latest/syntax/admonitions.html<br>\nvs<br>\nhttps://docutils.sourceforge.io/docs/ref/rst/directives.html</p>\n<p>https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html</p>\n<p>Pandoc - Supports divs :::, spans [text]{.class}, footnotes ^[inline]</p>\n<p>https://quarto.org/docs/authoring/markdown-basics.html</p>\n<p>Quarto - {{&lt; callout-note &gt;}}, {{&lt; include &gt;}}</p>\n<p>docusaurus - :::info, :::warning blocks</p>\n<p>https://jupyterbook.org/en/stable/reference/cheatsheet.html</p>","longname":"Main Page"} 
 
 
 
@@ -148,7 +246,7 @@ test{"kind":"mainpage","readme":"<h1>Getting Started</h1>\n<p><a href=\"https://
 <br class="clear">
 
 <footer>
-    Documentation by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sun Mar 29 2026 21:01:36 GMT-0400 (Eastern Daylight Time)
+    Documentation by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Fri Sep 11 2026 16:37:43 GMT-0400 (Eastern Daylight Time)
 </footer>
 
 <script> prettyPrint(); </script>

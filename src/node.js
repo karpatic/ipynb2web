@@ -67,7 +67,8 @@ const ipynb2web = {
   replaceEmojis: ConvertUtils.replaceEmojis,
   convertNotes: ConvertUtils.convertNotes,
   replaceAndLog: ConvertUtils.replaceAndLog,
-  nb2json: Convert.nb2json
+  nb2json: Convert.nb2json,
+  renderNotebook: Convert.renderNotebook
 };
 
 export default ipynb2web;

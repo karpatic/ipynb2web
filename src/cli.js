@@ -47,6 +47,8 @@ For sitemap command:
                Example: ipynb2web sitemap ./ ./sitemap.txt /docs example.com
 
 For processing notebooks (non-sitemap, non-audio commands):
+  --trusted    Preserve active HTML/JS only for host-approved notebooks.
+               Without this flag, rich content uses inert representations.
   AssetsDir    Optional directory path for saving static assets separately
                instead of inlining them. When provided, images and other 
                assets will be saved as separate files in this directory.
@@ -76,6 +78,8 @@ Examples:
  * @memberof module:Ipynb2web:cli
  */
 function cli(args) {
+    const trusted = args.includes('--trusted');
+    args = args.filter(arg => arg !== '--trusted');
     const directory = args[0] || '';
     const SAVETO = args[1] || false;
     const FROM = args[2] || false;
@@ -112,7 +116,7 @@ function cli(args) {
       createSitemap(searchDir, sitemapOutFile, sitemapPathPrefix, sitemapDomain);
     }
     else if (directory === 'audio') { createAudio(FROM, SAVETO); }
-    else { cli_nbs2html(FROM, directory, SAVETO, true, assetsDir); }
+    else { cli_nbs2html(FROM, directory, SAVETO, true, assetsDir, { trusted }); }
 }
 
 /**

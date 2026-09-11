@@ -1,536 +1,196 @@
-/** 
- *  @fileOverview Houses the core [nb2json](module-convert.html#.nb2json) function and accompanying utils. 
- * Functions exposed from [browser](module-Ipynb2web_browser.html) and [node](module-Ipynb2web_node.html).
- * 
- *  Where processing happens
- * - -1 - Calling nb2json - yaml filename returned gets formatted
- * - 0 - nb2json - meta.filename is fixed up right before returning too
- * - 0 - nb2json - meta.prettify inserts script
- * - 0 - nb2json - replaceEmojies
- * - 0 - nb2json - convertNotes
- * - 1 - get_metadata - yaml is parsed, title, summary, keyValues set
- * 
- *  @module convert
- *  @exports {Object} - An object containing utility functions.
- *  @author Charles Karpati
- */
-
-
-import { marked } from "marked";
-import { makeDetails, replaceEmojis, convertNotes, replaceAndLog, collapseHeaders } from './convert_util.mjs'
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// fname = ./src/ipynb/route/filename (wihout the .ipynb extension, when server calling it)
-// fname = /route/filename when from client
-// meta.filename = fname UNDERCASED WITH SPACES REPLACED WITH UNDERSCORES.
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-let prettify = false;
-let pyCode = [];
-let assetsToWrite = [];
-let imageIndex = 0;
-let footnoteCount = 0;
-
 /**
- * Converts a Jupyter Notebook (.ipynb) file to a JSON object containing metadata and content as two distinct entries.
- * 
- * @async
- * @param {string} ipynbPath - The path to the Jupyter Notebook file.
- * @param {boolean} [verbose=false] - If set to true, enables verbose logging for detailed information.
- * @param {string[]|boolean} [extractAssets=false] - Array of asset types to extract (e.g., ['png', 'js', 'txt', 'html']) or boolean for backward compatibility.
- * @returns {Object} An object with metadata and processed content of the notebook.
- * @memberof module:convert
+ * Browser/build notebook rendering; never executes cells.
+ * @module convert
  */
-async function nb2json(ipynbPath, verbose = false, extractAssets = false) { 
-  pyCode = []
-  prettify = false;
-  assetsToWrite = [];
-  imageIndex = 0;
-  footnoteCount = 0;
-  
-  let url = ipynbPath;
-  if (typeof process !== "undefined" && !ipynbPath.startsWith("http")) {
-    url = `http://localhost:8085/${ipynbPath}.ipynb`;
-  } 
+import { sourceText, parseYaml, readMetadata, get_metadata } from './metadata.mjs';
+import { createMarkdown, escapeHtml } from './markdown.mjs';
+import { makeDetails } from './convert_util.mjs';
 
-  let ipynb = await fetch(url, { headers: { "Content-Type": "application/json; charset=utf-8" } });
-  // console.log('url', url);
-  // console.log('ipynb', ipynb);
-  const nb = await ipynb.json();
-  // console.log('nb', nb);
+const imageTypes = ['image/svg+xml', 'image/png', 'image/jpeg', 'image/webp', 'image/gif'];
+const mimeOrder = ['text/html', 'application/javascript', ...imageTypes, 'text/plain', 'application/json'];
+const legacy = {
+  '#hide': { include: false }, '#hide_input': { echo: false }, '#hide_output': { output: false },
+  '#collapse_input': { 'code-fold': true }, '#collapse_input_open': { 'code-fold': 'show' },
+  '#collapse_output': { 'output-fold': true }, '#collapse_output_open': { 'output-fold': 'show' },
+  '#export': { export: true }
+};
 
-  const meta = get_metadata(nb.cells[0]);
-  meta.prettify =
-    meta.prettify === true || meta.prettify === "true"
-      ? true
-      : meta.prettify === false || meta.prettify === "false"
-        ? false
-        : undefined;
-  meta.filename = ipynbPath.split("/")[ipynbPath.split("/").length - 1].toLowerCase().replaceAll(" ", "_");
-
-  verbose && console.log('- get_metadata', meta, '\n');
-
-  // Convert file 
-  let content = convertNb(nb.cells.slice(1), meta, verbose, extractAssets, meta.filename).flat().join(" ");
-  verbose && pyCode.length && console.log({ pyCode });
-
-  meta.pyCode = pyCode;
-  (meta.prettify === true || (meta.prettify === undefined && prettify)) &&
-    (content += `
-  <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
-  <link rel="stylesheet" href="https://cdn.rawgit.com/google/code-prettify/master/styles/desert.css"/>
-  `);
-
-  // verbose && console.log('- - content Ran ~~~~~~~~~~~', content, '~~~~~~~~~~~\n');
-  let resp = replaceEmojis(content);
-  verbose && console.log('- - replaceEmojis Ran', '\n');
-
-  resp = collapseHeaders(resp, meta.collapse, false);
-  verbose && console.log('- - collapseHeaders Ran', '\n');
-
-  resp = collapseHeaders(resp, meta.collapsable, true);
-  verbose && console.log('- - collapsableHeaders Ran', '\n');
-
-  return { meta, content: resp, assets: assetsToWrite };
-}
-
-/**
- * Extracts metadata from the first cell of a Jupyter Notebook, interpreting it as YAML.
- * Get markdown and check EACH LINE for yaml. Special characters must have a space after them.
- * 
- * The Lines: 
- * ```
- * # Title
- * > summary
- * - key1: value1"
- * ```
- * Will return: 
- * ```
- * { title: "Title", summary: "summary", key1: "value1" }
- * ```
- *
- * @param {Object[]} data - An array of cells from a Jupyter Notebook.
- * @returns {Object} An object containing extracted metadata like title, summary, and key-values.
- */
-function get_metadata(data) {
-  const returnThis = {};
-  for (const line of data.source) {
-    if (line.startsWith("#")) {
-      returnThis.title = line.replaceAll("\n", "").replaceAll("# ", "", 2);
-    } else if (line.startsWith(">")) {
-      returnThis.summary = line.replaceAll("\n", "").replaceAll("> ", "", 1);
-    } else if (line.startsWith("-")) {
-      const key = line.slice(line.indexOf("- ") + 2, line.indexOf(": "));
-      const val = line
-        .slice(line.indexOf(": ") + 2)
-        .replaceAll("\n", "")
-        .trim();
-      returnThis[key] = val;
+function codeOptions(source, diagnose) {
+  const lines = source.split('\n');
+  const old = {}, conventional = {};
+  let count = 0;
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith('#|')) {
+      try {
+        const value = parseYaml(trimmed.slice(2).trim().replace(/^([\w-]+):(?=\S)/, '$1: '));
+        if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('Expected key: value');
+        for (const [key, item] of Object.entries(value)) {
+          if (!['echo', 'output', 'include', 'code-fold', 'output-fold'].includes(key)) {
+            diagnose('unsupported-option', `Rendering does not handle #| ${key}`);
+          } else if (typeof item !== 'boolean' && !(['code-fold', 'output-fold'].includes(key) && item === 'show')) {
+            diagnose('invalid-option', `Invalid value for #| ${key}`);
+          } else conventional[key] = item;
+        }
+      } catch (error) { diagnose('invalid-option', error.message); }
+    } else {
+      const flags = trimmed.split(/\s+/);
+      if (!flags.length || !flags.every(flag => Object.hasOwn(legacy, flag))) break;
+      for (const flag of flags) Object.assign(old, legacy[flag]);
     }
+    count++;
   }
-  return returnThis;
+  return { options: { ...old, ...conventional }, source: lines.slice(count).join('\n') };
 }
 
-/**
- * Processes each cell of a Jupyter Notebook and returns an array of converted content.
- *
- * @param {Object[]} cells - An array of cells from a Jupyter Notebook.
- * @param {Object} meta - Metadata associated with the notebook.
- * @param {boolean} [verbose=false] - If set to true, enables verbose logging for detailed information.
- * @param {string[]|boolean} [extractAssets=false] - Array of asset types to extract (e.g., ['png', 'js', 'txt', 'html']) or boolean for backward compatibility.
- * @param {string} [notebookName=null] - The name of the notebook for asset naming.
- * @returns {string[]} An array of strings representing the processed content of each cell.
- */
-function convertNb(cells, meta, verbose = false, extractAssets = false, notebookName = null) {
-  verbose && console.group('- convertNb Running');
-  let returnThis = cells.map((c) => cleanCell(c, meta, verbose, extractAssets, notebookName));
-  verbose && console.groupEnd();
-  return returnThis;
-}
-
-/**
- * Processes an individual cell from a Jupyter Notebook, handling either markdown or code cells.
- * Returns text or passes cell to 'code cell' processor
- *
- * @param {Object} cell - A cell from a Jupyter Notebook.
- * @param {Object} meta - Metadata associated with the notebook.
- * @param {boolean} [verbose=false] - If set to true, enables verbose logging for detailed information.
- * @param {string[]|boolean} [extractAssets=false] - Array of asset types to extract (e.g., ['png', 'js', 'txt', 'html']) or boolean for backward compatibility.
- * @param {string} [notebookName=null] - The name of the notebook for asset naming.
- * @returns {string} The processed content of the cell.
- */
-function cleanCell(cell, meta, verbose = false, extractAssets = false, notebookName = null) { 
-  let x;
-  if (cell["cell_type"] == "markdown") { 
-    x = processMarkdown(cell["source"].join(" "), meta)
-    // verbose && console.log('- - - Parsing Markdown', x);
-  } else {  
-    // verbose && console.log('- - Parsing Code');//, cell ,'\n'); 
-    x = processCode(cell, meta, verbose, extractAssets, notebookName);
-  }
-  return x;
-}
-
-/**
- * Processes markdown content, converting it to HTML, handling special syntax, and applying transformations.
- *
- * @param {string} x - The markdown content to be processed.
- * @param {Object} meta - Metadata associated with the notebook.
- * @returns {string} The processed HTML content.
- */
-function processMarkdown(txt, meta) {
-
-  // Does not process markdown wrapped in html
-  let x = marked(txt); 
-  
-  // Two spaces at lines end transform into line breaks 
-  x = x.replace(/\s{2,}<\/p>/g, "</p><br>");
-
-  // Remove newline chars even though they dont get rendered. 
-  // x = x.replace(/\n/g, '');
-
-  // replace code blocks with pre.prettyprint
-  x = replaceAndLog(x, /<pre><code>([\s\S]*?)<\/code><\/pre>/g, (match, content) => {
-    if (meta.prettify === false) {
-      return match;
-    }
-    if (meta.prettify === undefined) {
-      prettify = true;
-    }
-    return `<pre class='prettyprint'>${content}</pre>`;
-  });
-  
-  // Single line code blocks do NOT get prettified
-  // x = replaceAndLog(x, /<code>([\s\S]*?)<\/code>/g, (match, content) => { prettify = true; return `<pre class='prettyprint' style='display:inline'>${content}</pre>`; });
-
-  // Open links in new tab
-  x = replaceAndLog(x, /<a\s+(?:[^>]*?\s+)?href="(.*?)"/g, (match, href) => {
-    if (!href.startsWith("./")) {
-      match += ' target="_blank" rel="nosopener noreferrer nofollow"';
-    }
-    return match; 
-  }); 
-
-  // create spans, inline footnotes ( Here is an inline note.^[Inlines notes are] ) , create elements ( :::{#id .class} )
-  const result = convertNotes(x, footnoteCount);
-  x = result.content;
-  footnoteCount = result.count;
-
-  return x
-}
-
-/**
- * Processes a code cell from a Jupyter Notebook, applying various transformations based on flags and output type.
- * 
- * Calls [getFlags](module-convert.html#.getFlags), [processSource](module-convert.html#.processSource), [processOutput](module-convert.html#.processOutput)
- *
- * @param {Object} cell - A code cell from a Jupyter Notebook.
- * @param {Object} meta - Metadata associated with the notebook.
- * @param {boolean} [verbose=false] - If set to true, enables verbose logging for detailed information.
- * @param {string[]|boolean} [extractAssets=false] - Array of asset types to extract (e.g., ['png', 'js', 'txt', 'html']) or boolean for backward compatibility.
- * @param {string} [notebookName=null] - The name of the notebook for asset naming.
- * @returns {string[]} An array of strings representing the processed content of the code cell.
- */
-function processCode(cell, meta, verbose = false, extractAssets = false, notebookName = null) {
-  // verbose && console.log('- - - processCode Running');
-  let x = [];
-  let flags = [];
-  // source
-  // verbose && console.group('ProcessCode');
-  if (cell["source"].length) { 
-    let source = cell["source"];
-    flags = getFlags(source[0]);
-    // verbose && console.log('Input: ', {'Raw': cell['source'], 'Flags': flags } ) 
-    if (flags.length > 0) { source = source.slice(1) }
-    source = processSource(source.join(" "), flags, meta);
-    x.push(source);
-  }
-  // output
-  if (cell["outputs"].length) { 
-    // verbose && console.log(flags, cell['outputs']) 
-    for (let o of cell["outputs"]) {
-      x.push(processOutput(o, flags, verbose, extractAssets, notebookName));
-    } 
-    // clear_output();
-  }
-  // verbose && console.groupEnd();
-  return x;
-}
-
-/**
- * Detects special flags in the source code of a notebook cell and handles them accordingly.
- *
- * @memberof module:convert
- * @param {string} source - The source code of a notebook cell.
- * @returns {string[]} An array of detected flags in the cell's source code.
- */
-function getFlags(source) {
-  const input_aug = [
-    "#collapse_input_open",
-    "#collapse_input",
-    "#collapse_output_open",
-    "#collapse_output",
-    "#hide_input",
-    "#hide_output",
-    "#hide",
-    "%%capture",
-    "%%javascript",
-    "%%html",
-    "#export"
-  ];
-  const sourceFlags = source.split(/\s+/); // Split by whitespace
-  return input_aug.filter((x) => sourceFlags.includes(x));
-}
-
-/**
- * Processes the source of a code cell, applying transformations based on flags and metadata.
- * Strip Flags from text, make details, hide all. Append to pyCode
- *
- * @memberof module:convert
- * @param {string} source - The source code of a notebook cell.
- * @param {string[]} flags - An array of flags affecting the processing.
- * @param {Object} meta - Metadata associated with the notebook.
- * @param {boolean} [verbose=false] - If set to true, enables verbose logging for detailed information.
- * @returns {string} The processed source code.
- */
-function processSource(source, flags, meta, verbose = false) {
-  if ('#export' == flags[flags.length - 1]) { pyCode.push(source); }
-  for (let lbl of flags) {
-    let skipList = ["#hide", "#hide_input", "%%javascript", "%%html", "%%capture"]
-    if (skipList.includes(lbl)) { return ""; }
-  }
-  if (meta.prettify === true) { source = `<pre class='prettyprint'>${source}</pre>`; }
-  let flagg = flags && !!flags.includes('#collapse_input_open')
-  if (flagg) {
-    verbose && console.log(flags)
-    for (let lbl of flags) {
-      source = source.replaceAll(lbl + "\r\n", "");
-      source = source.replaceAll(lbl + "\n", ""); // Strip the Flag  
-  if (lbl == "#collapse_input_open") source = makeDetails(source, true, 'input');
-  else if (lbl == "#collapse_input") source = makeDetails(source, false, 'input');
-    }
-    return source;
-  }
-}
-
-/**
- * Processes the output of a code cell, applying transformations based on flags and output type.
- * Strip Flags from output, make details, hide all.
- *
- * @function processOutput
- * @memberof module:convert
- * @param {Object} source - The output of a code cell.
- * @param {string[]} flags - An array of flags affecting the processing.
- * @param {boolean} [verbose=false] - If set to true, enables verbose logging for detailed information.
- * @param {string[]|boolean} [extractAssets=false] - Array of asset types to extract (e.g., ['png', 'js', 'txt', 'html']) or boolean for backward compatibility.
- * @param {string} [notebookName=null] - The name of the notebook for asset naming.
- * @returns {string} The processed output content.
- */
-function processOutput(source, flags, verbose = false, extractAssets = false, notebookName = null) {
-  // console.log('processOutput', source);
-  if (source["output_type"] == "error") {
-    return "";
-  }
-  if (source["output_type"] == "stream") {
-    if (source["name"] == "stderr") {
-      return "";
-    }
-    source["data"] = { "text/html": source["text"] };
-  }
-
-  const keys = Object.keys(source["data"]);
-  
-  // Debug logging to see what's happening
-  if (verbose || extractAssets) {
-    console.log('processOutput debug:', {
-      keys,
-      data: source["data"],
-      hasTextHtml: keys.includes("text/html"),
-      hasTextPlain: keys.includes("text/plain"),
-      hasAppJs: keys.includes("application/javascript"),
-      imageKeys: keys.filter(k => k.startsWith('image/'))
-    });
-  }
-  
-  const shouldExtract = (type) => {
-    const result = extractAssets === true || (Array.isArray(extractAssets) && extractAssets.some(t => 
-      t.toLowerCase() === type || t.toLowerCase() === type.split('/')[1] || 
-      (type === 'application/javascript' && t.toLowerCase() === 'js') ||
-      (type === 'text/html' && t.toLowerCase() === 'html')));
-    
-    // Debug logging for shouldExtract
-    if ((verbose || extractAssets) && (type === 'text/html' || type === 'application/javascript')) {
-      console.log('shouldExtract debug:', {
-        type,
-        extractAssets,
-        result,
-        isArray: Array.isArray(extractAssets)
-      });
-    }
-    
-    return result;
+function context(options = {}, extractAssets = false, notebookName = 'notebook', verbose = false) {
+  const result = { assets: [], diagnostics: [], pyCode: [] };
+  let index = 0;
+  let cellIndex = 0;
+  const trusted = options.trusted === true;
+  const diagnose = (code, message) => {
+    const diagnostic = { code, cell: cellIndex + 1, message };
+    result.diagnostics.push(diagnostic);
+    if (verbose) console.warn('ipynb2web:', diagnostic);
   };
-  
-  if (keys.includes("text/html")) {
-    const data = source["data"]["text/html"];
-    source = Array.isArray(data) ? data.join("") : data;
-    
-    // Calculate size in bytes
-    const sizeInBytes = new TextEncoder().encode(source).length;
-    const sizeThreshold = 100 * 1024; // 100KB
-    
-    // Only extract if starts with doctype, <html>, or is larger than 100KB
-    const startsWithDoctype = source.toLowerCase().includes('<!doctype');
-    const startsWithHtml = source.toLowerCase().trim().startsWith('<html');
-    const isLargeEnough = sizeInBytes > sizeThreshold;
-    
-    if (shouldExtract('text/html') && typeof process !== "undefined" && (startsWithDoctype || startsWithHtml || isLargeEnough)) {
-      const hash = source.substring(0, 8).replace(/[^a-zA-Z0-9]/g, '');
-      const name = `${notebookName ? `${notebookName}-` : ''}content-${hash}.html`;
-      
-      // Debug: Log what's being extracted as HTML
-      if (verbose || extractAssets) {
-        console.log('Extracting HTML asset:', { name, dataLength: source.length, sizeInBytes, startsWithDoctype, startsWithHtml, isLargeEnough, hash });
+  const shouldExtract = type => extractAssets === true || (Array.isArray(extractAssets) && extractAssets.some(item => {
+    const name = String(item).toLowerCase();
+    return [type, type.split('/')[1], { 'image/svg+xml': 'svg', 'image/jpeg': 'jpg', 'application/javascript': 'js', 'text/plain': 'txt' }[type]].includes(name);
+  }));
+  const asset = (type, data, encoding) => {
+    const extension = { 'image/svg+xml': 'svg', 'image/jpeg': 'jpg', 'text/html': 'html', 'application/javascript': 'js' }[type] ?? type.split('/')[1];
+    const prefix = (typeof notebookName === 'string' ? notebookName : 'notebook').replace(/[^a-zA-Z0-9_-]/g, '_') || 'notebook';
+    const name = `${prefix}-asset-${++index}.${extension}`;
+    result.assets.push({ placeholderName: name, data, encoding, type, notebookPrefix: `${prefix}-` });
+    return `ASSET_PLACEHOLDER_${name}`;
+  };
+  const image = bundle => {
+    if (!bundle || typeof bundle !== 'object') return null;
+    for (const type of imageTypes) {
+      if (!Object.hasOwn(bundle, type)) continue;
+      const data = sourceText(bundle[type]);
+      if (!data.trim()) { diagnose('invalid-image', `Empty ${type} output`); continue; }
+      const svg = type === 'image/svg+xml';
+      if (svg ? !/<svg[\s>]/i.test(data) : !/^[\da-z+/=\s]+$/i.test(data)) {
+        diagnose('invalid-image', `Invalid ${type} output`); continue;
       }
-      
-      assetsToWrite.push({ 
-        placeholderName: name, 
-        data: source, 
-        encoding: 'utf8', 
-        type: 'text/html',
-        notebookPrefix: notebookName ? `${notebookName}-` : ''
-      });
-      source = `<iframe src="ASSET_PLACEHOLDER_${name}" width="100%" height="400px"></iframe>`;
+      // SVG is an image resource, never active inline DOM, in the default mode.
+      if (shouldExtract(type)) return asset(type, data, svg ? 'utf8' : 'base64');
+      return svg ? `data:${type},${encodeURIComponent(data)}` : `data:${type};base64,${data.replace(/\s/g, '')}`;
     }
-  } else if (keys.includes("application/javascript")) {
-    const data = source["data"]["application/javascript"];
-    
-    // Calculate size in bytes for JS content
-    const jsContent = Array.isArray(data) ? data.join("") : data;
-    const sizeInBytes = new TextEncoder().encode(jsContent).length;
-    const sizeThreshold = 100 * 1024; // 100KB
-    const isLargeEnough = sizeInBytes > sizeThreshold;
-    
-    if (shouldExtract('application/javascript') && typeof process !== "undefined" && isLargeEnough) {
-      const hash = jsContent.toString().substring(0, 8).replace(/[^a-zA-Z0-9]/g, '');
-      const name = `${notebookName ? `${notebookName}-` : ''}script-${hash}.js`;
-      
-      // Debug: Log what's being extracted as JS
-      if (verbose || extractAssets) {
-        console.log('Extracting JS asset:', { name, sizeInBytes, isLargeEnough });
-      }
-      
-      assetsToWrite.push({ placeholderName: name, data: jsContent, encoding: 'utf8', type: 'application/javascript' });
-      source = `<script src="ASSET_PLACEHOLDER_${name}"></script>`;
-    } else {
-      source = "<script>" + jsContent + "</script>";
+    return null;
+  };
+  const md = createMarkdown(options, diagnose, image);
+  const pre = text => `<pre><code>${escapeHtml(text)}</code></pre>`;
+  const missing = message => {
+    diagnose('unsupported-output', message);
+    return `<pre class="ipynb-diagnostic">${escapeHtml(message)}</pre>`;
+  };
+  const output = saved => {
+    if (!saved || typeof saved !== 'object') return missing('Missing saved output');
+    if (saved.output_type === 'stream') {
+      if (saved.name === 'stderr') diagnose('stderr', sourceText(saved.text));
+      return pre(sourceText(saved.text));
     }
-  } else {
-    // Check for images first, then fall back to text/plain if no image found
-    const imageKey = keys.filter(key => key.startsWith('image/'))[0];
-    if (imageKey && source["data"][imageKey]) {
-      const data = source["data"][imageKey];
-      
-      // Debug logging for image processing
-      if (verbose || extractAssets) {
-        console.log('Image processing debug:', {
-          imageKey,
-          dataType: typeof data,
-          dataLength: data?.length,
-          shouldExtractResult: shouldExtract(imageKey),
-          processEnv: typeof process !== "undefined"
-        });
-      }
-      
-      // Additional check to make sure this is actually image data
-      if (typeof data === 'string' && data.length > 50) { // Basic sanity check for image data
-        const imageType = imageKey.split('/')[1]; // Extract format (png, jpeg, gif, svg+xml, etc.)
-        
-        if (shouldExtract(imageKey) && typeof process !== "undefined") {
-          // Use simple index-based naming instead of complex unique ID
-          imageIndex++;
-          
-          // Handle special cases for file extensions
-          let extension = imageType;
-          if (imageType === 'jpeg') extension = 'jpg';
-          if (imageType === 'svg+xml') extension = 'svg';
-          
-          const name = `${notebookName ? `${notebookName}-` : ''}image-${imageIndex}.${extension}`;
-          const encoding = imageType === 'svg+xml' ? 'utf8' : 'base64';
-          
-          // Debug: Log what's being extracted as image
-          if (verbose || extractAssets) {
-            console.log('Extracting image asset:', { 
-              name, 
-              imageType, 
-              extension, 
-              encoding, 
-              dataLength: data.length, 
-              imageIndex
-            }); 
-          }
-          
-          assetsToWrite.push({ 
-            placeholderName: name, 
-            data: data, 
-            encoding: encoding, 
-            type: imageKey,
-            notebookPrefix: notebookName ? `${notebookName}-` : ''
-          });
-          source = `<img src="ASSET_PLACEHOLDER_${name}" alt="Image Alt Text">`;
-        } else {
-          if (verbose || extractAssets) {
-            console.log('Image not extracted - inline instead:', { 
-              shouldExtract: shouldExtract(imageKey), 
-              processUndefined: typeof process === "undefined" 
-            });
-          }
-          source = `<img src="data:${imageKey};base64,${data}" alt="Image Alt Text">`;
+    if (saved.output_type === 'error') {
+      const message = sourceText(saved.traceback?.join('\n') || `${saved.ename ?? 'Error'}: ${saved.evalue ?? ''}`);
+      diagnose('saved-error', message);
+      return pre(message);
+    }
+    const bundle = saved.data;
+    if (!bundle || typeof bundle !== 'object') return missing('Saved output has no MIME data');
+    if (!trusted && (Object.hasOwn(bundle, 'text/html') || Object.hasOwn(bundle, 'application/javascript'))) {
+      diagnose('untrusted-output', 'Rich HTML/JavaScript requires the host option trusted: true; using an inert representation');
+    }
+    for (const type of mimeOrder) {
+      if (!Object.hasOwn(bundle, type) || bundle[type] == null) continue;
+      const data = sourceText(bundle[type]);
+      if (type === 'text/html' || type === 'application/javascript') {
+        if (!trusted || !data.trim()) continue;
+        if (type === 'text/html') {
+          return shouldExtract(type) ? `<iframe src="${asset(type, data, 'utf8')}" title="Notebook output"></iframe>` : data;
         }
-      } else {
-        // If we reach here, there was an image key but no valid image data
-        if (verbose || extractAssets) {
-          console.log('Found image key but invalid data:', { imageKey, dataType: typeof data, dataLength: data?.length });
-        }
-        source = "";
+        // A data URL avoids closing-script sequences corrupting the HTML wrapper.
+        const url = shouldExtract(type) ? asset(type, data, 'utf8') : `data:text/javascript,${encodeURIComponent(data)}`;
+        return `<script src="${escapeHtml(url)}"></script>`;
       }
-    } else if (keys.includes("text/plain")) {
-      const data = source["data"]["text/plain"];
-      // Always keep text/plain inline, don't extract to separate files
-      source = !/<Figure/.test(data) ? (Array.isArray(data) ? data.join('') : data) : "";
-    } else {
-      // No recognized content type found
-      if (verbose || extractAssets) {
-        console.log('No recognized content type found:', { keys, availableData: Object.keys(source["data"]) });
+      if (type.startsWith('image/')) {
+        const url = image({ [type]: bundle[type] });
+        if (url) return `<img src="${escapeHtml(url)}" alt="Notebook output">`;
+        continue;
       }
-      source = "";
+      if (type === 'application/json') return pre(JSON.stringify(bundle[type], null, 2));
+      return pre(data);
     }
-  }
-
-  for (let lbl of flags) {
-    try {
-      source = source.replaceAll(lbl + "\r\n", "");
-      source = source.replaceAll(lbl + "\n", "");
-    } catch {
-      verbose && console.log("ERROR: !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!processOutput... ", typeof source, source);
+    if (!trusted) {
+      const rich = bundle['text/html'] ?? bundle['application/javascript'];
+      if (rich != null) return pre(sourceText(rich));
     }
-    if (lbl == "#collapse_output_open") {
-      source = makeDetails(source, true, 'output');
+    return missing(`Unsupported saved output MIME types: ${Object.keys(bundle).join(', ') || '(none)'}`);
+  };
+  const render = (cell, index) => {
+    cellIndex = index;
+    const text = sourceText(cell?.source);
+    if (cell?.cell_type === 'markdown') return md.render(text, { attachments: cell.attachments, docId: `cell-${index + 1}` });
+    if (cell?.cell_type === 'raw') return pre(text);
+    if (cell?.cell_type !== 'code') return missing(`Unsupported cell type: ${cell?.cell_type}`);
+    const parsed = codeOptions(text, diagnose);
+    const flags = parsed.options;
+    if (flags.export) result.pyCode.push(parsed.source);
+    if (flags.include === false) return '';
+    if (/^\s*%%?\w/.test(parsed.source) && !(cell.outputs?.length)) {
+      diagnose('unexecuted-magic', 'IPython magic has no saved output; the renderer does not execute it');
     }
-    if (lbl == "#collapse_output") {
-      source = makeDetails(source, false, 'output');
-    }
-    if (lbl == "#hide_output") {
-      source = "";
-    }
-    if (lbl == "#hide") {
-      source = "";
-    }
-  }
-
-  return source;
-  //output_type == 'stream' ==> text
-  //output_type == 'display_data' ==> data{'application/javascript' or 'text/html' or 'execute_result'}
+    let input = flags.echo === false || !parsed.source ? '' : pre(parsed.source);
+    if (input && flags['code-fold']) input = makeDetails(input, flags['code-fold'] === 'show', 'input');
+    const saved = cell.outputs ?? [];
+    let outputs = flags.output === false ? '' : Array.isArray(saved) ? saved.map(output).join('\n') : missing('Expected a saved outputs array');
+    if (outputs && flags['output-fold']) outputs = makeDetails(outputs, flags['output-fold'] === 'show', 'output');
+    return input + outputs;
+  };
+  return { ...result, render };
 }
 
-export { nb2json, get_metadata, convertNb }
+/** Render a parsed notebook, without I/O or execution. Options are host-owned,
+ * never read from notebook metadata. Returns { meta, content, assets, diagnostics }.
+ */
+export function renderNotebook(notebook, options = {}) {
+  if (!notebook || !Array.isArray(notebook.cells)) throw new Error('Invalid notebook: expected cells array');
+  const { meta, consumed, remainder } = readMetadata(notebook.cells[0]);
+  if (!Object.hasOwn(meta, 'filename')) meta.filename = options.filename ?? 'notebook';
+  const ctx = context(options, options.extractAssets, meta.filename, options.verbose);
+  const content = notebook.cells.map((cell, index) => {
+    if (index === 0 && consumed) return remainder ? ctx.render({ ...cell, source: remainder }, index) : '';
+    return ctx.render(cell, index);
+  }).join('\n');
+  if (ctx.pyCode.length && !Object.hasOwn(meta, 'pyCode')) meta.pyCode = ctx.pyCode;
+  return { meta, content, assets: ctx.assets, diagnostics: ctx.diagnostics };
+}
+
+/** Fetch and render a notebook. Positional verbose/extractAssets arguments remain
+ * supported; the fourth argument holds host options such as { trusted: true }.
+ * Node's historical extensionless localhost:8085 paths remain supported.
+ */
+export async function nb2json(ipynbPath, verbose = false, extractAssets = false, options = {}) {
+  if (typeof verbose === 'object' && verbose !== null) {
+    options = verbose;
+    verbose = options.verbose ?? false;
+    extractAssets = options.extractAssets ?? false;
+  }
+  let url = String(ipynbPath);
+  if (typeof window === 'undefined' && !/^[a-z][a-z\d+.-]*:/i.test(url)) {
+    url = `http://localhost:8085/${url.replace(/^\//, '')}${url.endsWith('.ipynb') ? '' : '.ipynb'}`;
+  }
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Notebook fetch failed (${response.status}): ${url}`);
+  const filename = options.filename ?? (/^(?:data|blob):/i.test(url) ? 'notebook'
+    : String(ipynbPath).split('/').pop().split(/[?#]/)[0].replace(/\.ipynb$/i, '').toLowerCase().replaceAll(' ', '_'));
+  return renderNotebook(await response.json(), { ...options, verbose, extractAssets, filename });
+}
+
+// Low-level compatibility export. Use renderNotebook to receive assets/diagnostics.
+export function convertNb(cells, meta = {}, verbose = false, extractAssets = false, notebookName = null, options = {}) {
+  const ctx = context(options, extractAssets, notebookName ?? meta.filename, verbose);
+  return cells.map(ctx.render);
+}
+export { get_metadata };

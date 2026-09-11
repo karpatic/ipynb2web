@@ -39,7 +39,6 @@ app.get('/', (req, res) => {
             font-size: 16px;
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script type="module" src="/ipynb2web.browser.mjs"></script>
 </head>
 <body>
@@ -101,7 +100,6 @@ app.get('/method2', (req, res) => {
     Metadata:
     <div id='output'></div>
     <script type="module">
-        import { marked } from "https://cdn.jsdelivr.net/npm/marked/lib/marked.esm.js";
         const url = '/test.ipynb'; 
         import ipynb2web from '/ipynb2web.browser.mjs';
         ipynb2web.nb2json(url)
